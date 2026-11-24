@@ -42,6 +42,7 @@ def _wait(url: str, seconds: float = 20) -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(sys.platform == "win32", reason="gunicorn requires POSIX (fcntl/signals); runs in Linux CI")
 def test_gunicorn_serves_public_and_internal_ports(tmp_path: Path) -> None:
     public, internal = _free_port(), _free_port()
     env = {
@@ -76,3 +77,35 @@ def test_gunicorn_serves_public_and_internal_ports(tmp_path: Path) -> None:
     assert proc.returncode == 0, output[-2000:]
     workers = {line for line in output.splitlines() if "Booting worker" in line}
     assert len(workers) == 2, output[-2000:]
+
+
+@pytest.mark.slow
+def test_dev_server_serves_public_and_internal_ports(tmp_path: Path) -> None:
+    """Cross-platform dual-port check via `python -m app` (runs on Windows and Linux)."""
+    public, internal = _free_port(), _free_port()
+    env = {
+        **os.environ,
+        "PUBLIC_PORT": str(public),
+        "INTERNAL_PORT": str(internal),
+        "LOG_FORMAT": "json",
+    }
+    log_path = tmp_path / "dev.log"
+    with log_path.open("wb") as log_file:
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "app"], cwd=ROOT, env=env, stdout=log_file, stderr=subprocess.STDOUT
+        )
+        try:
+            _wait(f"http://127.0.0.1:{public}/health")
+            _wait(f"http://127.0.0.1:{internal}/health")
+            assert _get(f"http://127.0.0.1:{public}/_ping")[0] == 200
+            assert _get(f"http://127.0.0.1:{internal}/ready")[0] == 200
+            status, body = _get(f"http://127.0.0.1:{internal}/metrics")
+            assert status == 200
+            assert 'topic_tree_requests_total{route="health",status="200"}' in body
+            assert _get(f"http://127.0.0.1:{public}/metrics")[0] == 404
+        finally:
+            if sys.platform == "win32":
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], check=False, capture_output=True)
+            else:
+                proc.terminate()
+            proc.wait(timeout=15)
