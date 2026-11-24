@@ -87,7 +87,10 @@ def from_tree_in(nodes: list[TreeNodeIn]) -> list[Node]:
                 keywords=props.values("cclom:general_keyword"),
                 properties=props,
                 origin=_origin(item.origin),
-                contents=[ContentRef(id=c.id, nodeId=c.node_id, confidence=c.confidence or 1.0) for c in item.contents],
+                contents=[
+                    ContentRef(id=c.id, nodeId=c.node_id, confidence=1.0 if c.confidence is None else c.confidence)
+                    for c in item.contents
+                ],
                 children=from_tree_in(item.subcollections),
             )
         )

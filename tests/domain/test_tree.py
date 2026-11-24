@@ -73,3 +73,8 @@ def test_from_tree_in_reads_v2_and_legacy_nodes() -> None:
 def test_invalid_origin_in_input_is_dropped() -> None:
     roots = from_tree_in([TreeNodeIn.model_validate({"title": "A", "origin": {"type": "nonsense"}})])
     assert roots[0].origin is None
+
+
+def test_from_tree_in_preserves_zero_confidence() -> None:
+    roots = from_tree_in([TreeNodeIn.model_validate({"title": "A", "contents": [{"id": "c1", "confidence": 0.0}]})])
+    assert roots[0].contents[0].confidence == 0.0

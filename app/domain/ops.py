@@ -112,19 +112,27 @@ class _Applier:
         self.record(change)
 
     def merge(self, change: Change) -> None:
-        nodes = [self.node(key) for key in change.keys]
+        unique_keys = list(dict.fromkeys(change.keys))
+        if len(unique_keys) < 2:
+            raise _Rejected("mindestens zwei verschiedene Knoten nötig")
+        nodes = [self.node(key) for key in unique_keys]
         keys = {n.key for n in nodes}
         for node in nodes:
             below = {n.key for n, _, _ in walk(node.children)}
             if below & keys:
                 raise _Rejected("zusammenzulegende Knoten liegen ineinander")
         first, rest = nodes[0], nodes[1:]
+        by_id = {ref.id: ref for ref in first.contents}
         for other in rest:
             first.children.extend(other.children)
-            first.contents.extend(other.contents)
+            for ref in other.contents:
+                existing = by_id.get(ref.id)
+                if existing is None or ref.confidence > existing.confidence:
+                    by_id[ref.id] = ref
             _detach(self.roots, other.key)
+        first.contents = list(by_id.values())
         first.title, first.shorttitle = change.title, ""
-        self.record(change, key=first.key)
+        self.record(change, key=first.key, keys=unique_keys)
 
     def split(self, change: Change) -> None:
         self.node(change.key)

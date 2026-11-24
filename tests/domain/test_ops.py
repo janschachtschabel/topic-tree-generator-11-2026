@@ -109,3 +109,20 @@ def test_locked_nodes_and_their_descendants_are_protected() -> None:
 def test_changes_apply_in_order() -> None:
     roots, _ = run([ch(op="add", parent=None, title="Farben"), ch(op="move", key="k-akustik", to="k-farben")])
     assert parent_of(roots, "k-akustik").key == "k-farben"
+
+
+def test_merge_with_duplicate_keys_is_rejected_without_deleting_node() -> None:
+    roots, result = run([ch(op="merge", keys=["k-optik", "k-optik"], title="Optik")])
+    assert find(roots, "k-optik") is not None
+    assert [c.key for c in find(roots, "k-optik").children] == ["k-linsen", "k-spiegel"]
+    assert [w.code for w in result.rejected] == ["CHANGE_REJECTED"]
+    assert result.applied == []
+
+
+def test_merge_deduplicates_shared_contents_keeping_max_confidence() -> None:
+    roots = tree()
+    find(roots, "k-optik").contents = [ContentRef(id="c1", confidence=0.6)]
+    find(roots, "k-akustik").contents = [ContentRef(id="c1", confidence=0.9), ContentRef(id="c3", confidence=0.8)]
+    roots, _ = run([ch(op="merge", keys=["k-optik", "k-akustik"], title="Optik und Akustik")], roots=roots)
+    merged = find(roots, "k-optik")
+    assert [(c.id, c.confidence) for c in merged.contents] == [("c1", 0.9), ("c3", 0.8)]
