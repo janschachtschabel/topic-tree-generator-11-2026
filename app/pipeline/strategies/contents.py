@@ -1,0 +1,75 @@
+"""Use case `contents`: groups are induced from the items themselves; assignment with confidence follows."""
+
+from app.domain.keys import assign_missing_keys
+from app.pipeline.result import StrategyResult
+from app.pipeline.run_context import RunContext
+from app.pipeline.steps.expand_branch import Cut, to_nodes
+from app.pipeline.steps.group_contents import group_contents
+from app.schemas.common import ItemUse, OriginType
+from app.schemas.request_v2 import Item, TopicTreeRequestV2
+from app.schemas.response_v2 import StructureInfo
+
+SAMPLE_SIZE = 300
+MAX_TITLES = 2000
+_TEXT = 200
+
+
+def _detail(item: Item) -> str:
+    p = item.properties
+    parts = [f"- id: {item.id}", p.first("cm:title") or "(ohne Titel)"]
+    if description := p.first("cm:description"):
+        parts.append(description[:_TEXT])
+    if keywords := p.values("cclom:general_keyword"):
+        parts.append("Schlagworte: " + ", ".join(keywords[:8]))
+    return " | ".join(parts)
+
+
+def _sample(items: list[Item]) -> list[Item]:
+    if len(items) <= SAMPLE_SIZE:
+        return items
+    step = len(items) / SAMPLE_SIZE
+    return [items[int(i * step)] for i in range(SAMPLE_SIZE)]
+
+
+def items_block(items: list[Item], rc: RunContext) -> str:
+    sample = _sample(items)
+    lines = [_detail(item) for item in sample]
+    if len(sample) < len(items):
+        chosen = {item.id for item in sample}
+        rest = [i for i in items if i.id not in chosen]
+        if len(rest) > MAX_TITLES:
+            rc.warn("ITEMS_SAMPLED", f"Nur {MAX_TITLES} weitere Titel flossen in die Gruppenbildung ein.", step="group")
+            rest = rest[:MAX_TITLES]
+        lines.append("\nWeitere Titel:")
+        lines.extend(f"- {(i.properties.first('cm:title') or i.id)[:80]}" for i in rest)
+    return "\n".join(lines)
+
+
+def _max_tokens(req: TopicTreeRequestV2) -> int:
+    groups = req.shape.main_topics.max
+    if req.shape.depth > 1:
+        groups += groups * req.shape.children.max
+    return min(32000, 1000 + groups * (req.hints.description_length * 2 + 60))
+
+
+async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
+    shaping = [i for i in req.items or [] if ItemUse.structure in req.effective_use(i)]
+    grouping = await group_contents(items_block(shaping, rc), rc, max_tokens=_max_tokens(req))
+
+    cut = Cut()
+    roots = to_nodes(grouping.groups, req.shape.depth, req.shape.main_topics.max, cut, OriginType.cluster)
+    if cut.depth:
+        rc.warn("SHAPE_DEPTH", "Die Gruppenbildung war zu tief und wurde gekürzt.", step="group_contents")
+    if cut.width:
+        rc.warn("SHAPE_WIDTH", "Die Gruppenbildung hatte zu viele Gruppen; gekürzt.", step="group_contents")
+    assign_missing_keys(roots)
+    return StrategyResult(
+        roots=roots,
+        title=req.topic or "Sammlung aus Inhalten",
+        description=grouping.description,
+        structure=StructureInfo(
+            order=req.hints.order or grouping.order,
+            levels=grouping.levels[: req.shape.depth],
+            source="hint" if req.hints.order else "detected",
+        ),
+    )

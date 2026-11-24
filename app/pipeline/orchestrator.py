@@ -21,7 +21,7 @@ from app.pipeline.inputs.refs import resolve_refs
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
-from app.pipeline.strategies import document, folders, refine, topic
+from app.pipeline.strategies import contents, document, folders, refine, topic
 from app.schemas.common import ItemUse, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import TopicTreeResponseV2
@@ -31,11 +31,11 @@ __all__ = ["STRATEGIES", "Strategy", "StrategyResult", "run"]
 
 Strategy = Callable[[TopicTreeRequestV2, RunContext], Awaitable[StrategyResult]]
 
-# Use cases without an entry answer 501 until their strategy exists.
 STRATEGIES: dict[UseCase, Strategy] = {
     UseCase.topic: topic.build,
     UseCase.folders: folders.build,
     UseCase.document: document.build,
+    UseCase.contents: contents.build,
 }
 
 _RETRYABLE = {429, 500, 502, 503, 504}

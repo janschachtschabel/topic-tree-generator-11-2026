@@ -64,7 +64,7 @@ def _max_tokens(req: TopicTreeRequestV2, main: Node) -> int:
     return max(2000, min(32000, 800 + nodes * per_node))
 
 
-class _Cut:
+class Cut:
     """Records whether the LLM answer exceeded the shape (too deep or too wide)."""
 
     def __init__(self) -> None:
@@ -72,7 +72,10 @@ class _Cut:
         self.width = False
 
 
-def _to_nodes(items: list[BranchNode], levels_left: int, width: int, cut: _Cut) -> list[Node]:
+def to_nodes(
+    items: list[BranchNode], levels_left: int, width: int, cut: Cut, origin: OriginType = OriginType.topic
+) -> list[Node]:
+    """Convert LLM nodes into working nodes, cutting what exceeds the shape (recorded in `cut`)."""
     if levels_left <= 0:
         cut.depth = cut.depth or bool(items)
         return []
@@ -84,21 +87,21 @@ def _to_nodes(items: list[BranchNode], levels_left: int, width: int, cut: _Cut) 
             shorttitle=item.shorttitle.strip(),
             description=item.description.strip(),
             keywords=item.keywords,
-            origin=Origin(type=OriginType.topic),
-            children=_to_nodes(item.children, levels_left - 1, width, cut),
+            origin=Origin(type=origin),
+            children=to_nodes(item.children, levels_left - 1, width, cut, origin),
         )
         for item in items[:width]
     ]
 
 
-async def _expand_one(main: Node, prefix: str, req: TopicTreeRequestV2, rc: RunContext) -> _Cut:
+async def _expand_one(main: Node, prefix: str, req: TopicTreeRequestV2, rc: RunContext) -> Cut:
     result = await rc.llm.complete_json(
         STEP, f"{prefix}{_branch_block(main)}", BranchResult, max_tokens=_max_tokens(req, main)
     )
     main.description = result.description.strip()
     main.keywords = result.keywords
-    cut = _Cut()
-    children = _to_nodes(result.children, req.shape.depth - 1, req.shape.children.max, cut)
+    cut = Cut()
+    children = to_nodes(result.children, req.shape.depth - 1, req.shape.children.max, cut)
     if children:
         main.children = children
     return cut
