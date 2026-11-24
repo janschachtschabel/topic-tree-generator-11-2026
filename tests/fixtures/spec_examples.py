@@ -150,3 +150,68 @@ ALL_REQUESTS = {
     "assign_only": ASSIGN_ONLY,
     "full_options": {"mode": "create", "use_case": "topic", "topic": "Optik", **FULL_OPTIONS_BLOCK},
 }
+
+RESPONSE = {
+    "metadata": {
+        "title": "Optik",
+        "description": "Themenbaum Optik für die Sekundarstufe I",
+        "target_audience": "Lehrkräfte",
+        "created_at": "2026-11-20T10:15:00Z",
+        "author": "Themenbaum Generator",
+        "schema_version": "2.0",
+        "version": "v2",
+        "based_on": "v1",
+        "generation": {
+            "mode": "refine",
+            "use_case": "folders",
+            "topic": None,
+            "frame": FRAME,
+            "shape": {},
+            "hints": {},
+            "options": {"improve": True},
+            "inputs": {"folders": 2, "items": {"structure": 0, "content": 82}},
+            "feedback": [{"version": "v2", "text": "Neuer Ordner (2) ist eigentlich Spiegel und gehört zu Optik."}],
+            "generator_version": "2.0.0",
+            "model": "route-x",
+        },
+    },
+    "collection": [
+        {
+            "key": "k-optik",
+            "title": "Optik",
+            "shorttitle": "Optik",
+            "status": "unchanged",
+            "origin": {"type": "folder", "path": "Optik"},
+            "confidence": 1.0,
+            "properties": {
+                "cm:title": ["Optik"],
+                "ccm:collectionshorttitle": ["Optik"],
+                "cm:description": ["Licht, Schatten, Linsen und Spiegel im Alltag"],
+                "cclom:general_keyword": ["Licht", "Linsen"],
+                "ccm:taxonid": [DISC],
+                "ccm:educationalcontext": [SEK1],
+                "ccm:educationalintendedenduserrole": [TEACHER],
+            },
+            "contents": [{"id": "c1", "nodeId": "5c0e1f2a-0000", "confidence": 1.0}],
+            "subcollections": [
+                {
+                    "key": "k-spiegel",
+                    "title": "Spiegel",
+                    "shorttitle": "Spiegel",
+                    "status": "moved",
+                    "origin": {"type": "folder", "path": "Neuer Ordner (2)"},
+                    "properties": {"cm:title": ["Spiegel"]},
+                    "contents": [{"id": "c4", "nodeId": "71bd09e4-0000", "confidence": 1.0}],
+                    "subcollections": [],
+                }
+            ],
+        }
+    ],
+    "unassigned": [{"id": "c9", "nodeId": "n9", "reason": "off_topic"}],
+    "changes": [
+        {"op": "rename", "key": "k-spiegel", "title": "Spiegel", "from": "feedback_text"},
+        {"op": "move", "key": "k-spiegel", "to": "k-optik", "from": "feedback_text"},
+    ],
+    "questions": [],
+    "warnings": [],
+}
