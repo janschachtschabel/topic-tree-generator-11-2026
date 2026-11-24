@@ -689,6 +689,16 @@ Schritt 0: `/better-coding-workflow` laden.
   - `topic`-Strategie auf **vollständiges Titel-Grundgerüst in einem Aufruf** (`plan_structure` über alle Ebenen) → **deterministische Duplikatbereinigung** (`eliminate_generated_duplicates` in `shape_rules.py`, auch für `contents`) → **parallele Beschreibungs-Batches** (`describe_nodes`, balancierte 10er-Batches mit vollständiger Baum-Übersicht im gemeinsamen Cache-Präfix) umgestellt: 0 Duplikate und 0 Warnungen bei `topic_sek1` (100 Knoten in 31,1 s, 65 % Cache), `topic_bne_auto_meta` (31,1 s, 73 % Cache) und `topic_beruf` (22,4 s, 76 % Cache).
   - `infer_metadata` klassifiziert auf **exakte deutsche Vokabular-Labels** (ohne Roh-URIs im Prompt) und mappt deterministisch auf kanonische SkoHub-URIs (`METADATA_LABEL_UNKNOWN` bei ungültigen Labels).
   - Test-UI (`/ui/`): doppelte Knotentitel farblich + mit `Duplikat`/`Duplicate`-Badge hervorgehoben, umschaltbare UI-Sprache `DE` (Standard) / `EN` (`i18n.js`), verifiziert frei von externen Schriften/CDNs.
+- **Review 24.11.2026 (abends, nach Skeleton-first)**:
+  - `contents`: Untergruppen wurden auf `main_topics.max` statt `children.max` gekürzt (`to_nodes` mit `child_width`).
+  - Toter Schritt `expand_branch` (Code, Prompt, Tests) entfernt; geteilte Umwandlung in `steps/node_conversion.py`.
+  - Helm-Alarm von `BRANCH_FAILED` (wird nicht mehr erzeugt) auf `DESCRIBE_FAILED` umgestellt
+    (`prometheusRule.describeFailuresPerHour`, vorher `branchFailuresPerHour`).
+  - `refine` behält Titel und Beschreibung des Baums: `current_tree.title`/`current_tree.description` (optional).
+  - Zusatzthemen werden auch als „Methodik & Didaktik“/„Didaktik und Methodik“ erkannt (`extra_kind`).
+  - Token-Budget von `plan_structure`: 32 Token je Knoten, Obergrenze 32 000 (vorher 28/16 000, zu knapp ab ~530 Knoten).
+  - `infer_metadata`: Beschreibungsauszug an Wort-/Satzgrenze gekürzt.
+  - Test-UI: Kopierfehler außerhalb von HTTPS abgefangen; Download-URL erst nach dem Klick freigegeben.
 
 # Verifikationsplan
 
