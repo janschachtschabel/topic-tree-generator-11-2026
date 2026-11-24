@@ -1,6 +1,6 @@
 # Design: Themenbaum-Dienst v2
 
-Stand: 24.11.2026 · Status: **Entwurf, wartet auf Freigabe** · Branch: `feature/topic-tree-v2`
+Stand: 24.11.2026 · Status: **freigegeben (mit Änderungen aus Runde 2)** · Branch: `feature/topic-tree-v2`
 
 ## Ziel
 
@@ -28,6 +28,9 @@ dieses Plans:
 | Betrieb ohne b-api | Nativer OpenAI-Support (OpenAI-kompatibler Endpunkt per Env); optional setzbare Auth für Aufrufe. Mit b-api läuft das LLM über die b-api. Später nur intern über die b-api erreichbar. Erkennung automatisch, per Env auf feste Werte umschaltbar. |
 | Laufzeit > 30 s | Synchron. Mehrere Worker, Timeout konfigurierbar, kein Streaming, Wiederholungen bei abgebrochenen Einzel-Prompts, Logging nach Leitfaden. |
 | Umfang | Alle Phasen am Stück. |
+| Dienst-ID | `topic-tree` (bestehender b-api-Proxy-Eintrag). |
+| Alter Endpunkt | Funktioniert genauso wie bisher; neue Systematik nur im neuen Endpunkt (E7). |
+| Seitenmarken | Erläutert; Format wird im Team geklärt. Bis dahin E11 (alle gängigen Formate). |
 
 ## Scope
 
@@ -124,13 +127,14 @@ Kein Repository-Zugriff. `nodeId` wird durchgereicht. `fulltext.ref` und `items_
 `REF_ALLOWED_HOSTS` geladen (Standard leer = abgelehnt mit 422 `REF_NOT_ALLOWED`), nur HTTPS, Grenzen
 `REF_MAX_BYTES` (10 MB) und `REF_TIMEOUT_SECONDS` (20). Schützt vor SSRF.
 
-### E7 Alte Endpunkte
+### E7 Alte Endpunkte (entschieden: Verhalten eingefroren)
 
-`/generate-topic-tree` wird ein Adapter auf die v2-Pipeline (Use Case `topic`): `num_*` → `shape` mit
-min = max, `include_*` → `extra_topics`, Antwort zurück ins alte Format (Schlüssel mit Unterstrich, `subcollections`
-fehlt bei Blättern, `version` aus der Projektversion). Ein Vertragstest friert das Format ein. Damit bekommen
-bestehende Abnehmer weniger Aufrufe und keine stillen Lücken mehr. **Zur Freigabe**, Alternative: alter Code
-unverändert in `app/api/legacy.py`.
+`/generate-topic-tree` und `/generate-collection-description` behalten Anfrage, Antwort, Prompts und Ablauf
+(Ebene für Ebene, Bearer wird als Schlüssel an die b-api gereicht). Der Code zieht nach `app/legacy/` um, ohne
+Logikänderung. Gemeinsam mit v2 nutzen sie nur die Querschnitte: Tracing-Middleware, Zugriffszeile, Logformat,
+`/health`. Einzige Abweichung: Fach- und Stufenlabels kommen aus dem Vokabular-Snapshot statt aus einem
+Netzabruf beim Start (sonst startet der Dienst ohne Netz nicht); dabei werden zuverlässig die deutschen Labels
+genommen, bisher zufällig deutsch oder englisch. Vertragstests frieren Format und Auth-Verhalten ein.
 
 ### E8 Ordnungsprinzip erkennen
 
@@ -193,8 +197,7 @@ app/
   api/
     deps.py                Dependency: CallerContext + LLMClient je Anfrage
     errors.py              ApiError, Fehlerformat, Handler
-    legacy.py              /generate-topic-tree, /generate-collection-description (Format eingefroren)
-    legacy_adapter.py      alt ↔ v2 (Anfrage-Mapping, Antwort-Rückformung)
+    legacy.py              Router für die alten Endpunkte (ruft app/legacy/)
     v2.py                  POST /v2/topic-tree
     health.py              /health, /_ping auf dem öffentlichen Port (nicht in OpenAPI)
   context/
@@ -215,7 +218,6 @@ app/
     properties.py          Properties: nimmt cm:title und cm_title an; gibt Doppelpunkt (v2) oder Unterstrich (alt) aus
     request_v2.py          TopicTreeRequestV2, Frame, Shape, Range, Hints, Options, Item, Fulltext, FolderNode, CurrentTree, Feedback, Change
     response_v2.py         TopicTreeResponseV2, NodeOut, ContentRef, Unassigned, ChangeRecord, Question, Warning, Metadata, Generation
-    legacy.py              TopicTreeRequest, DescriptionRequest (aus src/DTOs übernommen, unverändert)
   domain/
     tree.py                Node (key, title, shorttitle, description, keywords, status, origin, confidence, contents, children, locked); walk/find/path/parent
     keys.py                make_key(title, taken) → "k-<slug>[-n]"
@@ -240,6 +242,7 @@ app/
       outline.py           Markdown → Abschnitte mit id, Ebene, Seite, Textauszug
       refs.py              ref-Laden mit Allowlist, Größen- und Zeitgrenze
     finalize.py            Properties aus frame, Metadaten, generation, Ausgabe
+  legacy/                  alter Ablauf, Logik unverändert: service.py, prompts.py, structured_text.py, dtos.py
   vocab/
     labels.py              label(uri) → deutsches prefLabel; Snapshot, kein Netz zur Laufzeit
     data/discipline.json  data/educationalContext.json  data/intendedEndUserRole.json
@@ -370,17 +373,14 @@ class CallerContext:
 |---|---|
 | GWDG-Modelle verstehen `response_format: json_schema` oder `prompt_cache_key` nicht | Ausgabemodus und Cache-Key per Env; Validierung + Reparatur unabhängig vom Modus; Probe-Skript `scripts/probe_llm.py` für T4 |
 | Große Bäume überschreiten die Frist | Frist mit Teilergebnis + Warnung; Grenzen in `shape` (max. Tiefe 4, Hauptebene ≤ 20) |
-| Abnehmer des alten Formats brechen durch den Adapter | Vertragstest mit eingefrorener Struktur; E7 zur Freigabe |
+| Abnehmer des alten Formats brechen | alter Ablauf unverändert, Vertragstests für Format und Auth |
 | LLM erfindet keys oder ids bei Zuordnung/Feedback | Ausgaben gegen vorhandene keys/ids geprüft; Unbekanntes → `CHANGE_REJECTED`/`ASSIGN_FAILED` |
 | Vokabular-Snapshot veraltet | Skript zum Neubau, Datum im Snapshot, unbekannte URIs → Warnung, nicht Fehler |
 | Zwei Ports mit mehreren Workern | Master-Hook-Muster aus der prometheus-client-Doku; Test startet gunicorn real im Smoke-Test |
 
-## Offene Punkte (vor Umsetzung zu klären)
+## Offene Punkte
 
-1. **Dienst-ID**: `topic-tree` (bestehender b-api-Proxy-Eintrag) oder `topic-tree-generator` (Repo/Image)?
-   Vorschlag: `topic-tree`, das Image behält seinen Registry-Namen bis T6 umstellt.
-2. **E7** alter Endpunkt als Adapter auf v2 (Vorschlag) oder alter Code eingefroren?
-3. **E11** Format der Seitenmarken aus der Konvertierung.
+1. Format der Seitenmarken aus der Konvertierung (betrifft nur T4.1; bis dahin E11).
 
 Annahmen ohne Rückfrage (bei Widerspruch bitte melden): E9 Wörter; GitLab-CI bleibt der Deploy-Weg,
 GitHub Actions nur Lint/Test/Helm-Lint; Chart im Repo unter `deploy/helm/<dienst-id>`.
@@ -457,11 +457,11 @@ Schritt 0: `/better-coding-workflow` laden.
   fehlendem LLM in jedem Modus; `/metrics` liefert Prometheus-Text; Smoke-Test startet `gunicorn -c gunicorn.conf.py` mit
   2 Workern und prüft beide Ports (markiert `@pytest.mark.slow`).
 
-- [ ] **T1.11 App-Fabrik und alte Endpunkte auf neuer Basis**
-  Dateien: `app/main.py`, `app/api/deps.py`, `app/api/health.py`, `app/api/legacy.py`, `app/schemas/legacy.py`,
-  `main.py` (Shim), Tests; `src/` löschen, `.idea/` aus dem Repo.
+- [ ] **T1.11 App-Fabrik und alte Endpunkte umgezogen**
+  Dateien: `app/main.py`, `app/api/deps.py`, `app/api/health.py`, `app/api/legacy.py`, `app/legacy/*` (Logik aus `main.py`/`src/`
+  unverändert), `main.py` (Shim), Tests; `src/` löschen, `.idea/` aus dem Repo.
   Tests: `/openapi.json` enthält nur `/generate-topic-tree`, `/generate-collection-description`, `/v2/topic-tree` (Letzteres ab
-  T2.9); `/health` und `/_ping` 200, nicht in OpenAPI; Beschreibungsendpunkt nutzt `LLMClient.complete_text`.
+  T2.9); `/health` und `/_ping` 200, nicht in OpenAPI; alte Endpunkte reichen den Bearer weiter wie bisher.
   **Vertragstest** `tests/api/test_legacy_contract.py`: Antwortstruktur des alten Endpunkts mit Fake-LLM eingefroren
   (Schlüssel `metadata{title,description,target_audience,created_at,version,author}`, `collection[].{title,shorttitle,properties{cm_title,...},subcollections?}`).
   Alte Tests unter `tests/` an neue Pfade angepasst und grün.
@@ -544,12 +544,7 @@ Schritt 0: `/better-coding-workflow` laden.
   `structure`-Items → Kontextblock, daraus entstandene Knoten `suggested` (Fake-LLM markiert Quelle); Ende-zu-Ende mit
   Fake-LLM: 8×5×3 erzeugt ≤ 10 Aufrufe (gezählt).
 
-- [ ] **T3.4 Alter Endpunkt als Adapter** (nur nach Freigabe E7)
-  Dateien: `app/api/legacy_adapter.py`, `app/api/legacy.py`, Tests.
-  Intern nutzt die Pipeline `ShapePlan(depth, main: Range, children_per_level: list[Range])`; die v2-API füllt alle Ebenen mit
-  `shape.children`, der Adapter je Ebene eigene Zahlen.
-  Tests: Mapping `num_main_topics=5,num_subtopics=3,num_curriculum_topics=2` → `ShapePlan(depth=3, main=5–5, children_per_level=[3–3, 2–2])`;
-  `num_subtopics=0` → Tiefe 1; `num_curriculum_topics=0` → Tiefe 2; Vertragstest aus T1.11 weiterhin grün.
+- [x] **T3.4 entfällt** (E7: alter Endpunkt bleibt beim alten Ablauf).
 
 - [ ] **T3.5 Schritt describe_nodes** [P]
   Dateien: `app/pipeline/steps/describe_nodes.py`, `app/prompts/describe_nodes.md`, Tests.
