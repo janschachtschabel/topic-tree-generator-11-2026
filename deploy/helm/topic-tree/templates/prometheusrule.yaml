@@ -24,9 +24,9 @@ spec:
           labels: { severity: warning }
           annotations:
             summary: "Themenbaum-Dienst: P90 der Antwortzeit nahe der Frist"
-        - alert: TopicTreeBranchFailures
-          expr: sum(increase(topic_tree_warnings_total{code="BRANCH_FAILED"}[1h])) > {{ .Values.prometheusRule.branchFailuresPerHour }}
+        - alert: TopicTreeDescribeFailures
+          expr: sum(increase(topic_tree_warnings_total{code="DESCRIBE_FAILED"}[1h])) > {{ .Values.prometheusRule.describeFailuresPerHour }}
           labels: { severity: info }
           annotations:
-            summary: "Themenbaum-Dienst: viele Äste konnten nicht erzeugt werden"
+            summary: "Themenbaum-Dienst: viele Beschreibungs-Batches sind fehlgeschlagen"
 {{- end }}

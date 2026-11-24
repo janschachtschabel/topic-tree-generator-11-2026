@@ -113,12 +113,12 @@ serviceMonitor:
 ## @param prometheusRule.enabled Create alert rules (Prometheus Operator)
 ## @param prometheusRule.llmErrorRatio Alert when this share of LLM calls fails over 10 minutes
 ## @param prometheusRule.slowRequestSeconds Alert when p90 request duration exceeds this
-## @param prometheusRule.branchFailuresPerHour Alert when more branches fail per hour
+## @param prometheusRule.describeFailuresPerHour Alert when more description batches (DESCRIBE_FAILED) fail per hour
 prometheusRule:
   enabled: false
   llmErrorRatio: 0.2
   slowRequestSeconds: 240
-  branchFailuresPerHour: 20
+  describeFailuresPerHour: 20
 
 ## @section Autoscaling
 ## @param autoscaling.enabled Create a HorizontalPodAutoscaler

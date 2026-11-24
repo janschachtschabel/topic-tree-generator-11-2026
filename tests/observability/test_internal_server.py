@@ -61,11 +61,11 @@ def test_ready_in_standalone_mode_with_openai_key(serve) -> None:
 
 def test_metrics_are_exposed_in_prometheus_format(serve) -> None:
     metrics.observe_request("v2.topic_tree", 200, 1.5)
-    metrics.count_warning("BRANCH_FAILED")
+    metrics.count_warning("DESCRIBE_FAILED")
     status, body = get(serve(Settings(_env_file=None)) + "/metrics")
     assert status == 200
     assert 'topic_tree_requests_total{route="v2.topic_tree",status="200"}' in body
-    assert 'topic_tree_warnings_total{code="BRANCH_FAILED"}' in body
+    assert 'topic_tree_warnings_total{code="DESCRIBE_FAILED"}' in body
 
 
 def test_unknown_internal_path_is_404(serve) -> None:

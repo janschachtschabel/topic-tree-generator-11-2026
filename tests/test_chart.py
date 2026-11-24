@@ -99,7 +99,7 @@ def test_optional_parts_render_when_enabled() -> None:
     container = docs["Deployment"]["spec"]["template"]["spec"]["containers"][0]
     assert container["envFrom"] == [{"secretRef": {"name": "topic-tree-secrets"}}]
     alerts = [r["alert"] for g in docs["PrometheusRule"]["spec"]["groups"] for r in g["rules"]]
-    assert {"TopicTreeLLMErrors", "TopicTreeSlowRequests", "TopicTreeBranchFailures"} <= set(alerts)
+    assert {"TopicTreeLLMErrors", "TopicTreeSlowRequests", "TopicTreeDescribeFailures"} <= set(alerts)
 
 
 @needs_helm

@@ -158,7 +158,7 @@ Alles zusätzlich, nichts ersetzt:
 
 - `metadata.generation.structure`: `{ "order": "...", "levels": ["Themenfeld", "Thema", ...], "source": "hint" | "detected" }`
 - `metadata.generation.usage`: `{ "llm_calls", "prompt_tokens", "cached_tokens", "completion_tokens", "duration_ms" }`
-- `warnings[]`: `{ "code", "message", "key"?, "step"? }` – Codes: `BRANCH_FAILED`, `DEADLINE_EXCEEDED`,
+- `warnings[]`: `{ "code", "message", "key"?, "step"? }` – Codes: `DESCRIBE_FAILED`, `DEADLINE_EXCEEDED`,
   `SHAPE_SINGLE_CHILD`, `SHAPE_DEPTH`, `SHAPE_WIDTH`, `DUPLICATE_TITLE`, `DESCRIPTION_LENGTH`,
   `DESCRIPTION_MISSING`, `GENERIC_TITLE`, `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`,
   `VOCAB_UNKNOWN`.
