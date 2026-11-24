@@ -78,3 +78,11 @@ def test_b_api_without_route_or_model_is_503_with_a_hint(ctx: CallerContext) -> 
         resolve_backend(ctx, settings(b_api_dev_key="dev-key"))
     assert (err.value.status, err.value.code) == (503, "LLM_NOT_CONFIGURED")
     assert "B_API_ROUTE" in err.value.message and "B_API_MODEL" in err.value.message
+
+
+@pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
+def test_model_without_path_is_503_naming_the_missing_path(ctx: CallerContext) -> None:
+    with pytest.raises(ApiError) as err:
+        resolve_backend(ctx, settings(b_api_dev_key="dev-key", b_api_model="gpt-6-luna"))
+    assert (err.value.status, err.value.code) == (503, "LLM_NOT_CONFIGURED")
+    assert "B_API_MODEL_PATH" in err.value.message

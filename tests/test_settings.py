@@ -144,8 +144,9 @@ def test_b_api_model_option_needs_its_path_which_is_normalized() -> None:
     s = make(B_API_MODEL="gpt-6-luna", B_API_MODEL_PATH="api/v1/llm/openai")
     assert s.b_api_model_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
     assert s.b_api_router_url.endswith("/api/v1/llm/router/")
-    with pytest.raises(ValidationError, match="B_API_MODEL_PATH"):
-        make(B_API_MODEL="gpt-6-luna")
+    # An incomplete model option must not stop the service from starting (crash loop in Docker); the request
+    # answers 503 with a hint instead (see tests/llm/test_backend.py).
+    assert make(B_API_MODEL="gpt-6-luna").b_api_model_url is None
     # With a route the model is only the fallback, so its path is not needed yet.
     assert make(B_API_ROUTE="topic-tree-generator", B_API_MODEL="gpt-6-luna").b_api_route == "topic-tree-generator"
     assert make(B_API_MODEL="", B_API_MODEL_PATH="").b_api_model is None

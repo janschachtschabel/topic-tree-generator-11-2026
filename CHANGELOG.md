@@ -27,6 +27,7 @@ Changed (operators)
 - `B_API_BASE_URL` may now be the plain base URL; the old full router URL still works.
 - b-api: a route at the router (`B_API_ROUTE`) is used first whenever it is set; otherwise v2 uses a single model
   (`B_API_MODEL`, e.g. `gpt-6-luna`) at the b-api endpoint for single models (`B_API_MODEL_PATH`).
+  An incomplete option never stops the service from starting (requests answer 503 with a hint).
   `B_API_ROUTE` no longer defaults to `topic-tree-generator` (that route does not exist yet); the frozen legacy
   endpoints keep it as their fallback.
   An upstream 400/404/422 now explains that route/model and endpoint probably do not match.

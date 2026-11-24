@@ -131,7 +131,7 @@ All settings are read from environment variables or `.env` and have defaults (se
 | `B_API_BASE_URL` | `https://b-api.staging.openeduhub.net` | Base URL of the b-api gateway (router path `/api/v1/llm/router/` is appended automatically). |
 | `B_API_ROUTE` | *(empty)* | Option 1: route name at the b-api LLM router (`/api/v1/llm/router/`), e.g. `topic-tree-generator`. **Used first whenever set** (legacy alias: `LLM_MODEL`). The frozen legacy endpoints fall back to `topic-tree-generator` when it is empty. |
 | `B_API_MODEL` | *(empty)* | Option 2: a single model (e.g. `gpt-6-luna`), used only while `B_API_ROUTE` is empty. |
-| `B_API_MODEL_PATH` | *(empty)* | Path of the b-api's OpenAI-compatible endpoint for single models (the part before `/chat/completions`); required for option 2. Without route and model, b-api requests fail with `503 LLM_NOT_CONFIGURED`. |
+| `B_API_MODEL_PATH` | *(empty)* | Path of the b-api's OpenAI-compatible endpoint for single models (the part before `/chat/completions`); required for option 2. A missing path or neither route nor model never stops the service from starting: b-api requests answer `503 LLM_NOT_CONFIGURED` naming what is missing, and `/ready` reports `B_API_MODEL_PATH_MISSING`. |
 | `B_API_DELEGATION_HEADER` | *(empty)* | Custom header name if the b-api proxy sends the delegation token outside `Authorization`. |
 | `B_API_DEV_KEY` | *(empty)* | Local developer key for direct b-api staging tests when `OPENAI_API_KEY` is not set. |
 | `OPENAI_API_KEY` | *(empty)* | API key for standalone OpenAI or OpenAI-compatible endpoints. |

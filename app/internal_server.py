@@ -15,9 +15,11 @@ from app.vocab.labels import snapshot_date
 
 
 def readiness(settings: Settings) -> tuple[bool, str | None]:
-    """Ready unless the service can never answer: standalone mode without any LLM configured."""
+    """Ready unless the service can never answer: no LLM in standalone mode, or an incomplete b-api model option."""
     if settings.service_mode == "standalone" and not (settings.openai_api_key or settings.b_api_dev_key):
         return False, "LLM_NOT_CONFIGURED"
+    if not settings.openai_api_key and settings.b_api_model_incomplete:
+        return False, "B_API_MODEL_PATH_MISSING"
     return True, None
 
 

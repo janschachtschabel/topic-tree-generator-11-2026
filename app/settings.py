@@ -126,14 +126,6 @@ class Settings(BaseSettings):
             raise ValueError(f"PUBLIC_PORT and INTERNAL_PORT must differ (both are {self.public_port})")
         return self
 
-    @model_validator(mode="after")
-    def _model_needs_path(self) -> Self:
-        if self.b_api_model and not self.b_api_route and not self.b_api_model_path:
-            raise ValueError(
-                "B_API_MODEL is set but B_API_MODEL_PATH (the b-api endpoint for single models) is missing"
-            )
-        return self
-
     @field_validator("b_api_model_path")
     @classmethod
     def _normalize_model_path(cls, value: str | None) -> str | None:
@@ -143,6 +135,11 @@ class Settings(BaseSettings):
         if not _LLM_PATH.match(path):
             raise ValueError(f"B_API_MODEL_PATH must be a plain path such as /api/v1/llm/<endpoint>/, got {value!r}")
         return path
+
+    @property
+    def b_api_model_incomplete(self) -> bool:
+        """Option 2 chosen (no route) but its endpoint path is missing; requests then answer 503 with a hint."""
+        return bool(self.b_api_model and not self.b_api_route and not self.b_api_model_path)
 
     @property
     def legacy_route(self) -> str:

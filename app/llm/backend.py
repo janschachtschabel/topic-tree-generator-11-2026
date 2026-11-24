@@ -32,6 +32,13 @@ def _b_api_target(settings: Settings) -> tuple[str, str]:
         return settings.b_api_router_url, settings.b_api_route
     if settings.b_api_model and settings.b_api_model_url:
         return settings.b_api_model_url, settings.b_api_model
+    if settings.b_api_model_incomplete:
+        raise ApiError(
+            503,
+            "LLM_NOT_CONFIGURED",
+            f"B_API_MODEL={settings.b_api_model} ist gesetzt, aber B_API_MODEL_PATH (Pfad des b-api-Endpunkts für "
+            "einzelne Modelle) fehlt.",
+        )
     raise ApiError(
         503,
         "LLM_NOT_CONFIGURED",
