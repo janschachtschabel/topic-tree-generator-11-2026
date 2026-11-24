@@ -93,6 +93,11 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         await refiner.apply(feedback.changes, ChangeSource.feedback_changes)
     if feedback.text:
         await refiner.apply_text(feedback.text)
-    targets = [node for node, _, _ in walk(roots) if node.key in refiner.refresh or not node.description]
+    protected = protected_keys(roots, set(feedback.locked))
+    targets = [
+        node
+        for node, _, _ in walk(roots)
+        if node.key not in protected and (node.key in refiner.refresh or not node.description)
+    ]
     await describe_nodes(targets, roots, rc, context=rc.context, description_length=req.hints.description_length)
     return result

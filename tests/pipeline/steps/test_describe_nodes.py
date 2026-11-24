@@ -61,3 +61,10 @@ async def test_nothing_to_describe_makes_no_call() -> None:
     llm = FakeLLM({"describe_nodes": echo})
     await describe_nodes([], tree(1), rc(llm), context="CTX")
     assert llm.calls == []
+
+
+async def test_unknown_keys_from_llm_are_ignored_and_reported() -> None:
+    roots = tree(2)
+    context = rc(FakeLLM({"describe_nodes": echo}))
+    await describe_nodes([roots[0]], roots, context, context="CTX")
+    assert "DESCRIBE_UNKNOWN_KEY" in [w.code for w in context.warnings]

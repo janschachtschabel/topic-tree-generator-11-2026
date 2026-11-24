@@ -59,6 +59,31 @@ def test_item_use_defaults_depend_on_use_case() -> None:
             {"mode": "create", "use_case": "document", "frame": {}, "items": [{**ex.ITEM_DOC, "fulltext": None}]},
             "MISSING_INPUT",
         ),
+        (
+            {
+                "mode": "create",
+                "use_case": "document",
+                "frame": {},
+                "items": [{**ex.ITEM_DOC, "fulltext": {"format": "markdown", "text": "   "}}],
+            },
+            "MISSING_INPUT",
+        ),
+        (
+            {
+                "mode": "create",
+                "use_case": "contents",
+                "frame": {},
+                "items": [ex.ITEM_CONTENT],
+            },
+            "MISSING_INPUT",
+        ),
+        (
+            {
+                **ex.CONTENTS,
+                "items_ref": "https://files.example.org/items.json",
+            },
+            "INVALID_INPUT",
+        ),
         ({**ex.TOPIC, "options": {"assign_only": True}}, "INVALID_OPTION"),
         ({**ex.CONTENTS, "items": [ex.content_item("a", "A"), ex.content_item("a", "B")]}, "DUPLICATE_ID"),
         (
@@ -158,7 +183,7 @@ def test_text_fields_are_length_limited() -> None:
 
 
 def test_loaded_items_may_exceed_the_inline_limit_but_are_still_checked() -> None:
-    items = [ex.content_item(f"c{i}", f"T{i}") for i in range(4)]
+    items = [{"id": f"c{i}", "properties": {"cm:title": [f"T{i}"]}} for i in range(4)]
     small = Settings(_env_file=None, items_inline_max=3)
     check_request(parse({**ex.CONTENTS, "items": items}), small, loaded=True)
     with pytest.raises(ApiError) as err:

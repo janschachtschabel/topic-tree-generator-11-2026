@@ -43,11 +43,18 @@ async def _describe_batch(
     tokens = 600 + len(batch) * (int(words * 1.6) + 80)
     result = await rc.llm.complete_json(STEP, f"{prefix}{NODES_MARKER}\n{lines}", DescribeResult, max_tokens=tokens)
     by_key = {node.key: node for node in batch}
+    unknown = 0
     for item in result.nodes:
         node = by_key.get(item.key)
         if node is not None:
             node.description = item.description.strip()
             node.keywords = item.keywords
+        else:
+            unknown += 1
+    if unknown:
+        rc.warn(
+            "DESCRIBE_UNKNOWN_KEY", f"{unknown} unbekannte Knotenschlüssel bei Beschreibungen verworfen.", step=STEP
+        )
 
 
 async def describe_nodes(

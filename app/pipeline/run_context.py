@@ -2,7 +2,7 @@
 
 import time
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel
 
@@ -28,6 +28,7 @@ class RunContext:
     deadline: float
     # Request context block (identical prefix of every prompt in this request); set by the orchestrator.
     context: str = ""
+    mode: Literal["bapi", "standalone"] = "standalone"
     warnings: list[ServiceWarning] = field(default_factory=list)
 
     def remaining(self) -> float:

@@ -47,8 +47,10 @@ def _to_change(change: FolderChange) -> Change | None:
         return None
 
 
-async def improve_folders(roots: list[Node], titles: dict[str, str], rc: RunContext) -> ApplyResult:
-    prompt = render(STEP, context=rc.context, folders=render_folders(roots, titles))
+async def improve_folders(
+    roots: list[Node], titles: dict[str, str], rc: RunContext, *, inputs_block: str = ""
+) -> ApplyResult:
+    prompt = render(STEP, context=rc.context, inputs=inputs_block, folders=render_folders(roots, titles))
     result = await rc.llm.complete_json(STEP, prompt, ImproveResult, max_tokens=3000)
     changes = [c for c in (_to_change(raw) for raw in result.changes) if c is not None]
     if len(changes) < len(result.changes):

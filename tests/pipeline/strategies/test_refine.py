@@ -174,3 +174,26 @@ async def test_split_divides_a_node_by_hint() -> None:
     assert by_key(resp.collection, "k-kraft") in resp.collection[1].subcollections
     assert [(c.op, c.key) for c in resp.changes] == [("split", "k-mechanik")]
     assert "Kräfte vs Bewegung" in llm.prompts("split_node")[0]
+
+
+async def test_locked_node_without_description_is_not_described() -> None:
+    current = copy.deepcopy(CURRENT)
+    current["collection"][0]["properties"]["cm:description"] = []
+    req = request({"changes": [{"op": "rename", "key": "k-echo", "title": "Nachhall"}], "locked": ["k-optik"]})
+    req = req.model_copy(update={"current_tree": req.current_tree.model_validate(current)})
+    resp, llm = await run(req, {})
+    described = "\n".join(llm.prompts("describe_nodes"))
+    assert "k-optik" not in described
+    assert by_key(resp.collection, "k-optik").properties.first("cm:description") is None
+
+
+async def test_removed_node_contents_are_not_reassigned_or_duplicated() -> None:
+    assign = {"items": [{"id": "c1", "nodes": [{"key": "k-optik", "confidence": 0.9}]}]}
+    req = request(
+        {"changes": [{"op": "remove", "key": "k-akustik"}]},
+        items=[ex.content_item("c1", "Schall")],
+    )
+    resp, llm = await run(req, {"assign_contents": assign})
+    assert llm.prompts("assign_contents") == []
+    assert [u.id for u in resp.unassigned] == ["c1"]
+    assert all(c.id != "c1" for n in resp.collection for c in n.contents)

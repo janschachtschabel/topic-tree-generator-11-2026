@@ -3,6 +3,7 @@
 from app.domain.diff import FOLDER_SEPARATOR
 from app.domain.keys import assign_missing_keys
 from app.domain.tree import Node, walk
+from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.describe_nodes import describe_nodes
@@ -47,7 +48,7 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     titles = item_titles(req.items or [])
     changes = []
     if req.options.improve:
-        applied = await improve_folders(roots, titles, rc)
+        applied = await improve_folders(roots, titles, rc, inputs_block=structure_inputs_block(req))
         changes = applied.applied
         assign_missing_keys(roots)
     extra = {

@@ -106,3 +106,19 @@ async def test_end_to_end_status_against_folders_and_leftover_assignment() -> No
     linsen = next(n for n in optik.subcollections if n.key == "k-linsen")
     assert [c.id for c in linsen.contents] == ["c3", "c9"]
     assert "c1" not in llm.prompts("assign_contents")[0]
+
+
+async def test_improve_includes_supplementary_structure_items() -> None:
+    llm = FakeLLM({"improve_folders": {"changes": []}, "describe_nodes": describe})
+    items = [
+        *ex.FOLDER_ITEMS,
+        {
+            "id": "d1",
+            "use": ["structure"],
+            "properties": {"cm:title": ["Stoffverteilungsplan Optik"]},
+            "fulltext": {"format": "markdown", "text": "## Farben und Spektrum"},
+        },
+    ]
+    await build(req(items=items, options={"improve": True}), rc(llm))
+    assert "Stoffverteilungsplan Optik" in llm.prompts("improve_folders")[0]
+    assert "Farben und Spektrum" in llm.prompts("improve_folders")[0]

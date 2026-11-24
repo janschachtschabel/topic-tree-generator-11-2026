@@ -41,6 +41,7 @@ Laufzeit: synchron, je nach Baumgröße 10 bis 120 Sekunden.
     responses={
         200: {"model": TopicTreeResponseV2, "description": "Themenbaum"},
         401: {"description": "Fehlende oder ungültige Anmeldung", **_ERROR},
+        403: {"description": "Fehlende Berechtigung an der b-api", **_ERROR},
         422: {"description": "Ungültige oder unvollständige Anfrage", **_ERROR},
         502: {"description": "Sprachmodell lieferte keine verwertbare Antwort", **_ERROR},
         503: {"description": "Sprachmodell nicht erreichbar oder nicht konfiguriert", **_ERROR},

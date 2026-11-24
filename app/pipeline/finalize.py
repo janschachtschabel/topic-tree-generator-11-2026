@@ -24,6 +24,7 @@ from app.schemas.response_v2 import (
     Usage,
 )
 from app.version import service_version
+from app.vocab.labels import label
 
 _VERSION = re.compile(r"^v(\d+)$")
 _TEACHER = "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
@@ -104,7 +105,7 @@ def _feedback_history(req: TopicTreeRequestV2, version: str) -> list[FeedbackEnt
 
 def _audience(frame: Frame) -> str:
     roles = frame.intended_end_user_role_uri or [_TEACHER]
-    return ", ".join(dict.fromkeys(_AUDIENCE.get(r, r.rsplit("/", 1)[-1]) for r in roles))
+    return ", ".join(dict.fromkeys(_AUDIENCE.get(r) or label(r) or r.rsplit("/", 1)[-1] for r in roles))
 
 
 def finalize(

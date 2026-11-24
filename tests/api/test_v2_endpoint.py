@@ -116,3 +116,21 @@ def test_exported_json_schemas_are_current() -> None:
         path = Path(SCHEMA_DIR) / name
         assert path.exists(), f"run: uv run python -m scripts.export_schemas ({name} missing)"
         assert json.loads(path.read_text()) == schema, f"run: uv run python -m scripts.export_schemas ({name} stale)"
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_status", "expected_code"), [(401, 401, "UNAUTHORIZED"), (403, 403, "FORBIDDEN")]
+)
+async def test_bapi_upstream_auth_errors_return_4xx(status: int, expected_status: int, expected_code: str) -> None:
+    from app.errors import ApiError
+    from app.llm.client import LLMStepError
+
+    req = TopicTreeRequestV2.model_validate(copy.deepcopy(ex.TOPIC))
+
+    async def fail_auth(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
+        raise LLMStepError("plan_structure", "http_error", status)
+
+    rc = RunContext(llm=FakeLLM(), settings=Settings(_env_file=None), deadline=time.monotonic() + 60, mode="bapi")
+    with pytest.raises(ApiError) as err:
+        await orchestrator.run(req, rc, {UseCase.topic: fail_auth})
+    assert (err.value.status, err.value.code) == (expected_status, expected_code)

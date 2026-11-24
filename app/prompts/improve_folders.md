@@ -1,5 +1,5 @@
 {{context}}
-
+{{inputs}}
 ## Ordnerbaum
 {{folders}}
 

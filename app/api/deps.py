@@ -29,4 +29,4 @@ def run_context(request: Request) -> RunContext:
         trace=current_trace.get(),
         on_call=metrics.observe_llm,
     )
-    return RunContext(llm=llm, settings=settings, deadline=deadline)
+    return RunContext(llm=llm, settings=settings, deadline=deadline, mode=caller.mode)

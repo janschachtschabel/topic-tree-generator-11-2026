@@ -94,3 +94,13 @@ def test_next_version() -> None:
     assert next_version("v1") == ("v2", "v1")
     assert next_version("v9") == ("v10", "v9")
     assert next_version("1.2.6") == ("v2", "1.2.6")
+
+
+def test_audience_resolves_other_oeh_roles_from_vocab() -> None:
+    data = copy.deepcopy(ex.TOPIC)
+    data["frame"]["intended_end_user_role_uri"] = [
+        "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/parent",
+        "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/manager",
+    ]
+    out = run(data)
+    assert out["metadata"]["target_audience"] == "Eltern, Verwaltung"

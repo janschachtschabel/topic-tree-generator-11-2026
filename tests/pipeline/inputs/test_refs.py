@@ -127,3 +127,48 @@ async def test_invalid_items_document_is_rejected(serve) -> None:
 async def test_request_without_refs_is_returned_unchanged() -> None:
     req = TopicTreeRequestV2.model_validate(copy.deepcopy(ex.DOCUMENT))
     assert await resolve_refs(req, ALLOWED) is req
+
+
+async def test_malformed_content_length_header_does_not_crash(serve) -> None:
+    serve(lambda r: httpx.Response(200, content=b"ok", headers={"Content-Length": "not-a-number"}))
+    assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "ok"
+
+
+async def test_fetched_fulltext_exceeding_model_limit_raises_ref_too_large(serve) -> None:
+    big = "a" * (refs.MAX_FULLTEXT_CHARS + 1)
+    serve(lambda r: httpx.Response(200, text=big))
+    data = copy.deepcopy(ex.DOCUMENT)
+    data["items"][0]["fulltext"] = {"format": "markdown", "ref": "https://files.example.org/big.md"}
+    req = TopicTreeRequestV2.model_validate(data)
+    with pytest.raises(ApiError) as err:
+        await resolve_refs(
+            req, Settings(_env_file=None, ref_allowed_hosts=["files.example.org"], ref_max_bytes=10 * 1024 * 1024)
+        )
+    assert err.value.code == "REF_TOO_LARGE"
+
+
+async def test_resolve_refs_caps_concurrent_fetches(monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    active = 0
+    max_active = 0
+
+    class SlowTransport(httpx.AsyncBaseTransport):
+        async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+            nonlocal active, max_active
+            active += 1
+            max_active = max(max_active, active)
+            try:
+                await asyncio.sleep(0.02)
+                return httpx.Response(200, text="# Ok")
+            finally:
+                active -= 1
+
+    monkeypatch.setattr(refs, "client_factory", lambda: httpx.AsyncClient(transport=SlowTransport()))
+    items = [
+        {"id": f"d{i}", "use": ["structure"], "fulltext": {"ref": f"https://files.example.org/{i}.md"}}
+        for i in range(20)
+    ]
+    data = {**copy.deepcopy(ex.DOCUMENT), "items": items}
+    await resolve_refs(TopicTreeRequestV2.model_validate(data), ALLOWED)
+    assert 1 <= max_active <= refs.MAX_CONCURRENT_REFS

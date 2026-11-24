@@ -41,7 +41,16 @@ STRATEGIES: dict[UseCase, Strategy] = {
 _RETRYABLE = {429, 500, 502, 503, 504}
 
 
-def _llm_unavailable(error: LLMStepError) -> ApiError:
+def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
+    if mode == "bapi" and error.status == 401:
+        return ApiError(
+            401,
+            "UNAUTHORIZED",
+            "Delegations-Token von der b-api abgelehnt (abgelaufen oder außerhalb der Scopes).",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if mode == "bapi" and error.status == 403:
+        return ApiError(403, "FORBIDDEN", "Fehlende Berechtigung an der b-api für diesen LLM-Aufruf.")
     retry = error.status in _RETRYABLE or error.reason in {"timeout", "connection"}
     return ApiError(
         503 if retry else 502,
@@ -58,7 +67,12 @@ async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         return
     assign_missing_keys(result.roots)
     placed = {ref.id for node, _, _ in walk(result.roots) for ref in node.contents}
-    pending = [i for i in req.items or [] if ItemUse.content in req.effective_use(i) and i.id not in placed]
+    already_unassigned = {u.id for u in result.unassigned}
+    pending = [
+        i
+        for i in req.items or []
+        if ItemUse.content in req.effective_use(i) and i.id not in placed and i.id not in already_unassigned
+    ]
     if pending:
         result.unassigned.extend(await assign_contents(result.roots, pending, rc, req.options))
 
@@ -108,7 +122,7 @@ async def run(
         result = await strategy(req, rc)
         await _assign(req, rc, result)
     except LLMStepError as error:
-        raise _llm_unavailable(error) from error
+        raise _llm_unavailable(error, rc.mode) from error
     if rc.expired() and not any(w.code == "DEADLINE_EXCEEDED" for w in rc.warnings):
         rc.warn("DEADLINE_EXCEEDED", "Die Frist ist abgelaufen; der Baum ist unvollständig.")
     _post_process(req, rc, result)

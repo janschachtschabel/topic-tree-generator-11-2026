@@ -1,5 +1,6 @@
 """Cross-field input requirements per use case (Spec: "Use Case als Wert"). Fails with 422 instead of guessing."""
 
+from collections import Counter
 from collections.abc import Iterator
 
 from app.errors import ApiError
@@ -19,19 +20,27 @@ def _folder_item_ids(folders: list[FolderNode]) -> Iterator[str]:
 
 
 def _check_items(req: TopicTreeRequestV2, settings: Settings, loaded: bool) -> None:
+    if not loaded and req.items and req.items_ref is not None:
+        raise ApiError(422, "INVALID_INPUT", "Nur 'items' oder 'items_ref' angeben, nicht beides.")
     items = req.items or []
     if not loaded and len(items) > settings.items_inline_max:
         raise ApiError(
             422, "ITEMS_TOO_LARGE", f"Mehr als {settings.items_inline_max} Einträge inline; bitte items_ref nutzen."
         )
-    ids = [item.id for item in items]
-    duplicates = sorted({i for i in ids if ids.count(i) > 1})
+    counts = Counter(item.id for item in items)
+    duplicates = sorted(item_id for item_id, count in counts.items() if count > 1)
     if duplicates:
         raise ApiError(422, "DUPLICATE_ID", "Item-ids müssen eindeutig sein.", details={"ids": duplicates[:20]})
     if req.folders and not req.items_ref:
-        unknown = sorted(set(_folder_item_ids(req.folders)) - set(ids))
+        unknown = sorted(set(_folder_item_ids(req.folders)) - set(counts))
         if unknown:
             raise ApiError(422, "UNKNOWN_ITEM", "Ordner verweisen auf unbekannte Items.", details={"ids": unknown[:20]})
+
+
+def _has_fulltext(item) -> bool:
+    if not item.fulltext:
+        return False
+    return item.fulltext.ref is not None or bool(item.fulltext.text and item.fulltext.text.strip())
 
 
 def _check_create_inputs(req: TopicTreeRequestV2) -> None:
@@ -40,11 +49,14 @@ def _check_create_inputs(req: TopicTreeRequestV2) -> None:
         raise _missing("use_case 'topic' braucht 'topic'.")
     if req.use_case == UseCase.folders and not req.folders:
         raise _missing("use_case 'folders' braucht 'folders'.")
-    if req.use_case == UseCase.contents and not has_items:
-        raise _missing("use_case 'contents' braucht mindestens einen Eintrag in 'items' oder 'items_ref'.")
+    if req.use_case == UseCase.contents:
+        if not has_items:
+            raise _missing("use_case 'contents' braucht mindestens einen Eintrag in 'items' oder 'items_ref'.")
+        if not req.items_ref and not any(ItemUse.structure in req.effective_use(i) for i in req.items or []):
+            raise _missing("use_case 'contents' braucht mindestens ein Item mit use 'structure'.")
     if req.use_case == UseCase.document and not req.items_ref:
         structure_docs = [
-            item for item in req.items or [] if ItemUse.structure in req.effective_use(item) and item.fulltext
+            item for item in req.items or [] if ItemUse.structure in req.effective_use(item) and _has_fulltext(item)
         ]
         if not structure_docs:
             raise _missing("use_case 'document' braucht ein Strukturdokument (use: structure) mit Volltext.")
