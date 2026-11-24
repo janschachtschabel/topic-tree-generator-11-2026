@@ -26,6 +26,8 @@ class RunContext:
     llm: LLM
     settings: Settings
     deadline: float
+    # Request context block (identical prefix of every prompt in this request); set by the orchestrator.
+    context: str = ""
     warnings: list[ServiceWarning] = field(default_factory=list)
 
     def remaining(self) -> float:

@@ -6,38 +6,30 @@ keys, status, shape checks) happens here so it is done once and the same way.
 
 import time
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
 
 from app.domain.diff import mark_status_against_folders, mark_status_against_previous
 from app.domain.keys import assign_missing_keys
 from app.domain.shape_rules import ShapePlan, check_descriptions, check_shape, dedup_titles, normalize_shorttitles
-from app.domain.tree import Node, from_tree_in
+from app.domain.tree import from_tree_in
 from app.errors import ApiError
 from app.llm.client import LLMStepError
+from app.pipeline.context_block import build_context_block
 from app.pipeline.finalize import FinalizeInput, finalize
 from app.pipeline.input_checks import check_request
+from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
+from app.pipeline.strategies import topic
 from app.schemas.common import Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
-from app.schemas.response_v2 import ChangeRecord, Question, StructureInfo, TopicTreeResponseV2, Unassigned
+from app.schemas.response_v2 import TopicTreeResponseV2
 
-
-@dataclass
-class StrategyResult:
-    roots: list[Node]
-    title: str
-    description: str = ""
-    structure: StructureInfo | None = None
-    unassigned: list[Unassigned] = field(default_factory=list)
-    changes: list[ChangeRecord] = field(default_factory=list)
-    questions: list[Question] = field(default_factory=list)
-    shape_checked: bool = True
+__all__ = ["STRATEGIES", "Strategy", "StrategyResult", "run"]
 
 
 Strategy = Callable[[TopicTreeRequestV2, RunContext], Awaitable[StrategyResult]]
 
-# Filled by the strategy modules (phase 3/4); a missing entry answers 501.
-STRATEGIES: dict[UseCase, Strategy] = {}
+# Use cases without an entry answer 501 until their strategy exists.
+STRATEGIES: dict[UseCase, Strategy] = {UseCase.topic: topic.build}
 
 _RETRYABLE = {429, 500, 502, 503, 504}
 
@@ -83,6 +75,9 @@ async def run(
     strategy = (strategies if strategies is not None else STRATEGIES).get(req.use_case)
     if strategy is None:
         raise ApiError(501, "NOT_IMPLEMENTED", f"use_case '{req.use_case}' ist noch nicht umgesetzt.")
+    rc.context, unknown = build_context_block(req)
+    for uri in unknown:
+        rc.warn("VOCAB_UNKNOWN", f"Unbekannter Vokabularwert: {uri}", step="context")
     try:
         result = await strategy(req, rc)
     except LLMStepError as error:
