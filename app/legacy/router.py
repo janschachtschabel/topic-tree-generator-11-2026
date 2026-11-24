@@ -204,7 +204,7 @@ async def generate_topic_tree(
                 special_instructions=special_instructions,
                 context_instructions=context_instructions,
             ),
-            model=settings.b_api_route,
+            model=settings.legacy_route,
             max_description_length=topic_tree_request.max_description_length,
             require_list=False,
         )
@@ -238,7 +238,7 @@ async def generate_topic_tree(
             _task = generate_structured_text(
                 client=client,
                 prompt=_subtopic_prompt,
-                model=settings.b_api_route,
+                model=settings.legacy_route,
                 max_description_length=topic_tree_request.max_description_length,
             )
             sub_topic_tasks.append(_task)
@@ -278,7 +278,7 @@ async def generate_topic_tree(
                 _lp_task = generate_structured_text(
                     client=client,
                     prompt=_lp_prompt,
-                    model=settings.b_api_route,
+                    model=settings.legacy_route,
                     max_description_length=topic_tree_request.max_description_length,
                 )
                 lp_tasks.append(_lp_task)
@@ -409,7 +409,7 @@ async def generate_collection_description(
         )
         _ts_before: datetime = datetime.now()
         response = await client.chat.completions.create(
-            model=settings.b_api_route,
+            model=settings.legacy_route,
             messages=[
                 _system_prompt,
                 _user_prompt,

@@ -15,7 +15,9 @@ def test_defaults_match_the_plan(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.service_id == "topic-tree"
     assert s.service_mode == "auto"
     assert s.service_api_keys == []
-    assert s.b_api_route == "topic-tree-generator"
+    assert s.b_api_route is None and s.b_api_model is None
+    # The frozen legacy endpoints keep their former default route.
+    assert s.legacy_route == "topic-tree-generator"
     assert s.llm_param_family == "common"
     assert s.llm_output_mode == "json_schema"
     assert s.llm_send_prompt_cache_key == "auto"
@@ -144,6 +146,8 @@ def test_b_api_model_option_needs_its_path_which_is_normalized() -> None:
     assert s.b_api_router_url.endswith("/api/v1/llm/router/")
     with pytest.raises(ValidationError, match="B_API_MODEL_PATH"):
         make(B_API_MODEL="gpt-6-luna")
+    # With a route the model is only the fallback, so its path is not needed yet.
+    assert make(B_API_ROUTE="topic-tree-generator", B_API_MODEL="gpt-6-luna").b_api_route == "topic-tree-generator"
     assert make(B_API_MODEL="", B_API_MODEL_PATH="").b_api_model is None
 
 

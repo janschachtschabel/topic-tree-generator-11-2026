@@ -27,10 +27,16 @@ def _cache_key_flag(kind: BackendKind, settings: Settings) -> bool:
 
 
 def _b_api_target(settings: Settings) -> tuple[str, str]:
-    """(endpoint, model): a single model (B_API_MODEL) at its endpoint, otherwise the route at the router."""
+    """(endpoint, model): the route at the router when set, otherwise the single model at its endpoint."""
+    if settings.b_api_route:
+        return settings.b_api_router_url, settings.b_api_route
     if settings.b_api_model and settings.b_api_model_url:
         return settings.b_api_model_url, settings.b_api_model
-    return settings.b_api_router_url, settings.b_api_route
+    raise ApiError(
+        503,
+        "LLM_NOT_CONFIGURED",
+        "Für die b-api ist weder eine Route (B_API_ROUTE) noch ein Modell (B_API_MODEL mit B_API_MODEL_PATH) gesetzt.",
+    )
 
 
 def resolve_backend(ctx: CallerContext, settings: Settings) -> LLMBackend:

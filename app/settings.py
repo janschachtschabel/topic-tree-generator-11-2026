@@ -12,6 +12,7 @@ _HOSTNAME = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$"
 )
 
+_LEGACY_ROUTE = "topic-tree-generator"
 _LLM_PATH = re.compile(r"^/(?:[A-Za-z0-9_-]+/)+$")
 
 CommaList = Annotated[list[str], NoDecode]
@@ -28,12 +29,13 @@ class Settings(BaseSettings):
     domain: str | None = None
 
     b_api_base_url: str = "https://b-api.staging.openeduhub.net"
-    b_api_route: str = Field(
-        "topic-tree-generator",
+    # Option 1: route at the b-api router; used first whenever it is set.
+    b_api_route: str | None = Field(
+        None,
         validation_alias=AliasChoices("b_api_route", "B_API_ROUTE", "LLM_MODEL", "llm_model"),
     )
-    # Alternative to the route: one model (e.g. gpt-6-luna) at the b-api endpoint for single models. When set, v2
-    # uses it instead of the router; the frozen legacy endpoints always use the router.
+    # Option 2: one model (e.g. gpt-6-luna) at the b-api endpoint for single models; used when no route is set.
+    # The frozen legacy endpoints always use the router (legacy_route).
     b_api_model: str | None = None
     b_api_model_path: str | None = None
     b_api_delegation_header: str | None = None
@@ -75,6 +77,7 @@ class Settings(BaseSettings):
     ui_enabled: bool = True
 
     @field_validator(
+        "b_api_route",
         "b_api_delegation_header",
         "b_api_dev_key",
         "b_api_model",
@@ -125,7 +128,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _model_needs_path(self) -> Self:
-        if self.b_api_model and not self.b_api_model_path:
+        if self.b_api_model and not self.b_api_route and not self.b_api_model_path:
             raise ValueError(
                 "B_API_MODEL is set but B_API_MODEL_PATH (the b-api endpoint for single models) is missing"
             )
@@ -140,6 +143,11 @@ class Settings(BaseSettings):
         if not _LLM_PATH.match(path):
             raise ValueError(f"B_API_MODEL_PATH must be a plain path such as /api/v1/llm/<endpoint>/, got {value!r}")
         return path
+
+    @property
+    def legacy_route(self) -> str:
+        """Route of the frozen legacy endpoints: unchanged default when B_API_ROUTE is not set."""
+        return self.b_api_route or _LEGACY_ROUTE
 
     @property
     def b_api_router_url(self) -> str:

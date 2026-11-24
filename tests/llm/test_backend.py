@@ -14,7 +14,7 @@ def settings(**kw) -> Settings:
 
 
 def test_bapi_mode_uses_router_with_route_and_forwarded_token() -> None:
-    b = resolve_backend(BAPI, settings(b_api_route="topic-tree-generator"))
+    b = resolve_backend(BAPI, settings(b_api_route="topic-tree-generator"))  # route set explicitly
     assert b.kind == "bapi"
     assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/router/"
     assert b.api_key == "bdt_xyz"
@@ -33,7 +33,7 @@ def test_standalone_openai_compatible_base_url_is_used() -> None:
 
 
 def test_standalone_dev_key_uses_b_api_router() -> None:
-    b = resolve_backend(STANDALONE, settings(b_api_dev_key="dev-key"))
+    b = resolve_backend(STANDALONE, settings(b_api_dev_key="dev-key", b_api_route="topic-tree-generator"))
     assert b.kind == "dev"
     assert b.base_url.endswith("/api/v1/llm/router/")
     assert b.api_key == "dev-key"
@@ -47,25 +47,34 @@ def test_standalone_without_llm_configuration_is_503() -> None:
 
 @pytest.mark.parametrize(("flag", "expected"), [("true", True), ("false", False)])
 def test_prompt_cache_key_flag_overrides_auto(flag: str, expected: bool) -> None:
-    assert resolve_backend(BAPI, settings(llm_send_prompt_cache_key=flag)).send_cache_key is expected
+    s = settings(llm_send_prompt_cache_key=flag, b_api_route="r")
+    assert resolve_backend(BAPI, s).send_cache_key is expected
 
 
 def test_api_key_is_hidden_from_repr() -> None:
-    assert "bdt_xyz" not in repr(resolve_backend(BAPI, settings()))
+    assert "bdt_xyz" not in repr(resolve_backend(BAPI, settings(b_api_route="r")))
+
+
+MODEL = {"b_api_model": "gpt-6-luna", "b_api_model_path": "/api/v1/llm/openai/"}
 
 
 @pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
-def test_b_api_model_option_uses_the_model_endpoint(ctx: CallerContext) -> None:
-    b = resolve_backend(
-        ctx,
-        settings(b_api_dev_key="dev-key", b_api_model="gpt-6-luna", b_api_model_path="/api/v1/llm/openai/"),
-    )
+def test_a_set_route_goes_first_through_the_router(ctx: CallerContext) -> None:
+    b = resolve_backend(ctx, settings(b_api_dev_key="dev-key", b_api_route="topic-tree-generator", **MODEL))
+    assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/router/"
+    assert b.model == "topic-tree-generator"
+
+
+@pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
+def test_without_route_the_model_uses_the_model_endpoint(ctx: CallerContext) -> None:
+    b = resolve_backend(ctx, settings(b_api_dev_key="dev-key", **MODEL))
     assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
     assert b.model == "gpt-6-luna"
 
 
 @pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
-def test_without_b_api_model_the_route_goes_through_the_router(ctx: CallerContext) -> None:
-    b = resolve_backend(ctx, settings(b_api_dev_key="dev-key", b_api_model_path="/api/v1/llm/openai/"))
-    assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/router/"
-    assert b.model == "topic-tree-generator"
+def test_b_api_without_route_or_model_is_503_with_a_hint(ctx: CallerContext) -> None:
+    with pytest.raises(ApiError) as err:
+        resolve_backend(ctx, settings(b_api_dev_key="dev-key"))
+    assert (err.value.status, err.value.code) == (503, "LLM_NOT_CONFIGURED")
+    assert "B_API_ROUTE" in err.value.message and "B_API_MODEL" in err.value.message

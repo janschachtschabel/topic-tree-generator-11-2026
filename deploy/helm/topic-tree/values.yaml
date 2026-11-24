@@ -16,9 +16,9 @@ replicaCount: 2
 ## @section Service configuration (each value becomes an environment variable, see .env.example)
 ## @param config.serviceMode auto | bapi | standalone (behind the b-api in production: bapi)
 ## @param config.bApiBaseUrl Base URL of the b-api
-## @param config.bApiRoute Option 1: route name on the b-api LLM router
-## @param config.bApiModel Option 2: single model instead of the route (takes precedence when set)
-## @param config.bApiModelPath Path of the b-api endpoint for single models (required with bApiModel)
+## @param config.bApiRoute Option 1: route name on the b-api LLM router (used first whenever set)
+## @param config.bApiModel Option 2: single model, used only when bApiRoute is empty
+## @param config.bApiModelPath Path of the b-api endpoint for single models (required for option 2)
 ## @param config.llmParamFamily common | gpt5 | classic (must match the route's models)
 ## @param config.llmReasoningEffort Max reasoning effort: none | minimal | low (capped at low)
 ## @param config.llmOutputMode json_schema | json_object | prompt
