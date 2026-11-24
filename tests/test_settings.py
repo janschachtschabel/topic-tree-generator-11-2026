@@ -138,16 +138,16 @@ def test_public_and_internal_port_must_differ() -> None:
         Settings(_env_file=None, public_port=8010, internal_port=8010)
 
 
-def test_b_api_llm_path_defaults_to_the_router_and_is_normalized() -> None:
-    assert make().b_api_llm_url == "https://b-api.staging.openeduhub.net/api/v1/llm/router/"
-    assert make(B_API_LLM_PATH="api/v1/llm/openai").b_api_llm_url == (
-        "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
-    )
-    # The frozen legacy endpoints keep using the router whatever the v2 path is.
-    assert make(B_API_LLM_PATH="/api/v1/llm/openai/").b_api_router_url.endswith("/api/v1/llm/router/")
+def test_b_api_model_option_needs_its_path_which_is_normalized() -> None:
+    s = make(B_API_MODEL="gpt-6-luna", B_API_MODEL_PATH="api/v1/llm/openai")
+    assert s.b_api_model_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
+    assert s.b_api_router_url.endswith("/api/v1/llm/router/")
+    with pytest.raises(ValidationError, match="B_API_MODEL_PATH"):
+        make(B_API_MODEL="gpt-6-luna")
+    assert make(B_API_MODEL="", B_API_MODEL_PATH="").b_api_model is None
 
 
 @pytest.mark.parametrize("bad", ["https://evil.example/x", "/a/../b", "/a b"])
-def test_b_api_llm_path_rejects_urls_and_odd_paths(bad: str) -> None:
+def test_b_api_model_path_rejects_urls_and_odd_paths(bad: str) -> None:
     with pytest.raises(ValidationError):
-        make(B_API_LLM_PATH=bad)
+        make(B_API_MODEL="gpt-6-luna", B_API_MODEL_PATH=bad)

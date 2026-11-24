@@ -25,9 +25,9 @@ Changed (operators)
   callers with their own b-api key use the b-api proxy, or `B_API_DEV_KEY` for local development.
 - Container command: `gunicorn -c gunicorn.conf.py app.main:app` (was `fastapi run main.py`). Ports 8000 and 9000.
 - `B_API_BASE_URL` may now be the plain base URL; the old full router URL still works.
-- `B_API_LLM_PATH` (default `/api/v1/llm/router/`) lets v2 use a b-api endpoint for single models instead of the
-  router; `B_API_ROUTE` then holds the model name. An upstream 400/404/422 now explains that route/model and
-  endpoint probably do not match.
+- b-api: besides a route at the router (`B_API_ROUTE`), v2 can use a single model (`B_API_MODEL`, e.g.
+  `gpt-6-luna`) at the b-api endpoint for single models (`B_API_MODEL_PATH`); the model takes precedence when set.
+  An upstream 400/404/422 now explains that route/model and endpoint probably do not match.
 - `PUBLIC_PORT` / `INTERNAL_PORT` now also drive both Compose files (host port mapping, Traefik service port,
   healthcheck), so a service can move to alternative ports with one change in `.env`. Both ports are validated
   (`1–65535`, must differ).

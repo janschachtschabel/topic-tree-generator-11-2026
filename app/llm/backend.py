@@ -26,12 +26,17 @@ def _cache_key_flag(kind: BackendKind, settings: Settings) -> bool:
     return settings.llm_send_prompt_cache_key == "true"
 
 
+def _b_api_target(settings: Settings) -> tuple[str, str]:
+    """(endpoint, model): a single model (B_API_MODEL) at its endpoint, otherwise the route at the router."""
+    if settings.b_api_model and settings.b_api_model_url:
+        return settings.b_api_model_url, settings.b_api_model
+    return settings.b_api_router_url, settings.b_api_route
+
+
 def resolve_backend(ctx: CallerContext, settings: Settings) -> LLMBackend:
     if ctx.mode == "bapi" and ctx.delegation_token:
         kind: BackendKind = "bapi"
-        return LLMBackend(
-            kind, settings.b_api_llm_url, settings.b_api_route, _cache_key_flag(kind, settings), ctx.delegation_token
-        )
+        return LLMBackend(kind, *_b_api_target(settings), _cache_key_flag(kind, settings), ctx.delegation_token)
     if settings.openai_api_key:
         kind = "openai"
         return LLMBackend(
@@ -45,8 +50,7 @@ def resolve_backend(ctx: CallerContext, settings: Settings) -> LLMBackend:
         kind = "dev"
         return LLMBackend(
             kind,
-            settings.b_api_llm_url,
-            settings.b_api_route,
+            *_b_api_target(settings),
             _cache_key_flag(kind, settings),
             settings.b_api_dev_key.get_secret_value(),
         )

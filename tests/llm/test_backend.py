@@ -55,9 +55,17 @@ def test_api_key_is_hidden_from_repr() -> None:
 
 
 @pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
-def test_b_api_llm_path_selects_a_model_endpoint_instead_of_the_router(ctx: CallerContext) -> None:
+def test_b_api_model_option_uses_the_model_endpoint(ctx: CallerContext) -> None:
     b = resolve_backend(
-        ctx, settings(b_api_dev_key="dev-key", b_api_llm_path="/api/v1/llm/openai/", b_api_route="gpt-6-luna")
+        ctx,
+        settings(b_api_dev_key="dev-key", b_api_model="gpt-6-luna", b_api_model_path="/api/v1/llm/openai/"),
     )
     assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
     assert b.model == "gpt-6-luna"
+
+
+@pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
+def test_without_b_api_model_the_route_goes_through_the_router(ctx: CallerContext) -> None:
+    b = resolve_backend(ctx, settings(b_api_dev_key="dev-key", b_api_model_path="/api/v1/llm/openai/"))
+    assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/router/"
+    assert b.model == "topic-tree-generator"

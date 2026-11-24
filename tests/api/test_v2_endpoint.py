@@ -150,5 +150,9 @@ async def test_upstream_rejection_points_to_the_llm_configuration(status: int) -
     with pytest.raises(ApiError) as err:
         await orchestrator.run(req, rc, {UseCase.topic: rejected})
     assert (err.value.status, err.value.code) == (502, "LLM_UNAVAILABLE")
-    assert f"HTTP {status}" in err.value.message and "B_API_LLM_PATH" in err.value.message
+    assert (
+        f"HTTP {status}" in err.value.message
+        and "B_API_MODEL" in err.value.message
+        and "B_API_ROUTE" in err.value.message
+    )
     assert err.value.headers is None
