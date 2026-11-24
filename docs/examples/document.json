@@ -1,0 +1,50 @@
+{
+  "mode": "create",
+  "use_case": "document",
+  "items": [
+    {
+      "id": "d1",
+      "use": [
+        "structure"
+      ],
+      "properties": {
+        "cm:title": [
+          "Lehrplan Physik, Klassen 7 bis 10"
+        ]
+      },
+      "fulltext": {
+        "format": "markdown",
+        "text": "<!-- page: 12 -->\n## Themenfeld 2: Optische Phänomene\nLicht trifft auf Grenzflächen …"
+      }
+    },
+    {
+      "id": "c1",
+      "nodeId": "5c0e1f2a-…",
+      "use": [
+        "content"
+      ],
+      "properties": {
+        "cm:title": [
+          "Licht und Schatten"
+        ]
+      }
+    }
+  ],
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ],
+    "intended_end_user_role_uri": [
+      "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
+    ]
+  },
+  "hints": {
+    "exclude": [
+      "Wahlpflicht"
+    ],
+    "order": "Themenfelder"
+  }
+}

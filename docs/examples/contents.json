@@ -1,0 +1,34 @@
+{
+  "mode": "create",
+  "use_case": "contents",
+  "topic": "Optik",
+  "items": [
+    {
+      "id": "c1",
+      "properties": {
+        "cm:title": [
+          "Licht und Schatten"
+        ]
+      }
+    },
+    {
+      "id": "c2",
+      "properties": {
+        "cm:title": [
+          "Linsen im Alltag"
+        ]
+      }
+    }
+  ],
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ],
+    "intended_end_user_role_uri": [
+      "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
+    ]
+  }
+}

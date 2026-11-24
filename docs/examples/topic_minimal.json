@@ -1,0 +1,10 @@
+{
+  "mode": "create",
+  "use_case": "topic",
+  "topic": "Optik",
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ]
+  }
+}

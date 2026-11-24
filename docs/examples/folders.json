@@ -1,0 +1,54 @@
+{
+  "mode": "create",
+  "use_case": "folders",
+  "folders": [
+    {
+      "title": "Optik",
+      "items": [
+        "c1"
+      ],
+      "subcollections": []
+    },
+    {
+      "title": "Neuer Ordner (2)",
+      "items": [
+        "c2"
+      ],
+      "subcollections": []
+    }
+  ],
+  "items": [
+    {
+      "id": "c1",
+      "nodeId": "5c0e1f2a-…",
+      "properties": {
+        "cm:title": [
+          "Licht und Schatten"
+        ]
+      }
+    },
+    {
+      "id": "c2",
+      "nodeId": "71bd09e4-…",
+      "properties": {
+        "cm:title": [
+          "Spiegelbilder"
+        ]
+      }
+    }
+  ],
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ],
+    "intended_end_user_role_uri": [
+      "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
+    ]
+  },
+  "options": {
+    "improve": true
+  }
+}

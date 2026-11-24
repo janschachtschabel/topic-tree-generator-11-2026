@@ -1,0 +1,40 @@
+{
+  "mode": "refine",
+  "use_case": "topic",
+  "current_tree": {
+    "version": "v3",
+    "collection": [
+      {
+        "key": "k-optik",
+        "title": "Optik"
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "c9",
+      "use": [
+        "content"
+      ],
+      "properties": {
+        "cm:title": [
+          "Brechung am Prisma"
+        ]
+      }
+    }
+  ],
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ],
+    "intended_end_user_role_uri": [
+      "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
+    ]
+  },
+  "options": {
+    "assign_only": true
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "mode": "refine",
+  "use_case": "topic",
+  "current_tree": {
+    "version": "v1",
+    "collection": [
+      {
+        "key": "k-optik",
+        "title": "Optik",
+        "subcollections": []
+      },
+      {
+        "key": "k-akustik",
+        "title": "Akustik",
+        "subcollections": []
+      }
+    ]
+  },
+  "feedback": {
+    "text": "Farben als eigenes Hauptthema",
+    "locked": [
+      "k-optik"
+    ]
+  },
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ],
+    "intended_end_user_role_uri": [
+      "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
+    ]
+  }
+}
