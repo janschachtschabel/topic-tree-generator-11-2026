@@ -46,7 +46,7 @@ def build_context_block(req: TopicTreeRequestV2, topic: str | None = None) -> tu
     )
     if shape.extra_topics:
         extras = ", ".join(_EXTRA[e] for e in shape.extra_topics)
-        lines.append(f"Zusatzthemen (fügt der Dienst selbst ein, nicht erzeugen): {extras}")
+        lines.append(f"Zusatzthemen (zusätzlich zu den regulären Hauptthemen samt Unterthemen aufnehmen): {extras}")
     words = hints.description_length
     lo, hi = max(20, int(words * 0.75)), int(words * 1.2)
     lines.append(f"Beschreibungen: {lo} bis {hi} Wörter (Ziel {words} Wörter) je Knoten, auch auf der untersten Ebene")

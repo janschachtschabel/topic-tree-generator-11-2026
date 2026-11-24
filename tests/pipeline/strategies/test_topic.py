@@ -18,7 +18,7 @@ def req(**changes) -> TopicTreeRequestV2:
     return TopicTreeRequestV2.model_validate(data)
 
 
-def plan_answer(n_main: int, n_children: int) -> dict:
+def plan_answer(n_main: int, n_children: int, n_grand: int = 0) -> dict:
     return {
         "order": "Themen",
         "levels": ["Thema", "Teilthema", "Aspekt"],
@@ -29,72 +29,79 @@ def plan_answer(n_main: int, n_children: int) -> dict:
                 "title": f"Haupt {i}",
                 "shorttitle": f"H{i}",
                 "from_inputs": False,
-                "children": [{"title": f"Kind {i}.{j}", "shorttitle": f"K{j}"} for j in range(n_children)],
+                "children": [
+                    {
+                        "title": f"Kind {i}.{j}",
+                        "shorttitle": f"K{j}",
+                        "children": [
+                            {"title": f"Enkel {i}.{j}.{g}", "shorttitle": f"E{g}", "children": []}
+                            for g in range(n_grand)
+                        ],
+                    }
+                    for j in range(n_children)
+                ],
             }
             for i in range(n_main)
         ],
     }
 
 
-def branch(prompt: str, grand: int = 3) -> dict:
-    main = prompt.split("Hauptthema: ")[-1].splitlines()[0]
-    given = [line[2:] for line in prompt.split("Vorgegebene Unterthemen:\n")[-1].splitlines() if line.startswith("- ")]
-    given = given or [f"{main} neu {j}" for j in range(3)]
-    return {
-        "description": "wort " * 60,
-        "keywords": ["a"],
-        "children": [
-            {
-                "title": t,
-                "shorttitle": t[:10],
-                "description": "wort " * 60,
-                "keywords": ["b"],
-                "children": [
-                    {
-                        "title": f"{t} E{e}",
-                        "shorttitle": f"E{e}",
-                        "description": "wort " * 60,
-                        "keywords": [],
-                        "children": [],
-                    }
-                    for e in range(grand)
-                ],
-            }
-            for t in given
-        ],
-    }
+def describe(prompt: str) -> dict:
+    keys = [line.split("key: ")[1].split(" |")[0] for line in prompt.splitlines() if line.startswith("- key: ")]
+    return {"nodes": [{"key": k, "description": "wort " * 60, "keywords": ["Licht", "Optik"]} for k in keys]}
 
 
 def rc(llm: FakeLLM, context: str = "CTX") -> RunContext:
     return RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60, context=context)
 
 
-async def test_eight_by_five_by_three_needs_at_most_ten_llm_calls() -> None:
-    llm = FakeLLM({"plan_structure": plan_answer(8, 5), "expand_branch": branch})
+async def test_eight_by_five_by_three_fits_in_one_parallel_worker_wave() -> None:
+    llm = FakeLLM({"plan_structure": plan_answer(8, 5, n_grand=3), "describe_nodes": describe})
     request = req(shape={"depth": 3, "main_topics": {"min": 8, "max": 8}, "children": {"min": 3, "max": 5}})
     result = await build(request, rc(llm))
-    assert len(llm.calls) <= 10
+    # 1 skeleton + ceil(168 / 10) = 18 calls (all 17 describe batches run in 1 parallel wave under 20 workers).
+    assert len(llm.calls) <= 20
+    assert llm.prompts("expand_branch") == []
     assert len(result.roots) == 8
     assert sum(1 for _ in walk(result.roots)) == 8 + 8 * 5 + 8 * 5 * 3
+    assert all(node.description for node, _, _ in walk(result.roots))
     assert result.structure.source == "detected"
     assert result.title == ex.TOPIC["topic"]
 
 
 async def test_extra_topics_are_inserted_first_and_last() -> None:
-    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch})
+    payload = plan_answer(6, 3)
+    payload["main_topics"].append(
+        {
+            "title": "Allgemeines",
+            "shorttitle": "Allgemeines",
+            "from_inputs": False,
+            "children": [
+                {"title": "Einstieg", "shorttitle": "Einstieg", "children": []},
+                {"title": "Grundbegriffe", "shorttitle": "Grundbegriffe", "children": []},
+            ],
+        }
+    )
+    llm = FakeLLM({"plan_structure": payload, "describe_nodes": describe})
     shape = {"depth": 2, "extra_topics": ["general", "methodology"]}
     result = await build(req(shape=shape), rc(llm))
     titles = [r.title for r in result.roots]
     assert titles[0] == "Allgemeines" and titles[-1] == "Methodik und Didaktik"
     assert len(result.roots) == 8
-    assert result.roots[0].children
+    assert [c.title for c in result.roots[0].children] == ["Einstieg", "Grundbegriffe"]
+
+
+async def test_cross_branch_duplicates_in_skeleton_are_eliminated_before_describing() -> None:
+    payload = plan_answer(6, 3, n_grand=3)
+    # Inject a duplicate leaf across two branches.
+    payload["main_topics"][1]["children"][0]["children"][0]["title"] = "Enkel 0.0.0"
+    llm = FakeLLM({"plan_structure": payload, "describe_nodes": describe})
+    context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(req(), context)
+    assert not [w for w in resp.warnings if w.code == "DUPLICATE_TITLE"]
 
 
 async def test_depth_one_uses_describe_instead_of_branches() -> None:
-    def describe(prompt: str) -> dict:
-        keys = [line.split("key: ")[1].split(" |")[0] for line in prompt.splitlines() if line.startswith("- key: ")]
-        return {"nodes": [{"key": k, "description": "wort " * 60, "keywords": []} for k in keys]}
-
     llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
     result = await build(req(shape={"depth": 1}), rc(llm))
     assert llm.prompts("expand_branch") == []
@@ -103,7 +110,7 @@ async def test_depth_one_uses_describe_instead_of_branches() -> None:
 
 
 async def test_structure_items_feed_the_plan_prompt() -> None:
-    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch})
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
     items = [
         {
             "id": "s1",
@@ -119,18 +126,19 @@ async def test_structure_items_feed_the_plan_prompt() -> None:
 
 
 async def test_context_block_comes_from_the_run_context() -> None:
-    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch})
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
     await build(req(), rc(llm, context="## Anfragekontext\nThema: X"))
     assert all(user.startswith("## Anfragekontext\nThema: X") for _, user in llm.calls)
 
 
 async def test_orchestrator_end_to_end_without_warnings() -> None:
-    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch})
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3, n_grand=3), "describe_nodes": describe})
     context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
     resp = await orchestrator.run(req(), context)
     assert resp.warnings == []
     assert len(resp.collection) == 6
-    assert resp.metadata.generation.usage.llm_calls == 7
+    # 1 skeleton + ceil((6 + 18 + 54) / 10) = 1 + 8 = 9 LLM calls
+    assert resp.metadata.generation.usage.llm_calls == 9
     assert llm.calls[0][1].startswith("## Anfragekontext")
 
 
@@ -143,7 +151,9 @@ async def test_orchestrator_assigns_content_items_after_building() -> None:
             ]
         }
 
-    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch, "assign_contents": assign})
+    llm = FakeLLM(
+        {"plan_structure": plan_answer(6, 3, n_grand=3), "describe_nodes": describe, "assign_contents": assign}
+    )
     items = [
         ex.content_item("c1", "Linse"),
         ex.content_item("c2", "Kochrezept"),
@@ -157,7 +167,7 @@ async def test_orchestrator_assigns_content_items_after_building() -> None:
 
 
 async def test_assignment_can_be_switched_off() -> None:
-    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch})
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3, n_grand=3), "describe_nodes": describe})
     context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
     await orchestrator.run(req(items=[ex.content_item("c1", "Linse")], options={"assign_contents": False}), context)
     assert llm.prompts("assign_contents") == []

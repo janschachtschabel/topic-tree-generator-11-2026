@@ -35,6 +35,7 @@ def _extract_section_refs(prompt: str) -> list[str]:
 
 def _step_payload(step: str, user_prompt: str) -> dict[str, Any]:
     if step == "plan_structure":
+        want_depth_3 = "3 Ebenen" in user_prompt
         return {
             "order": "Themenfelder",
             "levels": ["Themenfeld", "Thema", "Fachbegriff"],
@@ -45,7 +46,19 @@ def _step_payload(step: str, user_prompt: str) -> dict[str, Any]:
                     "title": f"Themenfeld {i}",
                     "shorttitle": f"TF {i}",
                     "from_inputs": False,
-                    "children": [{"title": f"Thema {i}.{j}", "shorttitle": f"T {i}.{j}"} for j in range(1, 4)],
+                    "children": [
+                        {
+                            "title": f"Thema {i}.{j}",
+                            "shorttitle": f"T {i}.{j}",
+                            "children": [
+                                {"title": f"Begriff {i}.{j}.{g}", "shorttitle": f"B {i}.{j}.{g}", "children": []}
+                                for g in range(1, 4)
+                            ]
+                            if want_depth_3
+                            else [],
+                        }
+                        for j in range(1, 4)
+                    ],
                 }
                 for i in range(1, 7)
             ],

@@ -5,15 +5,16 @@ sibling nodes that the LLM invented. Structure taken from the caller's input is 
 """
 
 import re
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import dataclass
 
 from app.domain.tree import Node, walk
-from app.schemas.common import OriginType
+from app.schemas.common import ExtraTopic, OriginType
 from app.schemas.request_v2 import ChildRange, MainRange, Shape
 from app.schemas.response_v2 import ServiceWarning
 
 SHORTTITLE_MAX = 20
+EXTRA_TITLES = {ExtraTopic.general: "Allgemeines", ExtraTopic.methodology: "Methodik und Didaktik"}
 _NOT_WORD = re.compile(r"[^\w ]|_")
 _SPACES = re.compile(r"\s+")
 _GENERATED = {OriginType.topic, OriginType.cluster}
@@ -126,6 +127,58 @@ def _merge_generated_siblings(nodes: list[Node], warnings: list[ServiceWarning])
 
 def _is_generated(node: Node) -> bool:
     return node.origin is not None and node.origin.type in _GENERATED
+
+
+def _disambiguate_title(node: Node, parent: Node | None, seen: set[str]) -> str:
+    base = node.title.strip()
+    parent_title = parent.title.strip() if parent is not None else ""
+    if parent_title and parent_title.casefold() not in base.casefold():
+        candidate = f"{base} ({parent_title})"
+        if candidate.casefold() not in seen:
+            return candidate
+        base = candidate
+    n = 2
+    while f"{base} {n}".casefold() in seen:
+        n += 1
+    return f"{base} {n}"
+
+
+def eliminate_generated_duplicates(roots: list[Node]) -> int:
+    """Remove or disambiguate duplicate titles among generated nodes across the whole tree.
+
+    Traverses breadth-first so higher-level concepts keep their titles. Leaves are dropped when their parent
+    retains at least two children and no contents are attached; otherwise the duplicate is disambiguated with
+    parent context. Caller-owned nodes are never modified. Returns the number of resolved duplicates.
+    """
+    before = sum(1 for _ in walk(roots))
+    _merge_generated_siblings(roots, [])
+    changed = before - sum(1 for _ in walk(roots))
+
+    seen: set[str] = set()
+    queue: deque[tuple[Node, Node | None]] = deque((root, None) for root in roots)
+    while queue:
+        node, parent = queue.popleft()
+        key = node.title.strip().casefold()
+        if key not in seen:
+            seen.add(key)
+            for child in node.children:
+                queue.append((child, node))
+            continue
+        if not _is_generated(node):
+            for child in node.children:
+                queue.append((child, node))
+            continue
+        if not node.children and not node.contents and parent is not None and len(parent.children) >= 3:
+            parent.children.remove(node)
+            changed += 1
+            continue
+        node.title = _disambiguate_title(node, parent, seen)
+        node.shorttitle = ""
+        seen.add(node.title.casefold())
+        changed += 1
+        for child in node.children:
+            queue.append((child, node))
+    return changed
 
 
 def dedup_titles(roots: list[Node]) -> list[ServiceWarning]:

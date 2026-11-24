@@ -124,10 +124,11 @@ def test_e2e_v2_all_use_cases_bapi_and_standalone(tmp_path: Path) -> None:
                 resp = json.loads(body)
                 assert len(resp["collection"]) == 6
                 assert resp["metadata"]["generation"]["model"] == "topic-tree-generator"
-                assert resp["metadata"]["generation"]["usage"]["llm_calls"] == 7
+                # 1 full skeleton call + 3 parallel describe_nodes batches (24 nodes / batch 10)
+                assert resp["metadata"]["generation"]["usage"]["llm_calls"] == 4
                 assert resp["metadata"]["generation"]["usage"]["cached_tokens"] > 0
 
-                assert len(stub.calls) == 7
+                assert len(stub.calls) == 4
                 assert all(c.path == "/api/v1/llm/router/chat/completions" for c in stub.calls)
                 assert all(c.headers.get("authorization") == f"Bearer {delegation_token}" for c in stub.calls)
                 assert all("x-api-key" not in c.headers for c in stub.calls)

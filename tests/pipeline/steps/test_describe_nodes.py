@@ -27,15 +27,18 @@ def echo(prompt: str) -> dict:
     }
 
 
-async def test_batches_of_thirty_with_paths_and_extra_info() -> None:
+async def test_balanced_batches_of_ten_with_outline_paths_and_extra_info() -> None:
     roots = tree(40)
     targets = [n for n, _, _ in walk(roots)]
     llm = FakeLLM({"describe_nodes": echo})
     await describe_nodes(targets, roots, rc(llm), context="CTX", extra={"k-thema-0": "Inhalte: Linse, Prisma"})
     prompts = llm.prompts("describe_nodes")
-    assert len(prompts) == 2
+    assert len(prompts) == 5
     assert "Pfad: Optik > Thema 0" in prompts[0]
     assert "Inhalte: Linse, Prisma" in prompts[0]
+    assert "## Gesamtstruktur" in prompts[0].split(NODES_MARKER)[0]
+    assert "- Optik" in prompts[0].split(NODES_MARKER)[0]
+    assert "  - Thema 39" in prompts[0].split(NODES_MARKER)[0]
     assert {p.split(NODES_MARKER)[0] for p in prompts} == {prompts[0].split(NODES_MARKER)[0]}
     assert all(n.description.startswith("Text k-") for n in targets)
     assert targets[1].keywords == ["a"]

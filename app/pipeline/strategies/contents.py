@@ -4,6 +4,7 @@ import re
 
 from app.domain.keys import assign_missing_keys
 from app.domain.quality import PLATFORM_STOPWORDS
+from app.domain.shape_rules import eliminate_generated_duplicates
 from app.domain.text import truncate_sentences
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
@@ -120,6 +121,7 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         rc.warn("SHAPE_DEPTH", "Die Gruppenbildung war zu tief und wurde gekürzt.", step="group_contents")
     if cut.width:
         rc.warn("SHAPE_WIDTH", "Die Gruppenbildung hatte zu viele Gruppen; gekürzt.", step="group_contents")
+    eliminate_generated_duplicates(roots)
     assign_missing_keys(roots)
     return StrategyResult(
         roots=roots,

@@ -12,7 +12,7 @@ def req(data: dict) -> TopicTreeRequestV2:
     return TopicTreeRequestV2.model_validate(copy.deepcopy(data))
 
 
-def answer(n_main: int, n_children: int, order: str = "Themen") -> dict:
+def answer(n_main: int, n_children: int, order: str = "Themen", n_grand: int = 0) -> dict:
     return {
         "order": order,
         "levels": ["Thema", "Teilthema", "Aspekt"],
@@ -23,7 +23,17 @@ def answer(n_main: int, n_children: int, order: str = "Themen") -> dict:
                 "title": f"Haupt {i}",
                 "shorttitle": f"H{i}",
                 "from_inputs": False,
-                "children": [{"title": f"Kind {i}.{j}", "shorttitle": f"K{i}{j}"} for j in range(n_children)],
+                "children": [
+                    {
+                        "title": f"Kind {i}.{j}",
+                        "shorttitle": f"K{i}{j}",
+                        "children": [
+                            {"title": f"Enkel {i}.{j}.{g}", "shorttitle": f"E{i}{j}{g}", "children": []}
+                            for g in range(n_grand)
+                        ],
+                    }
+                    for j in range(n_children)
+                ],
             }
             for i in range(n_main)
         ],
@@ -35,12 +45,14 @@ def rc(llm: FakeLLM) -> RunContext:
 
 
 async def test_prompt_contains_context_block_then_shape_instruction() -> None:
-    llm = FakeLLM({"plan_structure": answer(6, 3)})
+    llm = FakeLLM({"plan_structure": answer(6, 3, n_grand=3)})
     await plan_structure(req(ex.TOPIC), rc(llm), context="## Anfragekontext\nThema: Optik")
     (prompt,) = llm.prompts("plan_structure")
     assert prompt.startswith("## Anfragekontext\nThema: Optik")
-    assert "6 bis 12 Hauptthemen" in prompt
-    assert "je Hauptthema 3 bis 8 Unterthemen" in prompt
+    assert "6 bis 12 reguläre Hauptthemen" in prompt
+    assert "3 bis 8" in prompt
+    assert "3 Ebenen" in prompt
+    assert "duplikate" in prompt.lower()
 
 
 async def test_order_hint_is_used_and_marked_as_hint() -> None:
@@ -87,3 +99,38 @@ async def test_nodes_from_inputs_are_suggested_and_origin_is_topic() -> None:
     assert result.roots[1].status is None
     assert result.roots[0].origin.type == "topic"
     assert "## Ergänzende Eingaben" in llm.prompts("plan_structure")[0]
+
+
+async def test_three_level_skeleton_keeps_grandchildren_and_cuts_excess_depth() -> None:
+    llm = FakeLLM({"plan_structure": answer(6, 3, n_grand=3)})
+    result = await plan_structure(req(ex.TOPIC), rc(llm), context="CTX")
+    assert len(result.roots) == 6
+    assert len(result.roots[0].children) == 3
+    assert len(result.roots[0].children[0].children) == 3
+
+    data = copy.deepcopy(ex.TOPIC)
+    data["shape"]["depth"] = 2
+    context = rc(FakeLLM({"plan_structure": answer(6, 3, n_grand=3)}))
+    shallow = await plan_structure(req(data), context, context="CTX")
+    assert all(c.children == [] for r in shallow.roots for c in r.children)
+    assert "SHAPE_DEPTH" in [w.code for w in context.warnings]
+
+
+async def test_extra_topics_do_not_count_against_main_max() -> None:
+    data = copy.deepcopy(ex.TOPIC)
+    data["shape"]["main_topics"] = {"min": 6, "max": 6}
+    data["shape"]["extra_topics"] = ["general"]
+    payload = answer(6, 3, n_grand=2)
+    payload["main_topics"].insert(
+        0,
+        {
+            "title": "Allgemeines",
+            "shorttitle": "Allgemeines",
+            "from_inputs": False,
+            "children": [{"title": "Grundlagen", "shorttitle": "Grundlagen", "children": []}],
+        },
+    )
+    context = rc(FakeLLM({"plan_structure": payload}))
+    result = await plan_structure(req(data), context, context="CTX")
+    assert len(result.roots) == 7
+    assert context.warnings == []

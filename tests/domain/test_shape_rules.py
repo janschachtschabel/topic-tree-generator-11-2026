@@ -3,6 +3,7 @@ from app.domain.shape_rules import (
     check_descriptions,
     check_shape,
     dedup_titles,
+    eliminate_generated_duplicates,
     normalize_shorttitles,
 )
 from app.domain.tree import Node
@@ -121,3 +122,41 @@ def test_unbalanced_branch_depths_are_reported() -> None:
 
     balanced = [deep, n("k-b", "B", n("k-b1", "B1"), n("k-b2", "B2"))]
     assert "SHAPE_UNBALANCED" not in codes(check_shape(balanced, plan))
+
+
+def test_eliminate_generated_duplicates_drops_leaf_when_parent_keeps_two_children() -> None:
+    roots = [
+        n("k-a", "Reflexion", n("k-a1", "Einfallswinkel"), n("k-a2", "Spiegelbild")),
+        n("k-b", "Brechung", n("k-b1", "Einfallswinkel"), n("k-b2", "Brechungsgesetz"), n("k-b3", "Totalreflexion")),
+    ]
+    changed = eliminate_generated_duplicates(roots)
+    assert changed == 1
+    assert [c.title for c in roots[1].children] == ["Brechungsgesetz", "Totalreflexion"]
+    assert dedup_titles(roots) == []
+
+
+def test_eliminate_generated_duplicates_disambiguates_when_removal_would_leave_single_child() -> None:
+    roots = [
+        n("k-a", "Hohlspiegel", n("k-a1", "Bildgröße"), n("k-a2", "Brennpunkt")),
+        n("k-b", "Sammellinse", n("k-b1", "Bildgröße"), n("k-b2", "Brennweite")),
+    ]
+    changed = eliminate_generated_duplicates(roots)
+    assert changed == 1
+    assert [c.title for c in roots[1].children] == ["Bildgröße (Sammellinse)", "Brennweite"]
+    assert roots[1].children[0].shorttitle == ""
+    assert dedup_titles(roots) == []
+
+
+def test_eliminate_generated_duplicates_prefers_higher_level_and_preserves_caller_nodes() -> None:
+    roots = [
+        n("k-a", "Licht", n("k-a1", "Schatten", n("k-a11", "Farben"), n("k-a12", "Lichtstrahl")), n("k-a2", "Spiegel")),
+        n("k-b", "Farben", n("k-b1", "Spektrum"), n("k-b2", "Farbmischung")),
+        n("k-c", "Farben", generated=False),
+    ]
+    changed = eliminate_generated_duplicates(roots)
+    assert changed == 1
+    # Level-1 "Farben" wins over level-3 "Farben"; level-3 gets disambiguated because parent has only 2 kids.
+    assert roots[1].title == "Farben"
+    assert roots[0].children[0].children[0].title == "Farben (Schatten)"
+    # Caller-owned folder node is never renamed or dropped.
+    assert roots[2].title == "Farben"
