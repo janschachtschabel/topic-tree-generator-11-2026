@@ -101,3 +101,12 @@ async def test_unknown_keys_are_reported_when_batch_nodes_stay_undescribed() -> 
     warning = next(w for w in context.warnings if w.code == "DESCRIBE_UNKNOWN_KEY")
     assert "k-voellig-anders" in warning.message
     assert all(n.description == "" for n in targets)
+
+
+async def test_single_node_batch_with_hallucinated_key_warns_instead_of_overwriting() -> None:
+    roots = tree(2)
+    answer = {"nodes": [{"key": "k-voellig-anders", "description": "Falsch", "keywords": []}]}
+    context = rc(FakeLLM({"describe_nodes": answer}))
+    await describe_nodes([roots[0]], roots, context, context="CTX")
+    assert roots[0].description == ""
+    assert [w.code for w in context.warnings] == ["DESCRIBE_UNKNOWN_KEY"]

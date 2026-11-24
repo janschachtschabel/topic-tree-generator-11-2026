@@ -228,3 +228,24 @@ async def test_collapsed_llm_mapping_falls_back_to_the_document_outline() -> Non
     assert all(n.description for n, _, _ in walk(result.roots))
     codes = [w.code for w in run.warnings]
     assert "OUTLINE_FALLBACK" in codes and "SHAPE_DEPTH" not in codes
+
+
+async def test_whitespace_only_structure_item_is_ignored_when_valid_doc_follows() -> None:
+    blank = doc("d-blank", text="   \n  ")
+    valid = doc("d-real", text=TITLED)
+    llm = FakeLLM(
+        {
+            "map_outline": {
+                "order": "Themenfelder",
+                "levels": ["Ebene 1"],
+                "description": "Baum",
+                "nodes": [
+                    {"title": "Frei A", "shorttitle": "A", "section_ids": ["unknown:s1"], "children": []},
+                    {"title": "Frei B", "shorttitle": "B", "section_ids": ["unknown:s2"], "children": []},
+                ],
+            },
+            "describe_nodes": describe,
+        }
+    )
+    result = await build(req([blank, valid]), rc(llm))
+    assert result.roots[0].origin.id == "d-real"

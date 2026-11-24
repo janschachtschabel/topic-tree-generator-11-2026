@@ -211,3 +211,32 @@ async def test_assign_only_and_locked_refine_nodes_do_not_trigger_description_wa
     rc2 = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
     resp2 = await orchestrator.run(locked_req, rc2)
     assert [w.code for w in resp2.warnings] == []
+
+
+async def test_extra_topics_outside_topic_do_not_cause_false_shape_width_warnings() -> None:
+    request = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "create",
+            "use_case": "contents",
+            "topic": "Optik",
+            "items": [{"id": "c1", "properties": {"cm:title": ["Linsen"]}}],
+            "frame": copy.deepcopy(ex.FRAME),
+            "shape": {
+                "depth": 1,
+                "main_topics": {"min": 2, "max": 6},
+                "extra_topics": ["general", "methodology"],
+            },
+            "options": {"assign_contents": False},
+        }
+    )
+
+    async def fake_contents(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
+        return StrategyResult(
+            roots=[_topic_node("Linsen"), _topic_node("Spiegel")],
+            title="Optik",
+        )
+
+    rc = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(request, rc, strategies={UseCase.contents: fake_contents})
+    assert "Zusatzthemen" not in rc.context
+    assert [w.code for w in resp.warnings] == []

@@ -31,7 +31,11 @@ class DocSection:
 
 
 def structure_documents(req: TopicTreeRequestV2) -> list[Item]:
-    return [i for i in req.items or [] if ItemUse.structure in req.effective_use(i) and i.fulltext and i.fulltext.text]
+    return [
+        i
+        for i in req.items or []
+        if ItemUse.structure in req.effective_use(i) and i.fulltext and i.fulltext.text and i.fulltext.text.strip()
+    ]
 
 
 def _sections(doc: Item) -> list[DocSection]:

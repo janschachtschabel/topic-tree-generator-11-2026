@@ -221,3 +221,20 @@ async def test_refine_without_stored_description_stays_compatible() -> None:
     response, _ = await run(request(options={"assign_only": True}), {})
     assert response.metadata.title == "Physik"
     assert response.metadata.description == ""
+
+
+async def test_refine_combines_feedback_with_assigning_new_items_into_added_node() -> None:
+    interpretation = {
+        "changes": [{"op": "add", "parent": None, "title": "Farben"}],
+        "questions": [],
+    }
+    assign = {"items": [{"id": "c99", "nodes": [{"key": "k-farben", "confidence": 0.92}]}]}
+    req = request(
+        {"text": "Farben als Hauptthema ergänzen"},
+        items=[ex.content_item("c99", "Spektralfarben am Prisma")],
+    )
+    resp, llm = await run(req, {"interpret_feedback": interpretation, "assign_contents": assign})
+    farben = by_key(resp.collection, "k-farben")
+    assert farben is not None and farben.status == "new"
+    assert [c.id for c in farben.contents] == ["c99"]
+    assert "k-farben: Farben" in llm.prompts("assign_contents")[0]

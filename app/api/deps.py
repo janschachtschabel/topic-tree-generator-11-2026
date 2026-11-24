@@ -16,7 +16,7 @@ from app.settings import get_settings
 
 
 def run_context(request: Request) -> RunContext:
-    settings = get_settings()
+    settings = getattr(request.app.state, "settings", None) or get_settings()
     caller = resolve_caller(request.headers, settings)
     backend = resolve_backend(caller, settings)
     deadline = time.monotonic() + settings.request_timeout_seconds

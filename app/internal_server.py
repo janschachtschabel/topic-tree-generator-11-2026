@@ -15,8 +15,12 @@ from app.vocab.labels import snapshot_date
 
 
 def readiness(settings: Settings) -> tuple[bool, str | None]:
-    """Ready unless the service can never answer: standalone mode without any LLM configured."""
-    if settings.service_mode == "standalone" and not (settings.openai_api_key or settings.b_api_dev_key):
+    """Ready unless the configured service mode lacks any usable LLM target."""
+    has_bapi_target = bool(settings.b_api_route or settings.b_api_model)
+    if settings.service_mode == "standalone":
+        if not settings.openai_api_key and not (settings.b_api_dev_key and has_bapi_target):
+            return False, "LLM_NOT_CONFIGURED"
+    elif settings.service_mode == "bapi" and not has_bapi_target:
         return False, "LLM_NOT_CONFIGURED"
     return True, None
 

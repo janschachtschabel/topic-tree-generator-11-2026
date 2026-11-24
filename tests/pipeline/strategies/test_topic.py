@@ -123,6 +123,27 @@ async def test_structure_items_feed_the_plan_prompt() -> None:
     assert "Unterrichtsreihe Farben" in prompt and "Spektrum und Prisma" in prompt
 
 
+async def test_many_structure_items_keep_titles_and_keywords_and_warn_above_limit() -> None:
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
+    twelve = [
+        {
+            "id": f"m{i}",
+            "use": ["structure", "content"],
+            "properties": {"cm:title": [f"Material Baustein {i}"], "cclom:general_keyword": [f"Begriff{i}"]},
+        }
+        for i in range(12)
+    ]
+    await build(req(items=twelve), rc(llm))
+    prompt = llm.prompts("plan_structure")[0]
+    assert "Material Baustein 11" in prompt
+    assert "Begriff11" in prompt
+
+    many = [{"id": f"x{i}", "use": ["structure"], "properties": {"cm:title": [f"Eintrag {i}"]}} for i in range(55)]
+    context = rc(FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe}))
+    await build(req(items=many), context)
+    assert "INPUTS_TRUNCATED" in [w.code for w in context.warnings]
+
+
 async def test_context_block_comes_from_the_run_context() -> None:
     llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
     await build(req(), rc(llm, context="## Anfragekontext\nThema: X"))

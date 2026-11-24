@@ -41,7 +41,7 @@ def add_extra_topics(roots: list[Node], req: TopicTreeRequestV2) -> list[Node]:
 
 
 async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
-    plan = await plan_structure(req, rc, context=rc.context, inputs_block=structure_inputs_block(req))
+    plan = await plan_structure(req, rc, context=rc.context, inputs_block=structure_inputs_block(req, rc))
     roots = add_extra_topics(plan.roots, req)
     eliminate_generated_duplicates(roots)
     assign_missing_keys(roots)

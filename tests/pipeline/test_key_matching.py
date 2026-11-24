@@ -32,3 +32,9 @@ def test_each_batch_key_is_used_once() -> None:
 def test_without_elimination_keys_repeat_and_leftovers_stay_unmatched() -> None:
     tree = ["k-optik", "k-linsen"]
     assert match_keys(["k-optik", "K-Optik", "k-zzz"], tree, elimination=False) == {0: "k-optik", 1: "k-optik"}
+
+
+def test_single_node_batch_or_blank_answer_does_not_pair_by_blind_elimination() -> None:
+    assert match_keys(["k-etwas-ganz-anderes"], ["k-optik"]) == {}
+    assert match_keys(["   "], ["k-optik"]) == {}
+    assert match_keys(["k-lichtquellen", "   "], ["k-lichtquellen", "k-optik"]) == {0: "k-lichtquellen"}

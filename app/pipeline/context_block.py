@@ -2,7 +2,7 @@
 prompt so the provider's prefix cache covers both (plan E2). Must be deterministic."""
 
 from app.domain.shape_rules import EXTRA_TITLES
-from app.schemas.common import ExtraTopic
+from app.schemas.common import ExtraTopic, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.vocab.labels import label
 
@@ -45,7 +45,7 @@ def build_context_block(req: TopicTreeRequestV2, topic: str | None = None) -> tu
         f"Form: {shape.depth} Ebenen; Hauptebene {shape.main_topics.min} bis {shape.main_topics.max} Knoten; "
         f"je Knoten {shape.children.min} bis {shape.children.max} Kinder"
     )
-    if shape.extra_topics:
+    if shape.extra_topics and req.mode == Mode.create and req.use_case == UseCase.topic:
         extras = ", ".join(f"„{EXTRA_TITLES[e]}“ ({_EXTRA_POSITION[e]})" for e in shape.extra_topics)
         lines.append(f"Zusatzthemen (zusätzlich zu den regulären Hauptthemen samt Unterthemen aufnehmen): {extras}")
     words = hints.description_length

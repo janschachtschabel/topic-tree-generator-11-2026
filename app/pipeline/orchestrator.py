@@ -11,7 +11,15 @@ from app.domain.diff import mark_status_against_folders, mark_status_against_pre
 from app.domain.keys import assign_missing_keys
 from app.domain.ops import protected_keys
 from app.domain.quality import check_quality, clean_keywords, is_history_context
-from app.domain.shape_rules import ShapePlan, check_descriptions, check_shape, dedup_titles, normalize_shorttitles
+from app.domain.shape_rules import (
+    EXTRA_TITLES,
+    ShapePlan,
+    check_descriptions,
+    check_shape,
+    dedup_titles,
+    extra_kind,
+    normalize_shorttitles,
+)
 from app.domain.tree import Node, from_tree_in, index, walk
 from app.errors import ApiError
 from app.llm.client import LLMStepError
@@ -136,9 +144,11 @@ def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         return
     if result.shape_checked:
         plan = ShapePlan.from_shape(req.shape)
-        for warning in check_shape(result.roots, plan, extra=len(req.shape.extra_topics)):
+        requested_extra = set(req.shape.extra_topics)
+        actual_extra = sum(1 for r in result.roots if extra_kind(r.title) in requested_extra)
+        for warning in check_shape(result.roots, plan, extra=actual_extra):
             rc.warn(warning.code, warning.message, warning.key, warning.step)
-    allowed_extra = {topic.EXTRA_TITLES[kind].casefold() for kind in req.shape.extra_topics}
+    allowed_extra = {EXTRA_TITLES[kind].casefold() for kind in req.shape.extra_topics}
     history = is_history_context(
         req.topic, (label(uri) or "" for uri in req.frame.discipline_uri), order=req.hints.order
     )

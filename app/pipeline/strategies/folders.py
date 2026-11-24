@@ -48,7 +48,7 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     titles = item_titles(req.items or [])
     changes = []
     if req.options.improve:
-        applied = await improve_folders(roots, titles, rc, inputs_block=structure_inputs_block(req))
+        applied = await improve_folders(roots, titles, rc, inputs_block=structure_inputs_block(req, rc))
         changes = applied.applied
         assign_missing_keys(roots)
     extra = {

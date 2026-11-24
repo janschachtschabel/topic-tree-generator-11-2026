@@ -28,13 +28,19 @@ def match_keys(
     by_norm = {norm_key(key): key for key in batch}
     foreign = {norm_key(key) for key in elsewhere or set()} - set(by_norm)
     matched: dict[int, str] = {}
+
+    def _usable(raw: str | None) -> bool:
+        return bool((raw or "").strip(" \t\r\n.,;:"))
+
     for i, answer in enumerate(answers):
+        if not _usable(answer):
+            continue
         key = by_norm.get(norm_key(answer))
         if key is not None and (not elimination or key not in matched.values()):
             matched[i] = key
 
     def open_answers() -> list[int]:
-        return [i for i, a in enumerate(answers) if i not in matched and norm_key(a) not in foreign]
+        return [i for i, a in enumerate(answers) if i not in matched and _usable(a) and norm_key(a) not in foreign]
 
     def open_keys() -> list[str]:
         return [key for key in batch if not elimination or key not in matched.values()]
@@ -46,6 +52,7 @@ def match_keys(
         if scored and scored[0][0] >= _SIMILARITY and (len(scored) == 1 or scored[1][0] < scored[0][0]):
             matched[i] = scored[0][1]
     rest_answers, rest_keys = open_answers(), open_keys()
-    if elimination and len(rest_answers) == 1 and len(rest_keys) == 1:
+    # Pair a single leftover only when at least one sibling in the same batch actually matched.
+    if elimination and matched and len(rest_answers) == 1 and len(rest_keys) == 1:
         matched[rest_answers[0]] = rest_keys[0]
     return matched
