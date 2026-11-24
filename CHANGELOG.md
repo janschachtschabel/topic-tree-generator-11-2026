@@ -10,6 +10,8 @@ New
   service keys); detected per request (`SERVICE_MODE=auto`).
 - Faster and cheaper generation: skeleton first, one call per main topic (8×5×3: 9 instead of 49 calls), static
   system prompt and shared prompt prefixes for provider caching, per-process concurrency cap.
+- Optional built-in test UI under `/ui/` with ready-to-run sample scenarios for all use cases, interactive tree
+  viewer, token/cache/timing metrics and diagnostics (`UI_ENABLED=false` disables it completely; off by default in Helm).
 - Operations (Leitfaden): gunicorn with several workers, internal port with `/health`, `/ready`, `/metrics`,
   JSON logs with B3 / `x-client-trace-id`, non-root image, Helm chart `deploy/helm/topic-tree`.
 

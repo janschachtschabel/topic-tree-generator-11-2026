@@ -2,7 +2,7 @@
 
 import pytest
 
-_PREFIXES = ("SERVICE_", "B_API_", "OPENAI_", "LLM_", "REF_", "LOG_")
+_PREFIXES = ("SERVICE_", "B_API_", "OPENAI_", "LLM_", "REF_", "LOG_", "UI_")
 _EXACT = {
     "PUBLIC_PORT",
     "INTERNAL_PORT",

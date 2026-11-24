@@ -29,7 +29,7 @@ Python 3.13 and [uv](https://docs.astral.sh/uv/).
 ```shell
 uv sync
 cp .env.example .env          # set OPENAI_API_KEY (standalone) or call it through the b-api
-uv run python -m app          # public API :8000 (docs at /docs), internal :9000 (/health, /ready, /metrics)
+uv run python -m app          # public API :8000 (docs at /docs, test UI at /ui/), internal :9000 (/health, /ready, /metrics)
 ```
 
 Production-like: `uv run gunicorn -c gunicorn.conf.py app.main:app` or `docker compose up --build`.
@@ -47,7 +47,7 @@ curl -s localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @doc
 | `Authorization: Bearer bdt_…` (b-api delegation token) | LLM via the b-api router, token forwarded unchanged |
 | other bearer or none | standalone: `OPENAI_API_KEY`/`OPENAI_BASE_URL`; `SERVICE_API_KEYS` enforces auth if set |
 
-`bapi` accepts only delegation tokens; `standalone` never uses the b-api. All settings: `.env.example`.
+`bapi` accepts only delegation tokens; `standalone` never uses the b-api. Disable the built-in test UI in production with `UI_ENABLED=false` (default in the Helm chart). All settings: `.env.example`.
 
 ## Tests and checks
 

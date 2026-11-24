@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Themenbaum-Generator – Test-UI</title>
+  <link rel="stylesheet" href="/ui/assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Zum Ergebnisbereich springen</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Eingaben und Konfiguration">
+      <div class="sidebar-header">
+        <div class="brand-row">
+          <h1 class="brand-title">Themenbaum-Dienst</h1>
+          <span class="version-badge" id="service-version">v2</span>
+        </div>
+        <p class="brand-sub">Test-Oberfläche für <code>POST /v2/topic-tree</code></p>
+      </div>
+
+      <form id="tree-form" class="sidebar-form" novalidate>
+        <section class="field-group" aria-labelledby="presets-heading">
+          <h2 id="presets-heading" class="section-label">Musterszenarien</h2>
+          <p class="help-text">Ein Klick füllt alle Felder für den jeweiligen Use Case.</p>
+          <div id="preset-list" class="preset-grid" role="group" aria-label="Musterszenarien laden"></div>
+        </section>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="f-mode">Modus</label>
+            <select id="f-mode" name="mode">
+              <option value="create">create (neu erzeugen)</option>
+              <option value="refine">refine (weiterentwickeln)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-use-case">Use Case</label>
+            <select id="f-use-case" name="use_case">
+              <option value="topic">topic (Thema)</option>
+              <option value="document">document (Strukturdokument)</option>
+              <option value="folders">folders (Ordner &amp; Dateien)</option>
+              <option value="contents">contents (Inhalte gruppieren)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-topic">Thema <span id="topic-req" class="req-tag">(Pflicht bei topic)</span></label>
+          <input id="f-topic" name="topic" type="text" maxlength="2000" placeholder="z. B. Optik für die Sekundarstufe I">
+        </div>
+
+        <fieldset class="fieldset">
+          <legend class="section-label">Rahmen (OEH-Vokabulare)</legend>
+          <div class="field">
+            <label for="f-discipline">Fach (<code>discipline_uri</code>)</label>
+            <select id="f-discipline" name="discipline_uri">
+              <option value="">– beliebig –</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-context">Bildungsstufe (<code>educational_context_uri</code>)</label>
+            <select id="f-context" name="educational_context_uri">
+              <option value="">– beliebig –</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-role">Zielgruppe (<code>intended_end_user_role_uri</code>)</label>
+            <select id="f-role" name="intended_end_user_role_uri">
+              <option value="">– Standard (Lehrkräfte) –</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="section-label">Form (Shape)</legend>
+          <div class="row-3">
+            <div class="field">
+              <label for="f-depth">Ebenen</label>
+              <input id="f-depth" type="number" inputmode="numeric" min="1" max="4" value="3">
+            </div>
+            <div class="field">
+              <label for="f-main-min">Haupt min</label>
+              <input id="f-main-min" type="number" inputmode="numeric" min="1" max="20" value="6">
+            </div>
+            <div class="field">
+              <label for="f-main-max">Haupt max</label>
+              <input id="f-main-max" type="number" inputmode="numeric" min="1" max="20" value="12">
+            </div>
+          </div>
+          <div class="row-3">
+            <div class="field">
+              <label for="f-child-min">Kinder min</label>
+              <input id="f-child-min" type="number" inputmode="numeric" min="2" max="20" value="3">
+            </div>
+            <div class="field">
+              <label for="f-child-max">Kinder max</label>
+              <input id="f-child-max" type="number" inputmode="numeric" min="2" max="20" value="8">
+            </div>
+            <div class="field">
+              <label for="f-desc-len">Wörter/Text</label>
+              <input id="f-desc-len" type="number" inputmode="numeric" min="40" max="200" value="60">
+            </div>
+          </div>
+          <div class="check-row">
+            <label class="check"><input id="f-extra-general" type="checkbox"> „Allgemeines“ vorn</label>
+            <label class="check"><input id="f-extra-methodology" type="checkbox"> „Methodik &amp; Didaktik“ hinten</label>
+          </div>
+        </fieldset>
+
+        <details class="accordion" id="acc-hints">
+          <summary>Hinweise (Kontext, Include/Exclude, Ordnung)</summary>
+          <div class="accordion-body">
+            <div class="field">
+              <label for="f-hint-context">Kontext / Schwerpunkt</label>
+              <textarea id="f-hint-context" rows="2" maxlength="2000" placeholder="z. B. Unterricht Klasse 7–9, viele Experimente"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-hint-order">Ordnungsprinzip (optional)</label>
+              <input id="f-hint-order" type="text" maxlength="200" placeholder="leer = automatisch nach Bildungsstufe">
+            </div>
+            <div class="row-2">
+              <div class="field">
+                <label for="f-hint-include">Einschließen (Komma)</label>
+                <input id="f-hint-include" type="text" placeholder="Farben, Auge">
+              </div>
+              <div class="field">
+                <label for="f-hint-exclude">Ausschließen (Komma)</label>
+                <input id="f-hint-exclude" type="text" placeholder="Wellenoptik">
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="accordion" id="acc-options">
+          <summary>Optionen (Zuordnung, Improve, Konfidenz)</summary>
+          <div class="accordion-body">
+            <div class="check-col">
+              <label class="check"><input id="f-opt-improve" type="checkbox"> Ordner verbessern (<code>improve</code>)</label>
+              <label class="check"><input id="f-opt-assign" type="checkbox" checked> Inhalte zuordnen (<code>assign_contents</code>)</label>
+              <label class="check"><input id="f-opt-assign-only" type="checkbox"> Nur einsortieren (<code>assign_only</code>, nur bei refine)</label>
+              <label class="check"><input id="f-opt-multi" type="checkbox" checked> Mehrfachzuordnung (<code>multi_assign</code>)</label>
+            </div>
+            <div class="field">
+              <label for="f-opt-conf">Mindestkonfidenz (0–1)</label>
+              <input id="f-opt-conf" type="number" step="0.05" min="0" max="1" value="0.6">
+            </div>
+          </div>
+        </details>
+
+        <details class="accordion" id="acc-items">
+          <summary>Dateien / Dokumente / Inhalte (<code>items</code> JSON)</summary>
+          <div class="accordion-body">
+            <label for="f-items" class="sr-only">Items als JSON-Array</label>
+            <textarea id="f-items" class="code-area" rows="7" spellcheck="false" placeholder="[]"></textarea>
+            <p class="help-text">Strukturdokumente (<code>use: ["structure"]</code> mit <code>fulltext</code>) und Inhalte (<code>use: ["content"]</code>).</p>
+          </div>
+        </details>
+
+        <details class="accordion" id="acc-folders">
+          <summary>Ordnerstruktur (<code>folders</code> JSON)</summary>
+          <div class="accordion-body">
+            <label for="f-folders" class="sr-only">Folders als JSON-Array</label>
+            <textarea id="f-folders" class="code-area" rows="5" spellcheck="false" placeholder="[]"></textarea>
+          </div>
+        </details>
+
+        <details class="accordion" id="acc-refine">
+          <summary>Refine: Feedback &amp; Ist-Stand (<code>current_tree</code>)</summary>
+          <div class="accordion-body">
+            <div class="field">
+              <label for="f-fb-text">Rückmeldung als Text</label>
+              <textarea id="f-fb-text" rows="2" maxlength="8000" placeholder="z. B. Farben als eigenes Hauptthema ergänzen"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-fb-locked">Gesperrte Knoten-Keys (Komma)</label>
+              <input id="f-fb-locked" type="text" placeholder="k-optik, k-mechanik">
+            </div>
+            <div class="field">
+              <label for="f-fb-changes">Strukturierte Änderungen (<code>feedback.changes</code> JSON)</label>
+              <textarea id="f-fb-changes" class="code-area" rows="3" spellcheck="false" placeholder="[]"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-current-tree">Ist-Stand (<code>current_tree</code> JSON)</label>
+              <textarea id="f-current-tree" class="code-area" rows="6" spellcheck="false" placeholder="{}"></textarea>
+            </div>
+          </div>
+        </details>
+
+        <details class="accordion" id="acc-auth">
+          <summary>Anmeldung (optional, nur im Speicher)</summary>
+          <div class="accordion-body">
+            <div class="field">
+              <label for="f-token">Bearer-Token (Dienst-Schlüssel oder <code>bdt_…</code>)</label>
+              <input id="f-token" type="password" autocomplete="off" placeholder="leer = ohne Authorization-Header">
+              <p class="help-text">Wird niemals gespeichert und nur direkt im Aufruf an <code>/v2/topic-tree</code> gesendet.</p>
+            </div>
+          </div>
+        </details>
+
+        <div id="form-error" class="inline-error" role="alert" hidden></div>
+
+        <div class="sidebar-footer">
+          <button type="submit" id="btn-submit" class="btn-primary">Themenbaum erzeugen</button>
+          <button type="button" id="btn-cancel" class="btn-secondary" hidden>Abbrechen</button>
+        </div>
+      </form>
+    </aside>
+
+    <main id="main-content" class="workspace" tabindex="-1">
+      <header class="status-strip" aria-live="polite">
+        <div id="status-message" class="status-text">Bereit – wähle links ein Musterszenario oder gib ein eigenes Thema ein.</div>
+        <div class="status-actions" id="result-actions" hidden>
+          <button type="button" id="btn-use-refine" class="btn-outline">Als Ist-Stand für Refine</button>
+          <button type="button" id="btn-copy-json" class="btn-outline">JSON kopieren</button>
+          <button type="button" id="btn-download-json" class="btn-outline">JSON speichern</button>
+          <button type="button" id="btn-toggle-json" class="btn-outline" aria-expanded="false">Rohdaten</button>
+        </div>
+      </header>
+
+      <section id="error-panel" class="card error-card" role="alert" hidden>
+        <div class="card-head-row">
+          <h2 id="error-title" class="error-heading">Anfrage fehlgeschlagen</h2>
+          <button type="button" id="btn-retry" class="btn-outline">Erneut versuchen</button>
+        </div>
+        <p id="error-message" class="error-msg"></p>
+        <dl class="error-meta">
+          <dt>Code</dt><dd id="error-code"></dd>
+          <dt>HTTP-Status</dt><dd id="error-status"></dd>
+          <dt>Trace-ID</dt><dd id="error-trace"></dd>
+        </dl>
+        <pre id="error-details" class="json-pre" hidden></pre>
+      </section>
+
+      <section id="empty-state" class="card empty-card">
+        <h2>Themenbaum-Dienst v2 testen</h2>
+        <p>Simuliere alle vier Use Cases (<strong>topic</strong>, <strong>document</strong>, <strong>folders</strong>, <strong>contents</strong>) sowie iterative Weiterentwicklung im Modus <strong>refine</strong> – mit direkter Anzeige von Baumstruktur, Warnungen, Rückfragen, Laufzeit und Token-Verbrauch inkl. Prompt-Cache.</p>
+        <div id="empty-presets" class="empty-preset-grid"></div>
+      </section>
+
+      <section id="loading-state" class="card loading-card" hidden aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <h2 class="loading-title">Themenbaum wird erzeugt …</h2>
+          <p class="loading-sub">Synchroner Aufruf läuft (<span id="loading-timer">0,0 s</span>). Große 3-Ebenen-Bäume dauern typisch 35–110 s.</p>
+        </div>
+      </section>
+
+      <div id="result-area" hidden>
+        <section class="card metrics-card" aria-label="Kennzahlen der Antwort">
+          <div class="metric-row">
+            <span class="metric-group-label">BAUM</span>
+            <div class="metric-items" id="metrics-tree"></div>
+          </div>
+          <div class="metric-row">
+            <span class="metric-group-label">ZEIT</span>
+            <div class="metric-items" id="metrics-time"></div>
+          </div>
+          <div class="metric-row">
+            <span class="metric-group-label">TOKENS</span>
+            <div class="metric-items" id="metrics-tokens"></div>
+          </div>
+        </section>
+
+        <section id="diagnostics-area" class="diagnostics-grid" hidden></section>
+
+        <section class="card tree-card" aria-labelledby="tree-title">
+          <div class="tree-header">
+            <div>
+              <h2 id="tree-title" class="tree-heading"></h2>
+              <p id="tree-description" class="tree-desc"></p>
+              <p id="tree-structure" class="tree-meta-line"></p>
+            </div>
+            <div class="tree-controls">
+              <label for="tree-filter" class="sr-only">Knoten filtern</label>
+              <input id="tree-filter" type="search" placeholder="Knoten filtern …">
+              <button type="button" id="btn-expand-all" class="btn-outline">Alle aufklappen</button>
+              <button type="button" id="btn-collapse-all" class="btn-outline">Alle zuklappen</button>
+            </div>
+          </div>
+          <div id="tree-container" class="tree-root" role="tree" aria-label="Generierter Themenbaum"></div>
+        </section>
+
+        <section id="raw-json-panel" class="card" hidden>
+          <div class="raw-tabs" role="tablist" aria-label="JSON-Ansicht">
+            <button type="button" class="tab-btn active" data-tab="response" role="tab" aria-selected="true">Antwort-JSON</button>
+            <button type="button" class="tab-btn" data-tab="request" role="tab" aria-selected="false">Anfrage-JSON</button>
+          </div>
+          <pre id="raw-json-pre" class="json-pre"></pre>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/ui/assets/tree.js" defer></script>
+  <script src="/ui/assets/app.js" defer></script>
+</body>
+</html>

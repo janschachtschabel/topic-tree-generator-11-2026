@@ -54,6 +54,7 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
     log_format: Literal["json", "text"] = "json"
+    ui_enabled: bool = True
 
     @field_validator("service_api_keys", "ref_allowed_hosts", mode="before")
     @classmethod

@@ -27,6 +27,7 @@ replicaCount: 2
 ## @param config.webConcurrency gunicorn workers per pod
 ## @param config.refAllowedHosts Comma-separated hosts allowed for items_ref/fulltext.ref (empty: none)
 ## @param config.logLevel Log level
+## @param config.uiEnabled Serve the built-in test UI under /ui/ (keep false in production)
 ## @param config.extraEnv Additional environment variables (name: value)
 config:
   serviceMode: auto
@@ -42,6 +43,7 @@ config:
   webConcurrency: 2
   refAllowedHosts: ""
   logLevel: INFO
+  uiEnabled: false
   extraEnv: {}
 
 ## @section Secrets (names only, never values)

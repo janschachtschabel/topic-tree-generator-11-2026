@@ -2,7 +2,7 @@
 
 Stand: 24.11.2026 · Status: **umgesetzt und geprüft (Phasen 1–6 abgeschlossen)** · Branch: `feature/topic-tree-v2`
 
-> **Fortschritt**: Phase 1 (Fundament) ✅ · Phase 2 (v2-Vertrag & Domäne) ✅ · Phase 3 (topic, folders, refine, Zuordnung) ✅ · Phase 4 (document, contents, Referenzen) ✅ · Phase 5 (Betrieb, Docker, Helm, CI, Doku) ✅ · Phase 6 (Review, Audit, Verify + Live-E2E) ✅ · Live-Vermessung gegen OpenAI nativ (`gpt-6-luna`) ✅ (`docs/steckbrief.md`). Offen für Betrieb/T6: b-api-Proxy-Freischaltung, Image-Größe aus CI-Build und reale b-api-EUR-Abrechnung.
+> **Fortschritt**: Phase 1 (Fundament) ✅ · Phase 2 (v2-Vertrag & Domäne) ✅ · Phase 3 (topic, folders, refine, Zuordnung) ✅ · Phase 4 (document, contents, Referenzen) ✅ · Phase 5 (Betrieb, Docker, Helm, CI, Doku) ✅ · Phase 6 (Review, Audit, Verify + Live-E2E) ✅ · Live-Vermessung gegen OpenAI nativ (`gpt-6-luna`) ✅ (`docs/steckbrief.md`, `docs/measurements/2026-11-24-openai-gpt-6-luna.md`) · Optionale Test-UI (`/ui/`, per `UI_ENABLED=false` abschaltbar, im Helm-Chart standardmäßig aus) ✅. Offen für Betrieb/T6: b-api-Proxy-Freischaltung, Image-Größe aus CI-Build und reale b-api-EUR-Abrechnung.
 
 ## Ziel
 

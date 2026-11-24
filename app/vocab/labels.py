@@ -37,3 +37,13 @@ def label(uri: str) -> str | None:
 
 def snapshot_date() -> str:
     return _snapshot()[1]
+
+
+@cache
+def scheme_options(scheme: str) -> list[dict[str, str]]:
+    """Return sorted `{uri, label}` entries for a bundled vocabulary scheme."""
+    path = _DATA / f"{scheme}.json"
+    if not path.exists():
+        return []
+    labels: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))["labels"]
+    return [{"uri": uri, "label": name} for uri, name in sorted(labels.items(), key=lambda kv: kv[1].casefold())]

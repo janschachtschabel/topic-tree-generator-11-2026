@@ -10,6 +10,7 @@ from app.observability import metrics
 from app.observability.access_log import AccessLogMiddleware
 from app.observability.logging import configure_logging
 from app.settings import Settings, get_settings
+from app.ui.router import router as ui_router
 from app.version import service_version
 
 ROUTE_CLASSES = {
@@ -21,6 +22,9 @@ ROUTE_CLASSES = {
     ("GET", "/openapi.json"): "docs",
     ("GET", "/docs"): "docs",
     ("GET", "/redoc"): "docs",
+    ("GET", "/ui"): "ui",
+    ("GET", "/ui/"): "ui",
+    ("GET", "/ui/presets"): "ui",
 }
 
 DESCRIPTION = (
@@ -44,6 +48,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(v2_router)
     app.include_router(legacy_router)
+    if settings.ui_enabled:
+        app.include_router(ui_router)
     return app
 
 
