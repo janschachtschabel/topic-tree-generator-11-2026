@@ -293,8 +293,28 @@ PRESETS: list[dict[str, Any]] = [
                             "cclom:general_keyword": ["Licht", "Spiegel", "Linsen"],
                         },
                         "subcollections": [
-                            {"key": "k-spiegel", "title": "Spiegel", "shorttitle": "Spiegel", "subcollections": []},
-                            {"key": "k-linsen", "title": "Linsen", "shorttitle": "Linsen", "subcollections": []},
+                            {
+                                "key": "k-spiegel",
+                                "title": "Spiegel",
+                                "shorttitle": "Spiegel",
+                                "properties": {
+                                    "cm:title": ["Spiegel"],
+                                    "cm:description": ["Reflexionsgesetz, ebene und gewölbte Spiegel im Alltag."],
+                                },
+                                "subcollections": [],
+                            },
+                            {
+                                "key": "k-linsen",
+                                "title": "Linsen",
+                                "shorttitle": "Linsen",
+                                "properties": {
+                                    "cm:title": ["Linsen"],
+                                    "cm:description": [
+                                        "Sammel- und Zerstreuungslinsen, Brennpunkt und Bildentstehung."
+                                    ],
+                                },
+                                "subcollections": [],
+                            },
                         ],
                     },
                     {
@@ -302,7 +322,28 @@ PRESETS: list[dict[str, Any]] = [
                         "title": "Mechanik",
                         "shorttitle": "Mechanik",
                         "properties": {"cm:title": ["Mechanik"], "cm:description": ["Kräfte und Bewegungen."]},
-                        "subcollections": [],
+                        "subcollections": [
+                            {
+                                "key": "k-kraefte",
+                                "title": "Kräfte",
+                                "shorttitle": "Kräfte",
+                                "properties": {
+                                    "cm:title": ["Kräfte"],
+                                    "cm:description": ["Kraft als Ursache von Verformung und Bewegungsänderung."],
+                                },
+                                "subcollections": [],
+                            },
+                            {
+                                "key": "k-bewegung",
+                                "title": "Bewegung",
+                                "shorttitle": "Bewegung",
+                                "properties": {
+                                    "cm:title": ["Bewegung"],
+                                    "cm:description": ["Geschwindigkeit, gleichförmige und beschleunigte Bewegung."],
+                                },
+                                "subcollections": [],
+                            },
+                        ],
                     },
                     {
                         "key": "k-akustik",

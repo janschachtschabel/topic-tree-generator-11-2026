@@ -163,3 +163,21 @@ def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
     assert "is-duplicate" in tree_js
     assert "tree.badge.duplicate" in tree_js
     assert '"Duplikat"' in i18n_js and '"Duplicate"' in i18n_js
+
+
+def test_refine_presets_start_from_a_fully_described_tree() -> None:
+    from app.ui.presets import PRESETS
+
+    def nodes(items: list[dict]):
+        for item in items:
+            yield item
+            yield from nodes(item.get("subcollections", []))
+
+    for preset in PRESETS:
+        current = preset["payload"].get("current_tree")
+        if not current:
+            continue
+        undescribed = [
+            n["key"] for n in nodes(current["collection"]) if not n.get("properties", {}).get("cm:description")
+        ]
+        assert undescribed == [], f"{preset['id']}: {undescribed}"
