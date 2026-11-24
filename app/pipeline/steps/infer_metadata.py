@@ -4,8 +4,8 @@ Step A (deterministic, zero LLM cost): narrow each node's `ccm:taxonid`, `ccm:ed
 `ccm:educationalintendedenduserrole` from the properties of its assigned items (when narrower than `frame`
 or when `frame` is empty).
 Step B (LLM, batched with shared cache prefix): only for fields where `frame` is empty or multi-valued and
-nodes still lack specific URIs. For `hochschule` context, uses compact depth 1+2 `hochschulfaechersystematik`
-candidates (71 entries instead of all 344). All returned URIs are strictly validated against the candidate pool.
+nodes still lack specific URIs. Prompts list ONLY exact German vocabulary labels (no URIs) and require exact
+spelling; returned labels are deterministically mapped back to canonical SkoHub URIs in Python.
 """
 
 import asyncio
@@ -22,22 +22,22 @@ from app.vocab.labels import entries, is_known, label
 
 STEP = "infer_metadata"
 NODES_MARKER = "## Knoten"
-BATCH = 40
+BATCH = 20
 _HOCHSCHULE = "http://w3id.org/openeduhub/vocabs/educationalContext/hochschule"
 _HS_PREFIX = "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/"
 
 _FIELDS = (
-    ("discipline_uri", "ccm:taxonid", "Fach / TaxonID (discipline_uri)"),
-    ("educational_context_uri", "ccm:educationalcontext", "Bildungsstufe (educational_context_uri)"),
-    ("intended_end_user_role_uri", "ccm:educationalintendedenduserrole", "Zielgruppe (intended_end_user_role_uri)"),
+    ("discipline", "ccm:taxonid", "Fach (discipline)"),
+    ("educational_context", "ccm:educationalcontext", "Bildungsstufe (educational_context)"),
+    ("intended_end_user_role", "ccm:educationalintendedenduserrole", "Zielgruppe (intended_end_user_role)"),
 )
 
 
 class NodeMetadata(BaseModel):
     key: str
-    discipline_uri: list[str] = Field(default_factory=list)
-    educational_context_uri: list[str] = Field(default_factory=list)
-    intended_end_user_role_uri: list[str] = Field(default_factory=list)
+    discipline: list[str] = Field(default_factory=list)
+    educational_context: list[str] = Field(default_factory=list)
+    intended_end_user_role: list[str] = Field(default_factory=list)
 
 
 class MetadataResult(BaseModel):
@@ -81,26 +81,24 @@ def _candidate_pool(frame: Frame) -> dict[str, list[tuple[str, str]]]:
     pools: dict[str, list[tuple[str, str]]] = {}
 
     if len(frame.discipline_uri) > 1:
-        pools["discipline_uri"] = [(u, label(u) or u) for u in frame.discipline_uri]
+        pools["discipline"] = [(u, name) for u in frame.discipline_uri if (name := label(u))]
     elif not frame.discipline_uri:
         if _use_hochschule(frame):
-            pools["discipline_uri"] = [
-                (e["uri"], e["label"]) for e in entries("hochschulfaechersystematik", max_depth=2)
-            ]
+            pools["discipline"] = [(e["uri"], e["label"]) for e in entries("hochschulfaechersystematik", max_depth=2)]
         else:
-            pools["discipline_uri"] = [(e["uri"], e["label"]) for e in entries("discipline")]
+            pools["discipline"] = [(e["uri"], e["label"]) for e in entries("discipline")]
 
     if len(frame.educational_context_uri) > 1:
-        pools["educational_context_uri"] = [(u, label(u) or u) for u in frame.educational_context_uri]
+        pools["educational_context"] = [(u, name) for u in frame.educational_context_uri if (name := label(u))]
     elif not frame.educational_context_uri:
-        pools["educational_context_uri"] = [(e["uri"], e["label"]) for e in entries("educationalContext")]
+        pools["educational_context"] = [(e["uri"], e["label"]) for e in entries("educationalContext")]
 
     if len(frame.intended_end_user_role_uri) > 1:
-        pools["intended_end_user_role_uri"] = [(u, label(u) or u) for u in frame.intended_end_user_role_uri]
+        pools["intended_end_user_role"] = [(u, name) for u in frame.intended_end_user_role_uri if (name := label(u))]
     elif not frame.intended_end_user_role_uri:
-        pools["intended_end_user_role_uri"] = [(e["uri"], e["label"]) for e in entries("intendedEndUserRole")]
+        pools["intended_end_user_role"] = [(e["uri"], e["label"]) for e in entries("intendedEndUserRole")]
 
-    return pools
+    return {k: v for k, v in pools.items() if v}
 
 
 def _render_candidates(pools: dict[str, list[tuple[str, str]]]) -> str:
@@ -109,7 +107,7 @@ def _render_candidates(pools: dict[str, list[tuple[str, str]]]) -> str:
         items = pools.get(field_name)
         if not items:
             continue
-        lines = [f"### {caption}", *(f"- {uri} | {name}" for uri, name in items)]
+        lines = [f"### {caption}", *(f"- {name}" for _, name in items)]
         sections.append("\n".join(lines))
     return "\n\n".join(sections)
 
@@ -125,7 +123,7 @@ async def _infer_batch(
     batch: list[Node],
     prefix: str,
     roots: list[Node],
-    allowed: dict[str, set[str]],
+    label_maps: dict[str, dict[str, str]],
     rc: RunContext,
 ) -> int:
     lines = "\n".join(
@@ -143,13 +141,19 @@ async def _infer_batch(
         if node is None:
             continue
         for field_name, prop_key, _ in _FIELDS:
-            if field_name not in allowed or node.properties.values(prop_key):
+            lookup = label_maps.get(field_name)
+            if lookup is None or node.properties.values(prop_key):
                 continue
             proposed = getattr(item, field_name)
-            valid = [u for u in dict.fromkeys(proposed) if u in allowed[field_name]]
-            unknown += len(proposed) - len(valid)
-            if valid:
-                node.properties.set(prop_key, valid)
+            mapped: list[str] = []
+            for raw_label in proposed:
+                uri = lookup.get(raw_label.strip().casefold())
+                if uri is None:
+                    unknown += 1
+                elif uri not in mapped:
+                    mapped.append(uri)
+            if mapped:
+                node.properties.set(prop_key, mapped)
     return unknown
 
 
@@ -165,11 +169,13 @@ async def infer_metadata(roots: list[Node], req: TopicTreeRequestV2, rc: RunCont
     if not targets:
         return
 
-    allowed = {field_name: {uri for uri, _ in items} for field_name, items in pools.items()}
+    label_maps = {
+        field_name: {name.strip().casefold(): uri for uri, name in items} for field_name, items in pools.items()
+    }
     prefix = render(STEP, context=rc.context, candidates=_render_candidates(pools), nodes="").rstrip() + "\n\n"
     batches = [targets[i : i + BATCH] for i in range(0, len(targets), BATCH)]
     outcomes = await asyncio.gather(
-        *(_infer_batch(b, prefix, roots, allowed, rc) for b in batches), return_exceptions=True
+        *(_infer_batch(b, prefix, roots, label_maps, rc) for b in batches), return_exceptions=True
     )
     unknown_total = 0
     failed = 0
@@ -182,8 +188,8 @@ async def infer_metadata(roots: list[Node], req: TopicTreeRequestV2, rc: RunCont
             unknown_total += outcome
     if unknown_total:
         rc.warn(
-            "METADATA_URI_UNKNOWN",
-            f"{unknown_total} unbekannte Vokabular-URIs bei der automatischen Metadaten-Zuordnung verworfen.",
+            "METADATA_LABEL_UNKNOWN",
+            f"{unknown_total} unbekannte Vokabular-Bezeichnungen bei der automatischen Metadaten-Zuordnung verworfen.",
             step=STEP,
         )
     if failed:

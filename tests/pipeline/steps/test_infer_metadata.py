@@ -11,6 +11,7 @@ from app.pipeline.steps.infer_metadata import infer_metadata
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import ContentRef
 from app.settings import Settings
+from app.vocab.labels import label
 from tests.fakes.llm import FakeLLM
 from tests.fixtures import spec_examples as ex
 
@@ -73,7 +74,7 @@ async def test_single_value_frame_skips_llm_completely() -> None:
     assert llm.calls == []
 
 
-async def test_interdisciplinary_frame_narrows_per_node_via_llm_and_drops_hallucinated_uris() -> None:
+async def test_interdisciplinary_frame_narrows_per_node_via_labels_and_drops_unknown_labels() -> None:
     req = TopicTreeRequestV2.model_validate(
         {
             "mode": "create",
@@ -93,8 +94,8 @@ async def test_interdisciplinary_frame_narrows_per_node_via_llm_and_drops_halluc
         {
             "infer_metadata": {
                 "nodes": [
-                    {"key": roots[0].key, "discipline_uri": [BIO, "http://evil.invalid/999"]},
-                    {"key": roots[1].key, "discipline_uri": [POL]},
+                    {"key": roots[0].key, "discipline": ["Biologie", "Erfundenes Fach"]},
+                    {"key": roots[1].key, "discipline": ["politik"]},
                 ]
             }
         }
@@ -103,14 +104,14 @@ async def test_interdisciplinary_frame_narrows_per_node_via_llm_and_drops_halluc
     await infer_metadata(roots, req, context)
     assert roots[0].properties.values("ccm:taxonid") == [BIO]
     assert roots[1].properties.values("ccm:taxonid") == [POL]
-    assert "METADATA_URI_UNKNOWN" in [w.code for w in context.warnings]
-    # Prompt only offers the 2 frame disciplines, not all 70 or 344.
+    assert "METADATA_LABEL_UNKNOWN" in [w.code for w in context.warnings]
+    # Prompt sends exact German labels only — zero raw URIs.
     prompt = llm.prompts("infer_metadata")[0]
-    assert BIO in prompt and POL in prompt
-    assert "hochschulfaechersystematik" not in prompt
+    assert "- Biologie" in prompt and "- Politik" in prompt
+    assert "http://" not in prompt
 
 
-async def test_hochschule_context_uses_compact_hochschulfaechersystematik_candidates() -> None:
+async def test_hochschule_context_uses_compact_hochschulfaechersystematik_labels() -> None:
     req = TopicTreeRequestV2.model_validate(
         {
             "mode": "create",
@@ -124,11 +125,14 @@ async def test_hochschule_context_uses_compact_hochschulfaechersystematik_candid
             "options": {"auto_metadata": True},
         }
     )
+    hs_phys_label = label(HS_PHYS)
+    assert hs_phys_label is not None
     roots = [Node(key="k-exp", title="Quantenmechanik")]
-    llm = FakeLLM({"infer_metadata": {"nodes": [{"key": "k-exp", "discipline_uri": [HS_PHYS]}]}})
+    llm = FakeLLM({"infer_metadata": {"nodes": [{"key": "k-exp", "discipline": [hs_phys_label]}]}})
     await infer_metadata(roots, req, rc(llm))
     prompt = llm.prompts("infer_metadata")[0]
-    assert "hochschulfaechersystematik" in prompt
+    assert f"- {hs_phys_label}" in prompt
+    assert "http://" not in prompt
     assert roots[0].properties.values("ccm:taxonid") == [HS_PHYS]
 
 
