@@ -48,6 +48,18 @@ curl -s http://localhost:9000/metrics    # Prometheus metrics (internal port onl
 
 Open the built-in test UI at `http://localhost:8000/ui/` (or OpenAPI docs at `http://localhost:8000/docs`).
 
+**Alternative ports (several APIs on one host):** if `8000`/`9000` are already taken, set different ports in `.env`;
+both Compose files use them for the container *and* the host side, Traefik routing and the healthcheck follow:
+
+```shell
+# .env
+PUBLIC_PORT=8010
+INTERNAL_PORT=9010
+```
+
+Then the UI is at `http://localhost:8010/ui/` and `/ready` at `http://localhost:9010/ready`. The two ports must differ
+and lie in `1–65535`; inside the container (non-root) choose ports `≥ 1024`.
+
 ### Option B: Docker Compose – pre-built image behind Traefik (Compose-from-URL / reverse proxy)
 
 Uses [`docker-compose.yml`](docker-compose.yml) with Traefik HTTPS labels and zero required environment variables on first start:
@@ -100,8 +112,8 @@ All settings are read from environment variables or `.env` and have defaults (se
 | `TRAEFIK_NETWORK` | `topic-tree-web` | Docker network name used by Traefik and the service container. |
 | `TRAEFIK_ENTRYPOINT` | `websecure` | Traefik entrypoint name for HTTPS routing. |
 | `TRAEFIK_CERTRESOLVER` | `letsencrypt` | Traefik TLS certificate resolver name. |
-| `PUBLIC_PORT` | `8000` | Public API & UI port. |
-| `INTERNAL_PORT` | `9000` | Internal port for `/health`, `/ready`, and Prometheus `/metrics` (do not expose publicly). |
+| `PUBLIC_PORT` | `8000` | Public API & UI port; Docker Compose publishes the same port on the host (alternative port per service). |
+| `INTERNAL_PORT` | `9000` | Internal port for `/health`, `/ready`, and Prometheus `/metrics` (do not expose publicly); must differ from `PUBLIC_PORT`. |
 | `WEB_CONCURRENCY` | `2` | Number of Gunicorn worker processes (~125 MiB idle RAM with 2 workers). |
 
 ### LLM Backend (b-api Router & Standalone OpenAI)

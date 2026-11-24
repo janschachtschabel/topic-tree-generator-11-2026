@@ -1,5 +1,7 @@
 # Local build and single-host setup with direct ports (no reverse proxy).
 # Start: cp .env.example .env && docker compose -f docker-compose.build.yml up --build
+# Ports: PUBLIC_PORT / INTERNAL_PORT in .env set the container and host port alike (e.g. 8010/9010 when another
+# service already uses 8000/9000 on this host).
 services:
   topic-tree:
     build: .
@@ -8,8 +10,8 @@ services:
       - path: .env
         required: false
     ports:
-      - "8000:8000"
-      - "9000:9000"
+      - "${PUBLIC_PORT:-8000}:${PUBLIC_PORT:-8000}"
+      - "${INTERNAL_PORT:-9000}:${INTERNAL_PORT:-9000}"
     read_only: true
     tmpfs:
       - /tmp

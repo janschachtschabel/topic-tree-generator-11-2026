@@ -25,6 +25,9 @@ Changed (operators)
   callers with their own b-api key use the b-api proxy, or `B_API_DEV_KEY` for local development.
 - Container command: `gunicorn -c gunicorn.conf.py app.main:app` (was `fastapi run main.py`). Ports 8000 and 9000.
 - `B_API_BASE_URL` may now be the plain base URL; the old full router URL still works.
+- `PUBLIC_PORT` / `INTERNAL_PORT` now also drive both Compose files (host port mapping, Traefik service port,
+  healthcheck), so a service can move to alternative ports with one change in `.env`. Both ports are validated
+  (`1–65535`, must differ).
 
 Unchanged
 - `/generate-topic-tree` and `/generate-collection-description`: same request, response and behaviour.

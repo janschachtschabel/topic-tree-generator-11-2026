@@ -2,9 +2,9 @@
 
 import re
 from functools import lru_cache
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import AliasChoices, Field, SecretStr, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 _ROUTER_PATH = "/api/v1/llm/router"
@@ -54,8 +54,10 @@ class Settings(BaseSettings):
 
     request_timeout_seconds: float = Field(280, gt=0)
     web_concurrency: int = Field(2, ge=1)
-    public_port: int = 8000
-    internal_port: int = 9000
+    # Ports inside the container; Docker Compose publishes the same numbers on the host, so an alternative port for
+    # several services on one host is a single change in `.env`.
+    public_port: int = Field(8000, ge=1, le=65535)
+    internal_port: int = Field(9000, ge=1, le=65535)
 
     ref_allowed_hosts: CommaList = Field(default_factory=list)
     ref_max_bytes: int = Field(10 * 1024 * 1024, gt=0)
@@ -101,6 +103,12 @@ class Settings(BaseSettings):
         value = value.rstrip("/")
         value = value.removesuffix(_ROUTER_PATH)
         return value
+
+    @model_validator(mode="after")
+    def _distinct_ports(self) -> Self:
+        if self.public_port == self.internal_port:
+            raise ValueError(f"PUBLIC_PORT and INTERNAL_PORT must differ (both are {self.public_port})")
+        return self
 
     @property
     def b_api_router_url(self) -> str:

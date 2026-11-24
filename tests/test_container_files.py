@@ -1,5 +1,6 @@
 """Static and Compose-CLI checks of the container setup."""
 
+import json
 import re
 import shutil
 import subprocess
@@ -73,7 +74,9 @@ def test_canonical_compose_is_reverse_proxy_and_panel_compatible() -> None:
     assert "traefik.http.routers.topic-tree.rule=Host(`${DOMAIN:-}`)" in labels
     assert "traefik.http.routers.topic-tree.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}" in labels
     assert "traefik.http.routers.topic-tree.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}" in labels
-    assert "traefik.http.services.topic-tree.loadbalancer.server.port=8000" in labels
+    # Container ports follow PUBLIC_PORT / INTERNAL_PORT so a changed port in .env keeps routing and health intact.
+    assert "traefik.http.services.topic-tree.loadbalancer.server.port=${PUBLIC_PORT:-8000}" in labels
+    assert "127.0.0.1:${INTERNAL_PORT:-9000}/health" in " ".join(service["healthcheck"]["test"])
 
 
 def test_local_build_compose_publishes_both_ports_and_mounts_tmp() -> None:
@@ -81,7 +84,9 @@ def test_local_build_compose_publishes_both_ports_and_mounts_tmp() -> None:
     data = yaml.safe_load(text)
     service = data["services"]["topic-tree"]
     assert service["build"] == "."
-    assert "8000:8000" in service["ports"] and "9000:9000" in service["ports"]
+    # Host and container side follow PUBLIC_PORT / INTERNAL_PORT (alternative ports for several APIs on one host).
+    assert "${PUBLIC_PORT:-8000}:${PUBLIC_PORT:-8000}" in service["ports"]
+    assert "${INTERNAL_PORT:-9000}:${INTERNAL_PORT:-9000}" in service["ports"]
     assert service["read_only"] is True
     assert "/tmp" in service["tmpfs"]
 
@@ -124,3 +129,22 @@ def test_docker_compose_config_validates_without_env_and_with_env_example(tmp_pa
         check=False,
     )
     assert with_example.returncode == 0, with_example.stderr
+
+
+def test_build_compose_resolves_custom_ports_from_env(tmp_path: Path) -> None:
+    if shutil.which("docker") is None:
+        pytest.skip("docker CLI not installed")
+    (tmp_path / "docker-compose.build.yml").write_text(
+        (ROOT / "docker-compose.build.yml").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    (tmp_path / ".env").write_text("PUBLIC_PORT=8010\nINTERNAL_PORT=9010\n", encoding="utf-8")
+    result = subprocess.run(
+        ["docker", "compose", "-f", "docker-compose.build.yml", "config", "--format", "json"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    ports = json.loads(result.stdout)["services"]["topic-tree"]["ports"]
+    assert {(p["published"], p["target"]) for p in ports} == {("8010", 8010), ("9010", 9010)}

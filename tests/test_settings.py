@@ -118,3 +118,21 @@ def test_shape_cost_limits_validate_bounds() -> None:
         make(MAX_NODES_PER_LEVEL="1")
     with pytest.raises(ValidationError):
         make(MAX_NODES_PER_LEVEL="21")
+
+
+def test_ports_are_configurable_via_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PUBLIC_PORT", "8010")
+    monkeypatch.setenv("INTERNAL_PORT", "9010")
+    s = Settings(_env_file=None)
+    assert (s.public_port, s.internal_port) == (8010, 9010)
+
+
+@pytest.mark.parametrize("ports", [(0, 9000), (70000, 9000), (8000, 0), (8000, 65536)])
+def test_ports_outside_the_tcp_range_are_rejected(ports: tuple[int, int]) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, public_port=ports[0], internal_port=ports[1])
+
+
+def test_public_and_internal_port_must_differ() -> None:
+    with pytest.raises(ValidationError, match="must differ"):
+        Settings(_env_file=None, public_port=8010, internal_port=8010)
