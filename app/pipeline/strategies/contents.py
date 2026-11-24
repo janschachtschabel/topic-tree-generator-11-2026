@@ -116,7 +116,10 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     grouping = await group_contents(items_block(shaping, rc), rc, max_tokens=_max_tokens(req))
 
     cut = Cut()
-    roots = to_nodes(grouping.groups, req.shape.depth, req.shape.main_topics.max, cut, OriginType.cluster)
+    shape = req.shape
+    roots = to_nodes(
+        grouping.groups, shape.depth, shape.main_topics.max, cut, OriginType.cluster, child_width=shape.children.max
+    )
     if cut.depth:
         rc.warn("SHAPE_DEPTH", "Die Gruppenbildung war zu tief und wurde gekürzt.", step="group_contents")
     if cut.width:

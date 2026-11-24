@@ -73,12 +73,22 @@ class Cut:
 
 
 def to_nodes(
-    items: list[BranchNode], levels_left: int, width: int, cut: Cut, origin: OriginType = OriginType.topic
+    items: list[BranchNode],
+    levels_left: int,
+    width: int,
+    cut: Cut,
+    origin: OriginType = OriginType.topic,
+    child_width: int | None = None,
 ) -> list[Node]:
-    """Convert LLM nodes into working nodes, cutting what exceeds the shape (recorded in `cut`)."""
+    """Convert LLM nodes into working nodes, cutting what exceeds the shape (recorded in `cut`).
+
+    `width` limits this level; `child_width` (default: `width`) limits every level below it, so the top level
+    can follow `shape.main_topics.max` while deeper levels follow `shape.children.max`.
+    """
     if levels_left <= 0:
         cut.depth = cut.depth or bool(items)
         return []
+    below = width if child_width is None else child_width
     cut.width = cut.width or len(items) > width
     return [
         Node(
@@ -88,7 +98,7 @@ def to_nodes(
             description=item.description.strip(),
             keywords=item.keywords,
             origin=Origin(type=origin),
-            children=to_nodes(item.children, levels_left - 1, width, cut, origin),
+            children=to_nodes(item.children, levels_left - 1, below, cut, origin),
         )
         for item in items[:width]
     ]

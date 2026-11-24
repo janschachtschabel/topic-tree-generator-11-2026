@@ -214,3 +214,16 @@ async def test_stratified_sampling_handles_more_than_sample_size_strata_and_keep
     detailed = [line for line in prompt.splitlines() if line.startswith("- id: ")]
     assert len(detailed) == SAMPLE_SIZE
     assert any(line.startswith("- id: dom") for line in detailed)
+
+
+async def test_subgroups_are_cut_at_children_max_not_main_max() -> None:
+    data = grouping(2)
+    data["groups"][0]["children"] = [
+        {"title": f"Teil 0.{j}", "shorttitle": f"T{j}", "description": D60, "keywords": [], "children": []}
+        for j in range(8)
+    ]
+    llm = FakeLLM({"group_contents": data})
+    run = rc(llm)
+    result = await build(req(items(10)), run)
+    assert len(result.roots[0].children) == 6
+    assert any(w.code == "SHAPE_WIDTH" for w in run.warnings)
