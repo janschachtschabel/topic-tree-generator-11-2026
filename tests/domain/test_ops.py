@@ -134,3 +134,18 @@ def test_no_op_rename_and_move_are_not_recorded() -> None:
     )
     assert result.applied == [] and result.rejected == []
     assert [c.key for c in find(roots, "k-optik").children] == ["k-linsen", "k-spiegel"]
+
+
+def test_nested_add_resolves_newly_added_parent_by_title_or_key() -> None:
+    roots, result = run(
+        [
+            ch(op="add", parent=None, title="Farben und Spektrum"),
+            ch(op="add", parent="Farben und Spektrum", title="Spektralfarben"),
+            ch(op="add", parent="k-farben-und-spektrum", title="Farbmischung"),
+        ]
+    )
+    assert result.rejected == []
+    farben = find(roots, "k-farben-und-spektrum")
+    assert farben is not None
+    assert [c.title for c in farben.children] == ["Spektralfarben", "Farbmischung"]
+    assert result.applied[1].parent == "k-farben-und-spektrum"

@@ -66,8 +66,18 @@ class _Applier:
         data = change.model_dump(exclude={"properties", "hint"}) | overrides
         self.result.applied.append(ChangeRecord.model_validate({**data, "from": self.source}))
 
+    def _resolve_parent(self, ref: str) -> Node:
+        by_key = index(self.roots)
+        if ref in by_key:
+            return self.node(ref)
+        needle = ref.strip().casefold()
+        matches = [n for n, _, _ in walk(self.roots) if n.title.strip().casefold() == needle]
+        if len(matches) == 1 and matches[0].key:
+            return self.node(matches[0].key)
+        return self.node(ref)
+
     def add(self, change: Change) -> None:
-        parent = self.node(change.parent) if change.parent else None
+        parent = self._resolve_parent(change.parent) if change.parent else None
         taken = set(index(self.roots))
         new = Node(
             key=make_key(change.title, taken),
@@ -76,7 +86,7 @@ class _Applier:
             origin=Origin(type=OriginType.feedback),
         )
         (parent.children if parent else self.roots).append(new)
-        self.record(change, key=new.key)
+        self.record(change, key=new.key, parent=parent.key if parent else None)
 
     def remove(self, change: Change) -> None:
         node = self.node(change.key)
