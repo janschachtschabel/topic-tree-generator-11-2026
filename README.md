@@ -6,7 +6,7 @@ unstructured contents. Drafts can be refined with feedback, and content items ar
 
 - `POST /v2/topic-tree` – current API (format in `docs/schemas/`, calls in `docs/api.md`)
 - `POST /generate-topic-tree`, `POST /generate-collection-description` – legacy v1, unchanged
-- Design and decisions: `docs/plans/2026-11-24-topic-tree-v2.md` · Operations: `docs/steckbrief.md`
+- Design and decisions: `docs/plans/2026-11-24-topic-tree-v2.md` · Operations: `docs/steckbrief.md` · Measurements & cost model: `docs/measurements/2026-11-24-openai-gpt-6-luna.md`
 
 ## How it works
 

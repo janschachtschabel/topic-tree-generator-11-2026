@@ -26,6 +26,8 @@ Status je Zeile: ✅ belegt · ⏳ zu messen/klären · ➖ entfällt
 
 ## Messergebnisse (24.11.2026, OpenAI nativ, `gpt-6-luna`)
 
+Vollständiger Messbericht inkl. Token-Aufschlüsselung (ungecacht/gecacht/Output) und Rechenmodell für Tarif- und Kostenbewertungen: [`docs/measurements/2026-11-24-openai-gpt-6-luna.md`](measurements/2026-11-24-openai-gpt-6-luna.md).
+
 ### Feature-Probe (`scripts/probe_llm.py --model gpt-6-luna`)
 
 - `common_body` (`max_completion_tokens` + `reasoning_effort: "none"`): ✅ OK, gültiges JSON
