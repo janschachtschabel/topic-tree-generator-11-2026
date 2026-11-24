@@ -43,6 +43,8 @@ STRATEGIES: dict[UseCase, Strategy] = {
 }
 
 _RETRYABLE = {429, 500, 502, 503, 504}
+# Upstream rejections that point to a configuration mismatch (unknown route/model, unsupported parameters).
+_CONFIG_REJECTIONS = {400, 404, 422}
 
 
 def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
@@ -56,10 +58,16 @@ def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
     if mode == "bapi" and error.status == 403:
         return ApiError(403, "FORBIDDEN", "Fehlende Berechtigung an der b-api für diesen LLM-Aufruf.")
     retry = error.status in _RETRYABLE or error.reason in {"timeout", "connection"}
+    message = "Das Sprachmodell hat keine verwertbare Antwort geliefert."
+    if error.status in _CONFIG_REJECTIONS:
+        message = (
+            f"Der LLM-Endpunkt hat die Anfrage abgelehnt (HTTP {error.status}). Wahrscheinlich passen Modell bzw. Route "
+            "und Endpunkt nicht zusammen: B_API_ROUTE und B_API_LLM_PATH (b-api) bzw. OPENAI_MODEL prüfen."
+        )
     return ApiError(
         503 if retry else 502,
         "LLM_UNAVAILABLE",
-        "Das Sprachmodell hat keine verwertbare Antwort geliefert.",
+        message,
         details={"step": error.step, "reason": error.reason, "status": error.status},
         headers={"Retry-After": "30"} if retry else None,
     )

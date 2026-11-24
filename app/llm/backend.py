@@ -30,7 +30,7 @@ def resolve_backend(ctx: CallerContext, settings: Settings) -> LLMBackend:
     if ctx.mode == "bapi" and ctx.delegation_token:
         kind: BackendKind = "bapi"
         return LLMBackend(
-            kind, settings.b_api_router_url, settings.b_api_route, _cache_key_flag(kind, settings), ctx.delegation_token
+            kind, settings.b_api_llm_url, settings.b_api_route, _cache_key_flag(kind, settings), ctx.delegation_token
         )
     if settings.openai_api_key:
         kind = "openai"
@@ -45,7 +45,7 @@ def resolve_backend(ctx: CallerContext, settings: Settings) -> LLMBackend:
         kind = "dev"
         return LLMBackend(
             kind,
-            settings.b_api_router_url,
+            settings.b_api_llm_url,
             settings.b_api_route,
             _cache_key_flag(kind, settings),
             settings.b_api_dev_key.get_secret_value(),

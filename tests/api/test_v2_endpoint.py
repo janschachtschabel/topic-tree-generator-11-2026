@@ -134,3 +134,21 @@ async def test_bapi_upstream_auth_errors_return_4xx(status: int, expected_status
     with pytest.raises(ApiError) as err:
         await orchestrator.run(req, rc, {UseCase.topic: fail_auth})
     assert (err.value.status, err.value.code) == (expected_status, expected_code)
+
+
+@pytest.mark.parametrize("status", [400, 404, 422])
+async def test_upstream_rejection_points_to_the_llm_configuration(status: int) -> None:
+    from app.errors import ApiError
+    from app.llm.client import LLMStepError
+
+    req = TopicTreeRequestV2.model_validate(copy.deepcopy(ex.TOPIC))
+
+    async def rejected(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
+        raise LLMStepError("plan_structure", "http_error", status)
+
+    rc = RunContext(llm=FakeLLM(), settings=Settings(_env_file=None), deadline=time.monotonic() + 60, mode="standalone")
+    with pytest.raises(ApiError) as err:
+        await orchestrator.run(req, rc, {UseCase.topic: rejected})
+    assert (err.value.status, err.value.code) == (502, "LLM_UNAVAILABLE")
+    assert f"HTTP {status}" in err.value.message and "B_API_LLM_PATH" in err.value.message
+    assert err.value.headers is None

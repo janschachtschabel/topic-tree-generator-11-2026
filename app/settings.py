@@ -12,6 +12,8 @@ _HOSTNAME = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$"
 )
 
+_LLM_PATH = re.compile(r"^/(?:[A-Za-z0-9_-]+/)+$")
+
 CommaList = Annotated[list[str], NoDecode]
 
 
@@ -30,6 +32,9 @@ class Settings(BaseSettings):
         "topic-tree-generator",
         validation_alias=AliasChoices("b_api_route", "B_API_ROUTE", "LLM_MODEL", "llm_model"),
     )
+    # Path of the OpenAI-compatible LLM endpoint at the b-api used by v2: the router (named routes) by default, or
+    # another b-api endpoint that accepts plain model names (then B_API_ROUTE holds the model, e.g. gpt-6-luna).
+    b_api_llm_path: str = _ROUTER_PATH + "/"
     b_api_delegation_header: str | None = None
     b_api_dev_key: SecretStr | None = None
 
@@ -110,9 +115,23 @@ class Settings(BaseSettings):
             raise ValueError(f"PUBLIC_PORT and INTERNAL_PORT must differ (both are {self.public_port})")
         return self
 
+    @field_validator("b_api_llm_path")
+    @classmethod
+    def _normalize_llm_path(cls, value: str) -> str:
+        path = "/" + value.strip().strip("/") + "/"
+        if not _LLM_PATH.match(path):
+            raise ValueError(f"B_API_LLM_PATH must be a plain path such as /api/v1/llm/router/, got {value!r}")
+        return path
+
     @property
     def b_api_router_url(self) -> str:
+        """Router URL of the frozen legacy endpoints (always the router)."""
         return f"{self.b_api_base_url}{_ROUTER_PATH}/"
+
+    @property
+    def b_api_llm_url(self) -> str:
+        """LLM endpoint of the v2 pipeline (B_API_LLM_PATH, default the router)."""
+        return f"{self.b_api_base_url}{self.b_api_llm_path}"
 
 
 @lru_cache

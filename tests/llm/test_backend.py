@@ -52,3 +52,12 @@ def test_prompt_cache_key_flag_overrides_auto(flag: str, expected: bool) -> None
 
 def test_api_key_is_hidden_from_repr() -> None:
     assert "bdt_xyz" not in repr(resolve_backend(BAPI, settings()))
+
+
+@pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
+def test_b_api_llm_path_selects_a_model_endpoint_instead_of_the_router(ctx: CallerContext) -> None:
+    b = resolve_backend(
+        ctx, settings(b_api_dev_key="dev-key", b_api_llm_path="/api/v1/llm/openai/", b_api_route="gpt-6-luna")
+    )
+    assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
+    assert b.model == "gpt-6-luna"

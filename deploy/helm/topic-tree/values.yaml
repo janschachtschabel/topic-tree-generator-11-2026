@@ -16,7 +16,8 @@ replicaCount: 2
 ## @section Service configuration (each value becomes an environment variable, see .env.example)
 ## @param config.serviceMode auto | bapi | standalone (behind the b-api in production: bapi)
 ## @param config.bApiBaseUrl Base URL of the b-api
-## @param config.bApiRoute Route name on the b-api LLM router
+## @param config.bApiRoute Route name on the b-api LLM router (or a model name, see bApiLlmPath)
+## @param config.bApiLlmPath Path of the b-api LLM endpoint (default: router for named routes)
 ## @param config.llmParamFamily common | gpt5 | classic (must match the route's models)
 ## @param config.llmReasoningEffort Max reasoning effort: none | minimal | low (capped at low)
 ## @param config.llmOutputMode json_schema | json_object | prompt
@@ -36,6 +37,7 @@ config:
   serviceMode: auto
   bApiBaseUrl: https://b-api.staging.openeduhub.net
   bApiRoute: topic-tree-generator
+  bApiLlmPath: /api/v1/llm/router/
   llmParamFamily: common
   llmReasoningEffort: none
   llmOutputMode: json_schema
