@@ -723,7 +723,6 @@ dependencies = [
     { name = "prometheus-client" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "rdflib" },
     { name = "uvicorn-worker" },
 ]
 
@@ -746,7 +745,6 @@ requires-dist = [
     { name = "prometheus-client", specifier = ">=0.26.0" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
-    { name = "rdflib", specifier = ">=7.1.4" },
     { name = "uvicorn-worker", specifier = ">=0.4.0" },
 ]
 

@@ -1,7 +1,7 @@
 [project]
 name = "topic-tree-generator"
 version = "0.4.0"
-description = "Add your description here"
+description = "Themenbaum-Dienst: generates edu-sharing collection structures with an LLM"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -10,7 +10,6 @@ dependencies = [
     "openai>=1.99.9",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.13.1",
-    "rdflib>=7.1.4",
     "certifi>=2026.10.19",
     "gunicorn>=27.0.1",
     "uvicorn-worker>=0.4.0",
