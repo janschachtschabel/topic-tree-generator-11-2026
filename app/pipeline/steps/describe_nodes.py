@@ -11,8 +11,9 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from app.domain.text import truncate_sentences
-from app.domain.tree import Node, path
+from app.domain.tree import Node, path, walk
 from app.llm.client import LLMStepError
+from app.pipeline.key_matching import match_keys
 from app.pipeline.run_context import RunContext
 from app.prompts import render
 
@@ -42,12 +43,6 @@ def render_tree_outline(roots: list[Node], indent: int = 0) -> str:
     return "\n".join(lines)
 
 
-def _norm_key(key: str | None) -> str:
-    """Tolerate case, whitespace, trailing punctuation and a missing `k-` prefix in keys echoed by the model."""
-    text = (key or "").strip().casefold().rstrip(".,;:")
-    return text if text.startswith("k-") else f"k-{text}"
-
-
 def _line(node: Node, roots: list[Node], extra: dict[str, str]) -> str:
     line = f"- key: {node.key} | Pfad: {' > '.join(path(roots, node.key))}"
     info = extra.get(node.key)
@@ -62,11 +57,13 @@ async def _describe_batch(
     lines = "\n".join(_line(node, roots, extra) for node in batch)
     tokens = min(16000, 600 + len(batch) * (int(words * 1.8) + 80))
     result = await rc.llm.complete_json(STEP, f"{prefix}{NODES_MARKER}\n{lines}", DescribeResult, max_tokens=tokens)
-    by_key = {_norm_key(node.key): node for node in batch}
+    by_key = {node.key: node for node in batch}
+    tree_keys = {node.key for node, _, _ in walk(roots) if node.key}
+    matched = match_keys([item.key for item in result.nodes], list(by_key), elsewhere=tree_keys)
     unknown: list[str] = []
-    for item in result.nodes:
-        node = by_key.get(_norm_key(item.key))
-        if node is not None:
+    for i, item in enumerate(result.nodes):
+        if i in matched:
+            node = by_key[matched[i]]
             node.description = item.description.strip()
             node.keywords = item.keywords
         else:

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from app.domain.text import truncate_sentences
 from app.domain.tree import Node, index, path, walk
 from app.llm.client import LLMStepError
+from app.pipeline.key_matching import match_keys
 from app.pipeline.run_context import RunContext
 from app.prompts import render
 from app.schemas.common import UnassignedReason
@@ -73,7 +74,9 @@ def _apply(answer: Assignment, item: Item, nodes: dict[str, Node], options: Opti
         return unassigned(UnassignedReason.excluded)
     if answer.off_topic:
         return unassigned(UnassignedReason.off_topic)
-    known = [score for score in answer.nodes if score.key in nodes]
+    # Repair slightly altered keys deterministically; elimination is off because any tree node may be chosen.
+    matched = match_keys([score.key for score in answer.nodes], list(nodes), elimination=False)
+    known = [score.model_copy(update={"key": matched[i]}) for i, score in enumerate(answer.nodes) if i in matched]
     out.dropped += len(answer.nodes) - len(known)
     accepted = sorted((s for s in known if s.confidence >= options.min_confidence), key=lambda s: -s.confidence)
     if not options.multi_assign:

@@ -16,6 +16,7 @@ from app.domain.keys import assign_missing_keys
 from app.domain.text import truncate_sentences
 from app.domain.tree import Node, path, walk
 from app.llm.client import LLMStepError
+from app.pipeline.key_matching import match_keys
 from app.pipeline.run_context import RunContext
 from app.prompts import render
 from app.schemas.request_v2 import Frame, TopicTreeRequestV2
@@ -140,11 +141,13 @@ async def _infer_batch(
         STEP, f"{prefix}{NODES_MARKER}\n{lines}", MetadataResult, max_tokens=600 + 80 * len(batch)
     )
     by_key = {n.key: n for n in batch}
+    tree_keys = {n.key for n, _, _ in walk(roots) if n.key}
+    matched = match_keys([item.key for item in result.nodes], list(by_key), elsewhere=tree_keys)
     unknown = 0
-    for item in result.nodes:
-        node = by_key.get(item.key)
-        if node is None:
+    for i, item in enumerate(result.nodes):
+        if i not in matched:
             continue
+        node = by_key[matched[i]]
         for field_name, prop_key, _ in _FIELDS:
             lookup = label_maps.get(field_name)
             if lookup is None or node.properties.values(prop_key):
