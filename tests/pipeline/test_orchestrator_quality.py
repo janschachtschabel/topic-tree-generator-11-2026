@@ -149,3 +149,65 @@ async def test_refine_does_not_mutate_untouched_or_user_edited_keywords() -> Non
     assert by_key["k-untouched"].properties.values("cclom:general_keyword") == ["Brechung", "Arbeitsblatt"]
     assert by_key["k-edited"].status == "changed"
     assert by_key["k-edited"].properties.values("cclom:general_keyword") == ["Arbeitsblatt", "Reflexion"]
+
+
+async def test_assign_only_and_locked_refine_nodes_do_not_trigger_description_warnings() -> None:
+    assign_only_req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "refine",
+            "use_case": "folders",
+            "frame": copy.deepcopy(ex.FRAME),
+            "current_tree": {
+                "version": "v1",
+                "collection": [
+                    {
+                        "key": "k-optik",
+                        "title": "Optik",
+                        "shorttitle": "Optik",
+                        "properties": {"cm:title": ["Optik"], "cm:description": ["Kurz."]},
+                        "subcollections": [],
+                    }
+                ],
+            },
+            "options": {"assign_only": True, "assign_contents": False},
+        }
+    )
+    rc = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(assign_only_req, rc)
+    assert resp.warnings == []
+
+    locked_req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "refine",
+            "use_case": "topic",
+            "topic": "Physik",
+            "frame": copy.deepcopy(ex.FRAME),
+            "shape": {"depth": 2, "main_topics": {"min": 2, "max": 6}, "children": {"min": 2, "max": 6}},
+            "current_tree": {
+                "version": "v1",
+                "collection": [
+                    {
+                        "key": "k-optik",
+                        "title": "Optik",
+                        "shorttitle": "Optik",
+                        "properties": {"cm:title": ["Optik"], "cm:description": ["Kurz."]},
+                        "subcollections": [
+                            {"key": "k-spiegel", "title": "Spiegel", "shorttitle": "Spiegel", "subcollections": []},
+                            {"key": "k-linsen", "title": "Linsen", "shorttitle": "Linsen", "subcollections": []},
+                        ],
+                    },
+                    {
+                        "key": "k-mechanik",
+                        "title": "Mechanik",
+                        "shorttitle": "Mechanik",
+                        "properties": {"cm:title": ["Mechanik"], "cm:description": ["Kurz."]},
+                        "subcollections": [],
+                    },
+                ],
+            },
+            "feedback": {"locked": ["k-optik"]},
+        }
+    )
+    rc2 = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp2 = await orchestrator.run(locked_req, rc2)
+    assert [w.code for w in resp2.warnings] == []

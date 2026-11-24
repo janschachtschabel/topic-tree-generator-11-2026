@@ -104,6 +104,15 @@ def test_missing_descriptions_are_reported() -> None:
     assert codes(warnings) == ["DESCRIPTION_MISSING"]
 
 
+def test_check_descriptions_skips_protected_or_unchanged_keys() -> None:
+    nodes = [
+        Node(key="k-locked", title="Optik"),
+        Node(key="k-old", title="Mechanik", description="kurz"),
+        Node(key="k-new", title="Farben", description="wort " * 60),
+    ]
+    assert check_descriptions(nodes, target_words=60, skip_keys={"k-locked", "k-old"}) == []
+
+
 def test_unbalanced_branch_depths_are_reported() -> None:
     deep = n("k-a", "A", n("k-a1", "A1", n("k-a11", "A11"), n("k-a12", "A12")), n("k-a2", "A2"))
     shallow = n("k-b", "B")

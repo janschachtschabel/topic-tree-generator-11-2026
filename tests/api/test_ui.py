@@ -65,9 +65,17 @@ def test_ui_presets_cover_all_use_cases_and_validate_against_v2_schema() -> None
     assert any(p["payload"].get("options", {}).get("assign_only") for p in presets)
 
     settings = Settings(_env_file=None)
+    from app.vocab.labels import is_known
+
     for preset in presets:
         req = TopicTreeRequestV2.model_validate(preset["payload"])
         check_request(req, settings)
+        for uri in (
+            *req.frame.discipline_uri,
+            *req.frame.educational_context_uri,
+            *req.frame.intended_end_user_role_uri,
+        ):
+            assert is_known(uri), f"preset {preset['id']!r} uses unknown vocab URI: {uri}"
 
     vocabs = data["vocabs"]
     assert any(v["label"] == "Physik" for v in vocabs["discipline"])

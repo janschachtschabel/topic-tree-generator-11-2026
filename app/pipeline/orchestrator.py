@@ -95,6 +95,18 @@ def _protected_keyword_keys(req: TopicTreeRequestV2, result: StrategyResult, pre
     return protected
 
 
+def _skip_description_keys(req: TopicTreeRequestV2, roots: list[Node], previous: list[Node] | None) -> set[str]:
+    if previous is None:
+        return set()
+    skipped = protected_keys(roots, set(req.feedback.locked)) if req.feedback else set()
+    old_by_key = index(previous)
+    for node, _, _ in walk(roots):
+        old = old_by_key.get(node.key or "")
+        if old is not None and old.description == node.description:
+            skipped.add(node.key)
+    return skipped
+
+
 def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
     for warning in dedup_titles(result.roots):
         rc.warn(warning.code, warning.message, warning.key, warning.step)
@@ -111,6 +123,8 @@ def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         mark_status_against_folders(result.roots)
     else:
         mark_status_against_previous(result.roots, None)
+    if req.options.assign_only:
+        return
     if result.shape_checked:
         plan = ShapePlan.from_shape(req.shape)
         for warning in check_shape(result.roots, plan, extra=len(req.shape.extra_topics)):
@@ -121,7 +135,8 @@ def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
     )
     for warning in check_quality(result.roots, topic=req.topic, allowed_extra=allowed_extra, is_history=history):
         rc.warn(warning.code, warning.message, warning.key, warning.step)
-    for warning in check_descriptions(result.roots, req.hints.description_length):
+    skip_desc = _skip_description_keys(req, result.roots, previous)
+    for warning in check_descriptions(result.roots, req.hints.description_length, skip_keys=skip_desc):
         rc.warn(warning.code, warning.message, warning.key, warning.step)
 
 

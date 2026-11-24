@@ -141,8 +141,11 @@ def dedup_titles(roots: list[Node]) -> list[ServiceWarning]:
     return warnings
 
 
-def check_descriptions(roots: list[Node], target_words: int) -> list[ServiceWarning]:
-    nodes = [node for node, _, _ in walk(roots)]
+def check_descriptions(
+    roots: list[Node], target_words: int, *, skip_keys: set[str] | None = None
+) -> list[ServiceWarning]:
+    skipped = skip_keys or set()
+    nodes = [node for node, _, _ in walk(roots) if not (node.key and node.key in skipped)]
     missing = [n for n in nodes if not n.description.strip()]
     outliers = [
         n

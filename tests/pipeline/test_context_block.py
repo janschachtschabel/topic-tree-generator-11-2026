@@ -18,7 +18,7 @@ def test_block_lists_frame_labels_hints_and_shape() -> None:
     assert "Wellenoptik" in block and "Farben" in block
     assert "Ordnungsprinzip (Vorgabe): Themen" in block
     assert "3 Ebenen" in block and "6 bis 12" in block and "3 bis 8" in block
-    assert "etwa 60 Wörter" in block
+    assert "45 bis 72 Wörter (Ziel 60 Wörter)" in block
     assert unknown == []
 
 

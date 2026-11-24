@@ -7,7 +7,8 @@ _DISC_BIO = "http://w3id.org/openeduhub/vocabs/discipline/080"
 _DISC_CHEM = "http://w3id.org/openeduhub/vocabs/discipline/100"
 _DISC_GEO = "http://w3id.org/openeduhub/vocabs/discipline/220"
 _DISC_POL = "http://w3id.org/openeduhub/vocabs/discipline/480"
-_DISC_TECH = "http://w3id.org/openeduhub/vocabs/discipline/500"
+_DISC_MECHATRONIK = "http://w3id.org/openeduhub/vocabs/discipline/oeh04010"
+_DISC_ELEKTRO = "http://w3id.org/openeduhub/vocabs/discipline/04005"
 _CTX_SEK1 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
 _CTX_BERUF = "http://w3id.org/openeduhub/vocabs/educationalContext/berufliche_bildung"
 _ROLE_TEACHER = "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
@@ -87,7 +88,7 @@ PRESETS: list[dict[str, Any]] = [
             "use_case": "topic",
             "topic": "Elektromobilität und Hochvoltsysteme in der Kfz-Werkstatt",
             "frame": {
-                "discipline_uri": [_DISC_TECH],
+                "discipline_uri": [_DISC_MECHATRONIK, _DISC_ELEKTRO],
                 "educational_context_uri": [_CTX_BERUF],
                 "intended_end_user_role_uri": [_ROLE_TEACHER],
             },

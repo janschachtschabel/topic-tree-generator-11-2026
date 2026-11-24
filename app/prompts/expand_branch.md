@@ -13,6 +13,10 @@ Ordnungsprinzip je Ebene: {{levels}}
 5. Vermeide Doppelungen mit anderen Hauptthemen im Grundgerüst: Ordne ein Unterthema oder einen Fachbegriff nur dort
    ein, wo sein fachlicher Schwerpunkt liegt. Wenn ein Begriff bereits als Titel oder naheliegendes Unterthema in einem
    anderen Ast vorkommt, lege keinen gleichnamigen Knoten an, sondern erwähne den Bezug höchstens in der Beschreibung.
-6. Halte alle Beschreibungen präzise nahe der gewünschten Wortzahl aus dem Anfragekontext (keine langen Ausschweifungen).
+   Auf der untersten Ebene: benenne Begriffe, die auch in einem Nachbarast vorkommen können (z. B. Winkel, Bildgröße,
+   Bildlage, Lot, Anwendungen), eindeutig für diesen Ast (z. B. „Bildgröße am Spiegel“ statt „Bildgröße“,
+   „Einfallswinkel bei Brechung“ statt „Einfallswinkel“).
+6. Halte jede Beschreibung (auch auf der untersten Ebene) zuverlässig innerhalb der im Anfragekontext genannten
+   Wortspanne – weder zu kurz noch zu lang.
 
 {{branch}}
