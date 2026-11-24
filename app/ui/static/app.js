@@ -603,6 +603,8 @@
     if (!state.lastResponse) return;
     const current = {
       version: state.lastResponse.metadata.version,
+      title: state.lastResponse.metadata.title,
+      description: state.lastResponse.metadata.description,
       collection: state.lastResponse.collection,
       generation: state.lastResponse.metadata.generation,
     };

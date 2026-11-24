@@ -41,7 +41,8 @@ Vokabular-Bezeichnungen, die deterministisch auf kanonische SkoHub-URIs abgebild
 ## Nächster Durchlauf
 
 `collection` als `current_tree.collection`, `metadata.generation` als `current_tree.generation`, `metadata.version`
-als `current_tree.version` zurückgeben und nur das neue `feedback` ergänzen. Fehlende Vorgaben übernimmt der Dienst
+als `current_tree.version` sowie (optional) `metadata.title`/`metadata.description` als `current_tree.title`/
+`current_tree.description` zurückgeben und nur das neue `feedback` ergänzen. Fehlende Vorgaben übernimmt der Dienst
 aus `generation`.
 
 ## Seitenmarken im Markdown (use_case document)

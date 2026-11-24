@@ -197,3 +197,27 @@ async def test_removed_node_contents_are_not_reassigned_or_duplicated() -> None:
     assert llm.prompts("assign_contents") == []
     assert [u.id for u in resp.unassigned] == ["c1"]
     assert all(c.id != "c1" for n in resp.collection for c in n.contents)
+
+
+async def test_refine_keeps_tree_title_and_description_from_current_tree() -> None:
+    data = copy.deepcopy(CURRENT)
+    data["title"] = "Physik Sek I"
+    data["description"] = "Gesamtbeschreibung des Baums."
+    req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "refine",
+            "use_case": "topic",
+            "current_tree": data,
+            "frame": ex.FRAME,
+            "options": {"assign_only": True},
+        }
+    )
+    response, _ = await run(req, {})
+    assert response.metadata.title == "Physik Sek I"
+    assert response.metadata.description == "Gesamtbeschreibung des Baums."
+
+
+async def test_refine_without_stored_description_stays_compatible() -> None:
+    response, _ = await run(request(options={"assign_only": True}), {})
+    assert response.metadata.title == "Physik"
+    assert response.metadata.description == ""

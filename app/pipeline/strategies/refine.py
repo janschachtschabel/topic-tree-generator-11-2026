@@ -77,11 +77,13 @@ class _Refiner:
 
 
 async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
-    roots = from_tree_in(req.current_tree.collection)
+    current = req.current_tree
+    roots = from_tree_in(current.collection)
     assign_missing_keys(roots)
     result = StrategyResult(
         roots=roots,
-        title=req.topic or (roots[0].title if len(roots) == 1 else "Themenbaum"),
+        title=current.title or req.topic or (roots[0].title if len(roots) == 1 else "Themenbaum"),
+        description=current.description or "",
         structure=_structure(req),
         shape_checked=not (req.use_case == UseCase.folders and not req.options.improve),
     )

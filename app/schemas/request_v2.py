@@ -138,6 +138,9 @@ class GenerationIn(_Model):
 
 class CurrentTree(_Model):
     version: str | None = Field(None, max_length=50)
+    # `metadata.title` / `metadata.description` of the earlier answer; carried over so refine keeps them.
+    title: str | None = Field(None, max_length=2000)
+    description: str | None = Field(None, max_length=8000)
     collection: list[TreeNodeIn]
     generation: GenerationIn | None = None
 

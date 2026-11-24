@@ -280,7 +280,7 @@ curl -s http://localhost:8000/v2/topic-tree \
 
 ### 5. `refine` – Iterate on an existing tree with feedback & locked branches
 
-Pass the previous response's `collection`, `metadata.version`, and `metadata.generation` inside `current_tree`, plus `feedback.text`, structured `feedback.changes`, and `feedback.locked` keys to protect finalized branches.
+Pass the previous response's `collection`, `metadata.version`, and `metadata.generation` (optionally also `metadata.title` and `metadata.description` as `title`/`description`, so the refined tree keeps them) inside `current_tree`, plus `feedback.text`, structured `feedback.changes`, and `feedback.locked` keys to protect finalized branches.
 
 ```shell
 curl -s http://localhost:8000/v2/topic-tree \
