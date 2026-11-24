@@ -2,13 +2,7 @@
 (() => {
   "use strict";
 
-  const STATUS_LABELS = {
-    new: "neu",
-    unchanged: "unverändert",
-    changed: "geändert",
-    moved: "verschoben",
-    suggested: "vorgeschlagen",
-  };
+  const t = (key, vars) => (window.TopicTreeI18n ? window.TopicTreeI18n.t(key, vars) : key);
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -17,30 +11,50 @@
     return node;
   }
 
+  function normTitle(title) {
+    return (title || "").trim().toLowerCase();
+  }
+
+  function countTitles(nodes) {
+    const counts = new Map();
+    function visit(list) {
+      for (const n of list || []) {
+        const key = normTitle(n.title);
+        if (key) counts.set(key, (counts.get(key) || 0) + 1);
+        visit(n.subcollections || []);
+      }
+    }
+    visit(nodes);
+    return counts;
+  }
+
   function formatOrigin(origin) {
     if (!origin) return "";
     if (origin.type === "document") {
-      const parts = [`Dokument ${origin.id || ""}`.trim()];
-      if (origin.section) parts.push(`Abschnitt „${origin.section}“`);
-      if (origin.page != null) parts.push(`Seite ${origin.page}`);
+      const parts = [`${t("tree.origin.doc")} ${origin.id || ""}`.trim()];
+      if (origin.section) parts.push(`${t("tree.origin.section")} „${origin.section}“`);
+      if (origin.page != null) parts.push(`${t("tree.origin.page")} ${origin.page}`);
       return parts.join(" · ");
     }
-    if (origin.type === "folder") return `Ordner: ${origin.path || ""}`;
-    if (origin.type === "cluster") return "Herkunft: Inhalts-Cluster";
-    if (origin.type === "feedback") return "Herkunft: Rückmeldung";
+    if (origin.type === "folder") return `${t("tree.origin.folder")}: ${origin.path || ""}`;
+    if (origin.type === "cluster") return t("tree.origin.cluster");
+    if (origin.type === "feedback") return t("tree.origin.feedback");
     return "";
   }
 
   function computeTreeStats(nodes) {
     const byLevel = {};
+    const titleCounts = countTitles(nodes);
     let total = 0;
     let withDesc = 0;
     let totalContents = 0;
+    let duplicates = 0;
 
     function visit(list, depth) {
       for (const n of list || []) {
         total += 1;
         byLevel[depth] = (byLevel[depth] || 0) + 1;
+        if ((titleCounts.get(normTitle(n.title)) || 0) > 1) duplicates += 1;
         const desc = (n.properties && n.properties["cm:description"] && n.properties["cm:description"][0]) || "";
         if (desc.trim()) withDesc += 1;
         totalContents += (n.contents || []).length;
@@ -53,13 +67,15 @@
       byLevel,
       descPct: total ? Math.round((withDesc / total) * 100) : 0,
       totalContents,
+      duplicates,
     };
   }
 
-  function renderNode(node, depth, lockedSet, onToggleLock, vocabLabels) {
+  function renderNode(node, depth, lockedSet, onToggleLock, vocabLabels, titleCounts) {
     const children = node.subcollections || [];
     const hasChildren = children.length > 0;
-    const item = el("div", "tree-node");
+    const isDuplicate = (titleCounts.get(normTitle(node.title)) || 0) > 1;
+    const item = el("div", `tree-node${isDuplicate ? " is-duplicate" : ""}`);
     item.setAttribute("role", "treeitem");
     item.setAttribute("aria-expanded", hasChildren ? "true" : "false");
     item.dataset.key = node.key || "";
@@ -67,7 +83,7 @@
     const head = el("div", "node-head");
     const toggle = el("button", `node-toggle${hasChildren ? "" : " leaf"}`, "▾");
     toggle.type = "button";
-    toggle.setAttribute("aria-label", hasChildren ? `${node.title} ein- oder ausklappen` : "");
+    toggle.setAttribute("aria-label", hasChildren ? t("tree.toggleAria", { title: node.title }) : "");
     head.appendChild(toggle);
 
     head.appendChild(el("span", "level-tag", `E${depth}`));
@@ -78,26 +94,33 @@
     }
     if ((node.contents || []).length) {
       const count = node.contents.length;
-      head.appendChild(el("span", "node-count", `· ${count} ${count === 1 ? "Inhalt" : "Inhalte"}`));
+      const unit = count === 1 ? t("tree.contentSingular") : t("tree.contentPlural");
+      head.appendChild(el("span", "node-count", `· ${count} ${unit}`));
     }
     if (node.shorttitle && node.shorttitle !== node.title) {
       head.appendChild(el("span", "node-short", node.shorttitle));
     }
     if (node.key) head.appendChild(el("span", "node-key", node.key));
+    if (isDuplicate) {
+      const dupBadge = el("span", "status-badge duplicate", t("tree.badge.duplicate"));
+      dupBadge.title = t("tree.badge.duplicateTitle");
+      head.appendChild(dupBadge);
+    }
     if (node.status) {
-      head.appendChild(el("span", `status-badge ${node.status}`, STATUS_LABELS[node.status] || node.status));
+      const statusText = t(`tree.status.${node.status}`) || node.status;
+      head.appendChild(el("span", `status-badge ${node.status}`, statusText));
     }
 
     if (node.key) {
       const isLocked = lockedSet.has(node.key);
-      const lockBtn = el("button", "lock-btn", isLocked ? "Gesperrt (locked)" : "Sperren");
+      const lockBtn = el("button", "lock-btn", isLocked ? t("tree.locked") : t("tree.lock"));
       lockBtn.type = "button";
       lockBtn.setAttribute("aria-pressed", String(isLocked));
-      lockBtn.title = "Für den nächsten Refine-Lauf als locked vormerken";
+      lockBtn.title = t("tree.lockTitle");
       lockBtn.addEventListener("click", () => {
         const nowLocked = onToggleLock(node.key);
         lockBtn.setAttribute("aria-pressed", String(nowLocked));
-        lockBtn.textContent = nowLocked ? "Gesperrt (locked)" : "Sperren";
+        lockBtn.textContent = nowLocked ? t("tree.locked") : t("tree.lock");
       });
       head.appendChild(lockBtn);
     }
@@ -125,7 +148,7 @@
     }
 
     const desc = (props["cm:description"] && props["cm:description"][0]) || "";
-    body.appendChild(el("p", desc ? "node-desc" : "node-desc missing", desc || "keine Beschreibung"));
+    body.appendChild(el("p", desc ? "node-desc" : "node-desc missing", desc || t("tree.noDesc")));
 
     const keywords = props["cclom:general_keyword"] || [];
     if (keywords.length) {
@@ -140,7 +163,7 @@
       for (const c of contents) {
         const conf = c.confidence != null ? ` · ${c.confidence.toFixed(2)}` : "";
         const nid = c.nodeId ? ` (${c.nodeId})` : "";
-        cRow.appendChild(el("span", "content-pill", `Inhalt ${c.id}${nid}${conf}`));
+        cRow.appendChild(el("span", "content-pill", `${t("tree.contentPrefix")} ${c.id}${nid}${conf}`));
       }
       body.appendChild(cRow);
     }
@@ -150,7 +173,7 @@
     if (hasChildren) {
       childBox.setAttribute("role", "group");
       for (const child of children) {
-        childBox.appendChild(renderNode(child, depth + 1, lockedSet, onToggleLock, vocabLabels));
+        childBox.appendChild(renderNode(child, depth + 1, lockedSet, onToggleLock, vocabLabels, titleCounts));
       }
       const toggleBranch = () => {
         const open = !childBox.hidden;
@@ -172,8 +195,9 @@
 
   function renderTree(container, nodes, lockedSet, onToggleLock, vocabLabels) {
     container.replaceChildren();
+    const titleCounts = countTitles(nodes);
     for (const root of nodes || []) {
-      container.appendChild(renderNode(root, 1, lockedSet, onToggleLock, vocabLabels || {}));
+      container.appendChild(renderNode(root, 1, lockedSet, onToggleLock, vocabLabels || {}, titleCounts));
     }
   }
 

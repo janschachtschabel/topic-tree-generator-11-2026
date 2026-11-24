@@ -7,137 +7,141 @@
   <link rel="stylesheet" href="/ui/assets/styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#main-content">Zum Ergebnisbereich springen</a>
+  <a class="skip-link" href="#main-content" data-i18n="skip.link">Zum Ergebnisbereich springen</a>
 
   <div class="app-shell">
     <aside class="sidebar" aria-label="Eingaben und Konfiguration">
       <div class="sidebar-header">
         <div class="brand-row">
-          <h1 class="brand-title">Themenbaum-Dienst</h1>
+          <h1 class="brand-title" data-i18n="brand.title">Themenbaum-Dienst</h1>
           <span class="version-badge" id="service-version">v2</span>
+          <div class="lang-switch" role="group" aria-label="Sprache / Language">
+            <button type="button" id="lang-de" class="lang-btn active" data-lang="de" aria-pressed="true">DE</button>
+            <button type="button" id="lang-en" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+          </div>
         </div>
-        <p class="brand-sub">Test-Oberfläche für <code>POST /v2/topic-tree</code></p>
+        <p class="brand-sub"><span data-i18n="brand.sub.prefix">Test-Oberfläche für </span><code>POST /v2/topic-tree</code></p>
       </div>
 
       <form id="tree-form" class="sidebar-form" novalidate>
         <div class="field">
-          <label for="f-preset">Vorlage laden <span class="req-tag">(füllt Felder, startet nicht)</span></label>
+          <label for="f-preset"><span data-i18n="preset.label">Vorlage laden </span><span class="req-tag" data-i18n="preset.hint">(füllt Felder, startet nicht)</span></label>
           <div class="preset-row">
             <select id="f-preset" name="preset">
-              <option value="">– eigene Eingabe / Vorlage wählen –</option>
+              <option value="" data-i18n="preset.placeholder">– eigene Eingabe / Vorlage wählen –</option>
             </select>
-            <button type="button" id="btn-reset" class="btn-outline" title="Alle Eingabefelder auf Standard zurücksetzen">Leeren</button>
+            <button type="button" id="btn-reset" class="btn-outline" data-i18n="btn.reset" data-i18n-title="btn.reset.title" title="Alle Eingabefelder auf Standard zurücksetzen">Leeren</button>
           </div>
         </div>
 
         <div class="row-2">
           <div class="field">
-            <label for="f-mode">Modus</label>
+            <label for="f-mode" data-i18n="field.mode">Modus</label>
             <select id="f-mode" name="mode">
-              <option value="create">create (neu erzeugen)</option>
-              <option value="refine">refine (weiterentwickeln)</option>
+              <option value="create" data-i18n="mode.create">create (neu erzeugen)</option>
+              <option value="refine" data-i18n="mode.refine">refine (weiterentwickeln)</option>
             </select>
           </div>
           <div class="field">
-            <label for="f-use-case">Use Case</label>
+            <label for="f-use-case" data-i18n="field.useCase">Use Case</label>
             <select id="f-use-case" name="use_case">
-              <option value="topic">topic (Thema)</option>
-              <option value="document">document (Strukturdokument)</option>
-              <option value="folders">folders (Ordner &amp; Dateien)</option>
-              <option value="contents">contents (Inhalte gruppieren)</option>
+              <option value="topic" data-i18n="uc.topic">topic (Thema)</option>
+              <option value="document" data-i18n="uc.document">document (Strukturdokument)</option>
+              <option value="folders" data-i18n="uc.folders">folders (Ordner &amp; Dateien)</option>
+              <option value="contents" data-i18n="uc.contents">contents (Inhalte gruppieren)</option>
             </select>
           </div>
         </div>
 
         <div class="field">
-          <label for="f-topic">Thema <span id="topic-req" class="req-tag">(Pflicht bei topic)</span></label>
-          <input id="f-topic" name="topic" type="text" maxlength="2000" placeholder="z. B. Optik für die Sekundarstufe I">
+          <label for="f-topic"><span data-i18n="field.topic">Thema </span><span id="topic-req" class="req-tag">(Pflicht)</span></label>
+          <input id="f-topic" name="topic" type="text" maxlength="2000" data-i18n-placeholder="topic.placeholder" placeholder="z. B. Optik für die Sekundarstufe I">
         </div>
 
         <fieldset class="fieldset">
-          <legend class="section-label">Rahmen (OEH-Vokabulare)</legend>
+          <legend class="section-label" data-i18n="sec.frame">Rahmen (OEH-Vokabulare)</legend>
           <div class="field">
-            <label for="f-discipline">Fächer (<code>discipline_uri</code> – Schul- &amp; Hochschulfach, mehrfach wählbar)</label>
+            <label for="f-discipline"><span data-i18n="field.disciplines.pre">Fächer (</span><code>discipline_uri</code><span data-i18n="field.disciplines.post"> – Schul- &amp; Hochschulfach, mehrfach wählbar)</span></label>
             <select id="f-discipline" name="discipline_uri">
-              <option value="">– Fach hinzufügen (leer = beliebig) –</option>
+              <option value="" data-i18n="select.addDiscipline">– Fach hinzufügen (leer = beliebig) –</option>
             </select>
             <div id="discipline-chips" class="chip-list" aria-label="Ausgewählte Fächer" hidden></div>
           </div>
           <div class="field">
-            <label for="f-context">Bildungsstufe (<code>educational_context_uri</code>)</label>
+            <label for="f-context"><span data-i18n="field.context.pre">Bildungsstufe (</span><code>educational_context_uri</code><span data-i18n="field.context.post">)</span></label>
             <select id="f-context" name="educational_context_uri">
-              <option value="">– beliebig –</option>
+              <option value="" data-i18n="select.any">– beliebig –</option>
             </select>
           </div>
           <div class="field">
-            <label for="f-role">Zielgruppe (<code>intended_end_user_role_uri</code>)</label>
+            <label for="f-role"><span data-i18n="field.role.pre">Zielgruppe (</span><code>intended_end_user_role_uri</code><span data-i18n="field.role.post">)</span></label>
             <select id="f-role" name="intended_end_user_role_uri">
-              <option value="">– Standard (Lehrkräfte) –</option>
+              <option value="" data-i18n="select.defaultRole">– Standard (Lehrkräfte) –</option>
             </select>
           </div>
         </fieldset>
 
         <fieldset class="fieldset">
-          <legend class="section-label">Form (Shape – leer = Empfehlung)</legend>
+          <legend class="section-label" data-i18n="sec.shape">Form (Shape – leer = Empfehlung)</legend>
           <div class="row-3">
             <div class="field">
-              <label for="f-depth">Ebenen</label>
+              <label for="f-depth" data-i18n="field.depth">Ebenen</label>
               <input id="f-depth" type="number" inputmode="numeric" min="1" max="3" placeholder="auto">
             </div>
             <div class="field">
-              <label for="f-main-min">Haupt min</label>
+              <label for="f-main-min" data-i18n="field.mainMin">Haupt min</label>
               <input id="f-main-min" type="number" inputmode="numeric" min="1" max="20" placeholder="auto">
             </div>
             <div class="field">
-              <label for="f-main-max">Haupt max</label>
+              <label for="f-main-max" data-i18n="field.mainMax">Haupt max</label>
               <input id="f-main-max" type="number" inputmode="numeric" min="1" max="20" placeholder="auto">
             </div>
           </div>
           <div class="row-3">
             <div class="field">
-              <label for="f-child-min">Kinder min</label>
+              <label for="f-child-min" data-i18n="field.childMin">Kinder min</label>
               <input id="f-child-min" type="number" inputmode="numeric" min="2" max="20" placeholder="auto">
             </div>
             <div class="field">
-              <label for="f-child-max">Kinder max</label>
+              <label for="f-child-max" data-i18n="field.childMax">Kinder max</label>
               <input id="f-child-max" type="number" inputmode="numeric" min="2" max="20" placeholder="auto">
             </div>
             <div class="field">
-              <label for="f-desc-len">Wörter/Text</label>
+              <label for="f-desc-len" data-i18n="field.descLen">Wörter/Text</label>
               <input id="f-desc-len" type="number" inputmode="numeric" min="40" max="200" value="60">
             </div>
           </div>
           <p id="shape-limits-note" class="help-text">Leer = automatische Empfehlung nach Zielgruppe (Server-Limit: max. 3 Ebenen, max. 20 je Ebene).</p>
           <div class="check-row">
-            <label class="check"><input id="f-extra-general" type="checkbox"> „Allgemeines“ vorn</label>
-            <label class="check"><input id="f-extra-methodology" type="checkbox"> „Methodik &amp; Didaktik“ hinten</label>
+            <label class="check"><input id="f-extra-general" type="checkbox"> <span data-i18n="extra.general">„Allgemeines“ vorn</span></label>
+            <label class="check"><input id="f-extra-methodology" type="checkbox"> <span data-i18n="extra.methodology">„Methodik &amp; Didaktik“ hinten</span></label>
           </div>
         </fieldset>
 
         <details class="accordion" id="acc-hints">
-          <summary><span>Hinweise (Kontext, Include/Exclude, Ordnung)</span></summary>
+          <summary><span data-i18n="acc.hints">Hinweise (Kontext, Include/Exclude, Ordnung)</span></summary>
           <div class="accordion-body">
             <div class="field">
-              <label for="f-hint-context">Kontext / Schwerpunkt</label>
-              <textarea id="f-hint-context" rows="2" maxlength="2000" placeholder="z. B. Unterricht Klasse 7–9, viele Experimente"></textarea>
+              <label for="f-hint-context" data-i18n="field.hintContext">Kontext / Schwerpunkt</label>
+              <textarea id="f-hint-context" rows="2" maxlength="2000" data-i18n-placeholder="ph.hintContext" placeholder="z. B. Unterricht Klasse 7–9, viele Experimente"></textarea>
             </div>
             <div class="row-2">
               <div class="field">
-                <label for="f-hint-order">Ordnungsprinzip</label>
-                <input id="f-hint-order" type="text" maxlength="200" placeholder="leer = automatisch">
+                <label for="f-hint-order" data-i18n="field.hintOrder">Ordnungsprinzip</label>
+                <input id="f-hint-order" type="text" maxlength="200" data-i18n-placeholder="ph.hintOrder" placeholder="leer = automatisch">
               </div>
               <div class="field">
-                <label for="f-hint-lang">Sprache (ISO-2)</label>
+                <label for="f-hint-lang" data-i18n="field.hintLang">Sprache (ISO-2)</label>
                 <input id="f-hint-lang" type="text" maxlength="2" pattern="[a-z]{2}" value="de" placeholder="de">
               </div>
             </div>
             <div class="row-2">
               <div class="field">
-                <label for="f-hint-include">Einschließen (Komma)</label>
+                <label for="f-hint-include" data-i18n="field.hintInclude">Einschließen (Komma)</label>
                 <input id="f-hint-include" type="text" placeholder="Farben, Auge">
               </div>
               <div class="field">
-                <label for="f-hint-exclude">Ausschließen (Komma)</label>
+                <label for="f-hint-exclude" data-i18n="field.hintExclude">Ausschließen (Komma)</label>
                 <input id="f-hint-exclude" type="text" placeholder="Wellenoptik">
               </div>
             </div>
@@ -145,80 +149,80 @@
         </details>
 
         <details class="accordion" id="acc-options">
-          <summary><span>Optionen (Zuordnung, Improve, Konfidenz)</span></summary>
+          <summary><span data-i18n="acc.options">Optionen (Zuordnung, Improve, Konfidenz)</span></summary>
           <div class="accordion-body">
             <div class="check-col">
-              <label class="check"><input id="f-opt-auto-meta" type="checkbox"> Metadaten automatisch je Knoten (<code>auto_metadata</code>)</label>
-              <label class="check"><input id="f-opt-improve" type="checkbox"> Ordner verbessern (<code>improve</code>)</label>
-              <label class="check"><input id="f-opt-assign" type="checkbox" checked> Inhalte zuordnen (<code>assign_contents</code>)</label>
-              <label class="check"><input id="f-opt-assign-only" type="checkbox"> Nur einsortieren (<code>assign_only</code>, nur bei refine)</label>
-              <label class="check"><input id="f-opt-multi" type="checkbox" checked> Mehrfachzuordnung (<code>multi_assign</code>)</label>
+              <label class="check"><input id="f-opt-auto-meta" type="checkbox"> <span data-i18n="opt.autoMeta">Metadaten automatisch je Knoten</span> <code>(auto_metadata)</code></label>
+              <label class="check"><input id="f-opt-improve" type="checkbox"> <span data-i18n="opt.improve">Ordner verbessern</span> <code>(improve)</code></label>
+              <label class="check"><input id="f-opt-assign" type="checkbox" checked> <span data-i18n="opt.assign">Inhalte zuordnen</span> <code>(assign_contents)</code></label>
+              <label class="check"><input id="f-opt-assign-only" type="checkbox"> <span data-i18n="opt.assignOnly">Nur einsortieren (nur bei refine)</span> <code>(assign_only)</code></label>
+              <label class="check"><input id="f-opt-multi" type="checkbox" checked> <span data-i18n="opt.multi">Mehrfachzuordnung</span> <code>(multi_assign)</code></label>
             </div>
             <div class="field">
-              <label for="f-opt-conf">Mindestkonfidenz (0–1)</label>
+              <label for="f-opt-conf" data-i18n="field.minConf">Mindestkonfidenz (0–1)</label>
               <input id="f-opt-conf" type="number" step="0.05" min="0" max="1" value="0.6">
             </div>
           </div>
         </details>
 
         <details class="accordion" id="acc-items">
-          <summary><span>Dateien / Dokumente / Inhalte (<code>items</code>, Markdown, <code>items_ref</code>)</span></summary>
+          <summary><span data-i18n="acc.items">Dateien / Dokumente / Inhalte (items, Markdown, items_ref)</span></summary>
           <div class="accordion-body">
             <div class="field">
-              <label for="f-doc-markdown">Direktes Markdown-Dokument (optional, für <code>document</code> von Hand)</label>
+              <label for="f-doc-markdown" data-i18n="field.docMd">Direktes Markdown-Dokument (optional, für document von Hand)</label>
               <textarea id="f-doc-markdown" class="code-area" rows="5" spellcheck="false" placeholder="# Kapitel 1&#10;Text …&#10;## Unterkapitel 1.1&#10;…"></textarea>
-              <p class="help-text">Wird automatisch als Strukturdokument (<code>use: ["structure"]</code>) übergeben – ohne JSON-Escaping.</p>
+              <p class="help-text" data-i18n="help.docMd">Wird automatisch als Strukturdokument (use: ["structure"]) übergeben – ohne JSON-Escaping.</p>
             </div>
             <div class="field">
-              <label for="f-items">Items als JSON-Array (<code>items</code>)</label>
+              <label for="f-items" data-i18n="field.items">Items als JSON-Array (items)</label>
               <textarea id="f-items" class="code-area" rows="7" spellcheck="false" placeholder="[]"></textarea>
-              <p class="help-text">Strukturdokumente (<code>use: ["structure"]</code> mit <code>fulltext</code>) und Inhalte (<code>use: ["content"]</code>).</p>
+              <p class="help-text" data-i18n="help.items">Strukturdokumente (use: ["structure"] mit fulltext) und Inhalte (use: ["content"]).</p>
             </div>
             <div class="field">
-              <label for="f-items-ref">Alternativ: externe Items-URL (<code>items_ref</code>, nur HTTPS)</label>
+              <label for="f-items-ref" data-i18n="field.itemsRef">Alternativ: externe Items-URL (items_ref, nur HTTPS)</label>
               <input id="f-items-ref" type="url" placeholder="https://…/items.json">
-              <p class="help-text">Entweder <code>items</code>/Markdown oder <code>items_ref</code> nutzen (Host muss in <code>REF_ALLOWED_HOSTS</code> stehen).</p>
+              <p class="help-text" data-i18n="help.itemsRef">Entweder items/Markdown oder items_ref nutzen (Host muss in REF_ALLOWED_HOSTS stehen).</p>
             </div>
           </div>
         </details>
 
         <details class="accordion" id="acc-folders">
-          <summary><span>Ordnerstruktur (<code>folders</code> JSON)</span></summary>
+          <summary><span data-i18n="acc.folders">Ordnerstruktur (folders JSON)</span></summary>
           <div class="accordion-body">
-            <label for="f-folders" class="sr-only">Folders als JSON-Array</label>
+            <label for="f-folders" class="sr-only">Folders JSON</label>
             <textarea id="f-folders" class="code-area" rows="5" spellcheck="false" placeholder="[]"></textarea>
           </div>
         </details>
 
         <details class="accordion" id="acc-refine">
-          <summary><span>Refine: Feedback &amp; Ist-Stand (<code>current_tree</code>)</span></summary>
+          <summary><span data-i18n="acc.refine">Refine: Feedback &amp; Ist-Stand (current_tree)</span></summary>
           <div class="accordion-body">
             <div class="field">
-              <label for="f-fb-text">Rückmeldung als Text</label>
-              <textarea id="f-fb-text" rows="2" maxlength="8000" placeholder="z. B. Farben als eigenes Hauptthema ergänzen"></textarea>
+              <label for="f-fb-text" data-i18n="field.fbText">Rückmeldung als Text</label>
+              <textarea id="f-fb-text" rows="2" maxlength="8000" data-i18n-placeholder="ph.fbText" placeholder="z. B. Farben als eigenes Hauptthema ergänzen"></textarea>
             </div>
             <div class="field">
-              <label for="f-fb-locked">Gesperrte Knoten-Keys (Komma)</label>
+              <label for="f-fb-locked" data-i18n="field.fbLocked">Gesperrte Knoten-Keys (Komma)</label>
               <input id="f-fb-locked" type="text" placeholder="k-optik, k-mechanik">
             </div>
             <div class="field">
-              <label for="f-fb-changes">Strukturierte Änderungen (<code>feedback.changes</code> JSON)</label>
+              <label for="f-fb-changes" data-i18n="field.fbChanges">Strukturierte Änderungen (feedback.changes JSON)</label>
               <textarea id="f-fb-changes" class="code-area" rows="3" spellcheck="false" placeholder="[]"></textarea>
             </div>
             <div class="field">
-              <label for="f-current-tree">Ist-Stand (<code>current_tree</code> JSON)</label>
+              <label for="f-current-tree" data-i18n="field.currentTree">Ist-Stand (current_tree JSON)</label>
               <textarea id="f-current-tree" class="code-area" rows="6" spellcheck="false" placeholder="{}"></textarea>
             </div>
           </div>
         </details>
 
         <details class="accordion" id="acc-auth">
-          <summary><span>Anmeldung (optional, nur im Speicher)</span></summary>
+          <summary><span data-i18n="acc.auth">Anmeldung (optional, nur im Speicher)</span></summary>
           <div class="accordion-body">
             <div class="field">
-              <label for="f-token">Bearer-Token (Dienst-Schlüssel oder <code>bdt_…</code>)</label>
-              <input id="f-token" type="password" autocomplete="off" placeholder="leer = ohne Authorization-Header">
-              <p class="help-text">Wird niemals gespeichert und nur direkt im Aufruf an <code>/v2/topic-tree</code> gesendet.</p>
+              <label for="f-token" data-i18n="field.token">Bearer-Token (Dienst-Schlüssel oder bdt_…)</label>
+              <input id="f-token" type="password" autocomplete="off" data-i18n-placeholder="ph.token" placeholder="leer = ohne Authorization-Header">
+              <p class="help-text" data-i18n="help.token">Wird niemals gespeichert und nur direkt im Aufruf an /v2/topic-tree gesendet.</p>
             </div>
           </div>
         </details>
@@ -226,63 +230,63 @@
         <div id="form-error" class="inline-error" role="alert" hidden></div>
 
         <div class="sidebar-footer">
-          <button type="submit" id="btn-submit" class="btn-primary">Themenbaum erzeugen</button>
-          <button type="button" id="btn-cancel" class="btn-secondary" hidden>Abbrechen</button>
+          <button type="submit" id="btn-submit" class="btn-primary" data-i18n="btn.submit.create">Themenbaum erzeugen</button>
+          <button type="button" id="btn-cancel" class="btn-secondary" data-i18n="btn.cancel" hidden>Abbrechen</button>
         </div>
       </form>
     </aside>
 
     <main id="main-content" class="workspace" tabindex="-1">
       <header class="status-strip" aria-live="polite">
-        <div id="status-message" class="status-text">Bereit – wähle links ein Musterszenario oder gib ein eigenes Thema ein.</div>
+        <div id="status-message" class="status-text" data-i18n="status.ready">Bereit – wähle eine Vorlage oder gib links ein eigenes Thema ein.</div>
         <div class="status-actions" id="result-actions" hidden>
-          <button type="button" id="btn-use-refine" class="btn-outline">Als Ist-Stand für Refine</button>
-          <button type="button" id="btn-copy-json" class="btn-outline">JSON kopieren</button>
-          <button type="button" id="btn-download-json" class="btn-outline">JSON speichern</button>
-          <button type="button" id="btn-toggle-json" class="btn-outline" aria-expanded="false">Rohdaten</button>
+          <button type="button" id="btn-use-refine" class="btn-outline" data-i18n="btn.useRefine">Als Ist-Stand für Refine</button>
+          <button type="button" id="btn-copy-json" class="btn-outline" data-i18n="btn.copyJson">JSON kopieren</button>
+          <button type="button" id="btn-download-json" class="btn-outline" data-i18n="btn.downloadJson">JSON speichern</button>
+          <button type="button" id="btn-toggle-json" class="btn-outline" aria-expanded="false" data-i18n="btn.rawJson">Rohdaten</button>
         </div>
       </header>
 
       <section id="error-panel" class="card error-card" role="alert" hidden>
         <div class="card-head-row">
-          <h2 id="error-title" class="error-heading">Anfrage fehlgeschlagen</h2>
-          <button type="button" id="btn-retry" class="btn-outline">Erneut versuchen</button>
+          <h2 id="error-title" class="error-heading" data-i18n="error.heading">Anfrage fehlgeschlagen</h2>
+          <button type="button" id="btn-retry" class="btn-outline" data-i18n="btn.retry">Erneut versuchen</button>
         </div>
         <p id="error-message" class="error-msg"></p>
         <dl class="error-meta">
-          <dt>Code</dt><dd id="error-code"></dd>
-          <dt>HTTP-Status</dt><dd id="error-status"></dd>
-          <dt>Trace-ID</dt><dd id="error-trace"></dd>
+          <dt data-i18n="error.code">Code</dt><dd id="error-code"></dd>
+          <dt data-i18n="error.status">HTTP-Status</dt><dd id="error-status"></dd>
+          <dt data-i18n="error.trace">Trace-ID</dt><dd id="error-trace"></dd>
         </dl>
         <pre id="error-details" class="json-pre" hidden></pre>
       </section>
 
       <section id="empty-state" class="card empty-card">
-        <h2>Themenbaum-Dienst v2 testen</h2>
-        <p>Wähle eine Vorlage als Ausgangspunkt oder fülle das Formular links direkt von Hand aus. Ein Klick auf eine Vorlage füllt alle Felder voraus, ohne sofort zu starten – so kannst du jeden Parameter vor dem Klick auf <strong>„Themenbaum erzeugen“</strong> anpassen.</p>
+        <h2 data-i18n="empty.heading">Themenbaum-Dienst v2 testen</h2>
+        <p data-i18n="empty.body">Wähle eine Vorlage als Ausgangspunkt oder fülle das Formular links direkt von Hand aus. Ein Klick auf eine Vorlage füllt alle Felder voraus, ohne sofort zu starten – so kannst du jeden Parameter vor dem Start anpassen.</p>
         <div id="empty-presets" class="empty-preset-grid"></div>
       </section>
 
       <section id="loading-state" class="card loading-card" hidden aria-live="polite">
         <div class="spinner" aria-hidden="true"></div>
         <div>
-          <h2 class="loading-title">Themenbaum wird erzeugt …</h2>
-          <p class="loading-sub">Synchroner Aufruf läuft (<span id="loading-timer">0,0 s</span>). Große 3-Ebenen-Bäume dauern typisch 35–110 s.</p>
+          <h2 class="loading-title" data-i18n="loading.title">Themenbaum wird erzeugt …</h2>
+          <p class="loading-sub"><span data-i18n="loading.sub.pre">Synchroner Aufruf läuft (</span><span id="loading-timer">0,0 s</span><span data-i18n="loading.sub.post">). Große 3-Ebenen-Bäume dauern typisch 20–50 s.</span></p>
         </div>
       </section>
 
       <div id="result-area" hidden>
         <section class="card metrics-card" aria-label="Kennzahlen der Antwort">
           <div class="metric-row">
-            <span class="metric-group-label">BAUM</span>
+            <span class="metric-group-label" data-i18n="metric.group.tree">BAUM</span>
             <div class="metric-items" id="metrics-tree"></div>
           </div>
           <div class="metric-row">
-            <span class="metric-group-label">ZEIT</span>
+            <span class="metric-group-label" data-i18n="metric.group.time">ZEIT</span>
             <div class="metric-items" id="metrics-time"></div>
           </div>
           <div class="metric-row">
-            <span class="metric-group-label">TOKENS</span>
+            <span class="metric-group-label" data-i18n="metric.group.tokens">TOKENS</span>
             <div class="metric-items" id="metrics-tokens"></div>
           </div>
         </section>
@@ -297,11 +301,11 @@
               <p id="tree-structure" class="tree-meta-line"></p>
             </div>
             <div class="tree-controls">
-              <label class="check tree-detail-toggle"><input id="opt-show-details" type="checkbox"> Details anzeigen (Beschreibungen, Schlagworte &amp; Metadaten)</label>
-              <label for="tree-filter" class="sr-only">Knoten filtern</label>
-              <input id="tree-filter" type="search" placeholder="Knoten filtern …">
-              <button type="button" id="btn-expand-all" class="btn-outline">Alle aufklappen</button>
-              <button type="button" id="btn-collapse-all" class="btn-outline">Alle zuklappen</button>
+              <label class="check tree-detail-toggle"><input id="opt-show-details" type="checkbox"> <span data-i18n="tree.showDetails">Details anzeigen (Beschreibungen, Schlagworte &amp; Metadaten)</span></label>
+              <label for="tree-filter" class="sr-only" data-i18n="tree.filterPlaceholder">Knoten filtern</label>
+              <input id="tree-filter" type="search" data-i18n-placeholder="tree.filterPlaceholder" placeholder="Knoten filtern …">
+              <button type="button" id="btn-expand-all" class="btn-outline" data-i18n="tree.expandAll">Alle aufklappen</button>
+              <button type="button" id="btn-collapse-all" class="btn-outline" data-i18n="tree.collapseAll">Alle zuklappen</button>
             </div>
           </div>
           <div id="tree-container" class="tree-root compact-tree" role="tree" aria-label="Generierter Themenbaum"></div>
@@ -309,8 +313,8 @@
 
         <section id="raw-json-panel" class="card" hidden>
           <div class="raw-tabs" role="tablist" aria-label="JSON-Ansicht">
-            <button type="button" class="tab-btn active" data-tab="response" role="tab" aria-selected="true">Antwort-JSON</button>
-            <button type="button" class="tab-btn" data-tab="request" role="tab" aria-selected="false">Anfrage-JSON</button>
+            <button type="button" class="tab-btn active" data-tab="response" role="tab" aria-selected="true" data-i18n="tab.response">Antwort-JSON</button>
+            <button type="button" class="tab-btn" data-tab="request" role="tab" aria-selected="false" data-i18n="tab.request">Anfrage-JSON</button>
           </div>
           <pre id="raw-json-pre" class="json-pre"></pre>
         </section>
@@ -318,6 +322,7 @@
     </main>
   </div>
 
+  <script src="/ui/assets/i18n.js" defer></script>
   <script src="/ui/assets/tree.js" defer></script>
   <script src="/ui/assets/app.js" defer></script>
 </body>

@@ -41,10 +41,21 @@ def test_ui_enabled_serves_self_hosted_html_and_assets_without_exposing_in_opena
     assert "cdn.jsdelivr.net" not in html
     assert "unpkg.com" not in html
 
-    for name, mime in (("styles.css", "text/css"), ("tree.js", "javascript"), ("app.js", "javascript")):
+    for name, mime in (
+        ("styles.css", "text/css"),
+        ("i18n.js", "javascript"),
+        ("tree.js", "javascript"),
+        ("app.js", "javascript"),
+    ):
         asset = client.get(f"/ui/assets/{name}")
         assert asset.status_code == 200, name
         assert mime in asset.headers["content-type"]
+
+    # Zero external font URLs or CSS @import/@font-face rules in stylesheet.
+    css = client.get("/ui/assets/styles.css").text
+    assert "@import" not in css
+    assert "@font-face" not in css
+    assert "http://" not in css and "https://" not in css
 
     # Path traversal / unknown assets must be rejected.
     assert client.get("/ui/assets/unknown.js").status_code == 404
@@ -91,8 +102,8 @@ def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
     assert "align-items: end;" in css
     html = client.get("/ui/").text
     # Every accordion <summary> wraps its label in a single <span> so flex space-between does not split <code> nodes.
-    assert "<summary><span>" in html
-    assert html.count("<summary>") == html.count("<summary><span>")
+    assert "<summary><span" in html
+    assert html.count("<summary>") == html.count("<summary><span")
 
 
 def test_ui_exposes_compact_preset_selector_and_all_manual_v2_inputs() -> None:
@@ -136,3 +147,19 @@ def test_ui_presets_expose_operator_shape_limits_and_keep_concurrency_env_only()
     assert 'id="shape-limits-note"' in html
     # Worker / concurrency limits stay strictly env-controlled, never editable from the UI.
     assert "llm_max_concurrency" not in html and "web_concurrency" not in html
+
+
+def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
+    client = _client(ui_enabled=True)
+    html = client.get("/ui/").text
+    css = client.get("/ui/assets/styles.css").text
+    tree_js = client.get("/ui/assets/tree.js").text
+    i18n_js = client.get("/ui/assets/i18n.js").text
+
+    assert 'id="lang-de"' in html and 'id="lang-en"' in html
+    assert html.index("/ui/assets/i18n.js") < html.index("/ui/assets/tree.js") < html.index("/ui/assets/app.js")
+    assert ".tree-node.is-duplicate" in css
+    assert ".status-badge.duplicate" in css
+    assert "is-duplicate" in tree_js
+    assert "tree.badge.duplicate" in tree_js
+    assert '"Duplikat"' in i18n_js and '"Duplicate"' in i18n_js

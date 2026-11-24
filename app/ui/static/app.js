@@ -3,7 +3,11 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const numFmt = new Intl.NumberFormat("de-DE");
+  const i18n = () => window.TopicTreeI18n;
+  const t = (key, vars) => (i18n() ? i18n().t(key, vars) : key);
+  const fmtNum = (n) => (i18n() ? i18n().formatNumber(n) : String(n));
+  const fmtSec = (s) => (i18n() ? i18n().formatSeconds(s) : Number(s).toFixed(1));
+
   const state = {
     presets: [],
     activePresetId: null,
@@ -12,10 +16,13 @@
     vocabIndex: {},
     lastRequest: null,
     lastResponse: null,
+    lastClientSeconds: 0,
     activeRawTab: "response",
     lockedKeys: new Set(),
     controller: null,
     timerId: null,
+    statusKey: "status.ready",
+    statusVars: null,
   };
 
   function el(tag, className, text) {
@@ -23,6 +30,12 @@
     if (className) node.className = className;
     if (text !== undefined && text !== null) node.textContent = String(text);
     return node;
+  }
+
+  function setStatus(key, vars = null) {
+    state.statusKey = key;
+    state.statusVars = vars;
+    $("status-message").textContent = t(key, vars);
   }
 
   function splitCsv(text) {
@@ -35,14 +48,15 @@
     try {
       return JSON.parse(trimmed);
     } catch (err) {
-      throw new Error(`Ungültiges JSON in „${fieldName}“: ${err.message}`);
+      throw new Error(t("err.invalidJson", { field: fieldName, msg: err.message }));
     }
   }
 
-  function populateSelect(selectEl, options, groupLabel) {
-    const target = groupLabel ? document.createElement("optgroup") : selectEl;
-    if (groupLabel) {
-      target.label = groupLabel;
+  function populateSelect(selectEl, options, groupKey) {
+    const target = groupKey ? document.createElement("optgroup") : selectEl;
+    if (groupKey) {
+      target.dataset.i18nGroup = groupKey;
+      target.label = t(groupKey);
       selectEl.appendChild(target);
     }
     for (const opt of options || []) {
@@ -78,7 +92,7 @@
       chip.appendChild(document.createTextNode(name));
       const rm = el("button", "chip-remove", "×");
       rm.type = "button";
-      rm.setAttribute("aria-label", `Fach ${name} entfernen`);
+      rm.setAttribute("aria-label", t("chip.removeAria", { name }));
       rm.addEventListener("click", () => {
         state.disciplineUris = state.disciplineUris.filter((u) => u !== uri);
         renderDisciplineChips();
@@ -101,6 +115,13 @@
     for (const card of document.querySelectorAll(".empty-preset-card")) {
       card.classList.toggle("active", Boolean(presetId) && card.dataset.presetId === presetId);
     }
+  }
+
+  function updateShapeLimitsNote() {
+    $("shape-limits-note").textContent = t("shape.limits", {
+      dMax: state.limits.max_tree_depth,
+      wMax: state.limits.max_nodes_per_level,
+    });
   }
 
   function resetForm() {
@@ -153,7 +174,7 @@
     $("acc-options").open = false;
     syncModeLabels();
     showFormError("");
-    $("status-message").textContent = "Formular geleert – Werte links eingeben oder eine Vorlage auswählen.";
+    setStatus("status.reset");
   }
 
   function applyPreset(preset) {
@@ -218,15 +239,15 @@
     syncModeLabels();
     showFormError("");
     $("tree-form").scrollTop = 0;
-    $("status-message").textContent = `Vorlage „${preset.title}“ ins Formular geladen – links anpassen und unten auf „${$("btn-submit").textContent}“ klicken.`;
+    setStatus("status.presetLoaded", { title: preset.title, action: $("btn-submit").textContent });
   }
 
   function syncModeLabels(autoOpen) {
     const mode = $("f-mode").value;
     const useCase = $("f-use-case").value;
     const isRefine = mode === "refine";
-    $("btn-submit").textContent = isRefine ? "Entwurf weiterentwickeln" : "Themenbaum erzeugen";
-    $("topic-req").textContent = useCase === "topic" && !isRefine ? "(Pflicht)" : "(optional)";
+    $("btn-submit").textContent = t(isRefine ? "btn.submit.refine" : "btn.submit.create");
+    $("topic-req").textContent = t(useCase === "topic" && !isRefine ? "topic.req.required" : "topic.req.optional");
     if (autoOpen) {
       if (isRefine) $("acc-refine").open = true;
       if (useCase === "document" || useCase === "contents") $("acc-items").open = true;
@@ -238,7 +259,7 @@
     const raw = ($(id).value || "").trim();
     if (!raw) return null;
     const n = Number(raw);
-    if (!Number.isInteger(n)) throw new Error(`Ungültige Zahl in „${id}“.`);
+    if (!Number.isInteger(n)) throw new Error(t("err.invalidInt", { field: id }));
     return n;
   }
 
@@ -250,15 +271,11 @@
     const mainMax = optionalInt("f-main-max");
     const childMin = optionalInt("f-child-min");
     const childMax = optionalInt("f-child-max");
-    if (mainMin !== null && mainMax !== null && mainMin > mainMax) {
-      throw new Error("„Haupt min“ darf nicht größer als „Haupt max“ sein.");
-    }
-    if (childMin !== null && childMax !== null && childMin > childMax) {
-      throw new Error("„Kinder min“ darf nicht größer als „Kinder max“ sein.");
-    }
+    if (mainMin !== null && mainMax !== null && mainMin > mainMax) throw new Error(t("err.mainRange"));
+    if (childMin !== null && childMax !== null && childMin > childMax) throw new Error(t("err.childRange"));
 
     const lang = ($("f-hint-lang").value || "de").trim().toLowerCase();
-    if (!/^[a-z]{2}$/.test(lang)) throw new Error("„Sprache“ muss ein zweibuchstabiger ISO-Code sein (z. B. de, en).");
+    if (!/^[a-z]{2}$/.test(lang)) throw new Error(t("err.langCode"));
 
     const shape = {};
     if (depth !== null) shape.depth = depth;
@@ -315,9 +332,7 @@
 
     const docMd = $("f-doc-markdown").value.trim();
     const parsedItems = parseOptionalJson($("f-items").value, "items");
-    if (parsedItems !== null && !Array.isArray(parsedItems)) {
-      throw new Error("„items“ muss ein JSON-Array ([…]) sein.");
-    }
+    if (parsedItems !== null && !Array.isArray(parsedItems)) throw new Error(t("err.itemsArray"));
     const items = parsedItems ? [...parsedItems] : [];
     if (docMd) {
       items.unshift({
@@ -328,9 +343,7 @@
       });
     }
     const itemsRef = $("f-items-ref").value.trim();
-    if (items.length && itemsRef) {
-      throw new Error("Bitte entweder „items“/Markdown-Text ODER „items_ref“ angeben, nicht beides gleichzeitig.");
-    }
+    if (items.length && itemsRef) throw new Error(t("err.itemsAndRef"));
     if (items.length) payload.items = items;
     if (itemsRef) payload.items_ref = itemsRef;
 
@@ -376,31 +389,32 @@
     const cachePct = promptTokens ? Math.round((cachedTokens / promptTokens) * 100) : 0;
     const levelsText = Object.entries(stats.byLevel).map(([lvl, cnt]) => `E${lvl}: ${cnt}`).join(" · ");
 
-    const mTree = $("metrics-tree");
-    mTree.replaceChildren(
-      metricPair("Knoten", `${numFmt.format(stats.total)}${levelsText ? ` (${levelsText})` : ""}`),
-      metricPair("Beschrieben", `${stats.descPct} %`),
-      metricPair("Zugeordnet", numFmt.format(stats.totalContents)),
-      metricPair("Version", resp.metadata.version + (resp.metadata.based_on ? ` ← ${resp.metadata.based_on}` : "")),
-      metricPair("Warnungen", String((resp.warnings || []).length), (resp.warnings || []).length ? "warn" : "ok"),
-      metricPair("Rückfragen", String((resp.questions || []).length)),
+    const treeItems = [
+      metricPair(t("metric.nodes"), `${fmtNum(stats.total)}${levelsText ? ` (${levelsText})` : ""}`),
+      metricPair(t("metric.described"), `${stats.descPct} %`),
+      metricPair(t("metric.assigned"), fmtNum(stats.totalContents)),
+      metricPair(t("metric.version"), resp.metadata.version + (resp.metadata.based_on ? ` ← ${resp.metadata.based_on}` : "")),
+      metricPair(t("metric.warnings"), String((resp.warnings || []).length), (resp.warnings || []).length ? "warn" : "ok"),
+      metricPair(t("metric.questions"), String((resp.questions || []).length)),
+    ];
+    if (stats.duplicates > 0) {
+      treeItems.splice(3, 0, metricPair(t("metric.duplicates"), String(stats.duplicates), "warn"));
+    }
+    $("metrics-tree").replaceChildren(...treeItems);
+
+    const serverSec = usage.duration_ms != null ? fmtSec(usage.duration_ms / 1000) : fmtSec(clientSeconds);
+    $("metrics-time").replaceChildren(
+      metricPair(t("metric.duration"), `${serverSec} s`),
+      metricPair(t("metric.llmCalls"), String(usage.llm_calls ?? 0)),
+      metricPair(t("metric.failed"), String(usage.failed_calls ?? 0), (usage.failed_calls || 0) ? "warn" : "ok"),
+      metricPair(t("metric.model"), gen.model || "–"),
     );
 
-    const serverSec = usage.duration_ms != null ? (usage.duration_ms / 1000).toFixed(1) : clientSeconds.toFixed(1);
-    const mTime = $("metrics-time");
-    mTime.replaceChildren(
-      metricPair("Dauer", `${serverSec} s`),
-      metricPair("LLM-Aufrufe", String(usage.llm_calls ?? 0)),
-      metricPair("Fehlgeschlagen", String(usage.failed_calls ?? 0), (usage.failed_calls || 0) ? "warn" : "ok"),
-      metricPair("Modell/Route", gen.model || "–"),
-    );
-
-    const mTok = $("metrics-tokens");
-    mTok.replaceChildren(
-      metricPair("Gesamt", numFmt.format(totalTokens)),
-      metricPair("Input ungecacht", numFmt.format(uncachedTokens)),
-      metricPair("Input Cache", `${numFmt.format(cachedTokens)} (${cachePct} %)`, cachePct >= 40 ? "ok" : ""),
-      metricPair("Output", numFmt.format(completionTokens)),
+    $("metrics-tokens").replaceChildren(
+      metricPair(t("metric.total"), fmtNum(totalTokens)),
+      metricPair(t("metric.uncached"), fmtNum(uncachedTokens)),
+      metricPair(t("metric.cached"), `${fmtNum(cachedTokens)} (${cachePct} %)`, cachePct >= 40 ? "ok" : ""),
+      metricPair(t("metric.output"), fmtNum(completionTokens)),
     );
   }
 
@@ -411,7 +425,7 @@
 
     if ((resp.warnings || []).length) {
       const card = el("div", "diag-card warn");
-      card.appendChild(el("h3", "", `Warnungen (${resp.warnings.length})`));
+      card.appendChild(el("h3", "", t("diag.warnings", { n: resp.warnings.length })));
       const ul = el("ul", "diag-list");
       for (const w of resp.warnings) {
         const extra = [w.key, w.step].filter(Boolean).join(" / ");
@@ -423,7 +437,7 @@
 
     if ((resp.questions || []).length) {
       const card = el("div", "diag-card info");
-      card.appendChild(el("h3", "", `Rückfragen (${resp.questions.length})`));
+      card.appendChild(el("h3", "", t("diag.questions", { n: resp.questions.length })));
       const ul = el("ul", "diag-list");
       for (const q of resp.questions) ul.appendChild(el("li", "", q.text));
       card.appendChild(ul);
@@ -432,7 +446,7 @@
 
     if ((resp.changes || []).length) {
       const card = el("div", "diag-card");
-      card.appendChild(el("h3", "", `Umgesetzte Änderungen (${resp.changes.length})`));
+      card.appendChild(el("h3", "", t("diag.changes", { n: resp.changes.length })));
       const ul = el("ul", "diag-list");
       for (const c of resp.changes) {
         const target = c.title || c.to || (c.keys || []).join(", ") || "";
@@ -444,10 +458,10 @@
 
     if ((resp.unassigned || []).length) {
       const card = el("div", "diag-card");
-      card.appendChild(el("h3", "", `Nicht zugeordnet (${resp.unassigned.length})`));
+      card.appendChild(el("h3", "", t("diag.unassigned", { n: resp.unassigned.length })));
       const ul = el("ul", "diag-list");
       for (const u of resp.unassigned) {
-        ul.appendChild(el("li", "", `${u.id}${u.nodeId ? ` (${u.nodeId})` : ""} – Grund: ${u.reason}`));
+        ul.appendChild(el("li", "", `${u.id}${u.nodeId ? ` (${u.nodeId})` : ""} – ${t("diag.reason", { reason: u.reason })}`));
       }
       card.appendChild(ul);
       blocks.push(card);
@@ -471,6 +485,7 @@
 
   function renderSuccess(resp, clientSeconds) {
     state.lastResponse = resp;
+    state.lastClientSeconds = clientSeconds;
     $("empty-state").hidden = true;
     $("error-panel").hidden = true;
     $("result-area").hidden = false;
@@ -478,17 +493,17 @@
 
     const gen = resp.metadata.generation || {};
     const usage = gen.usage || {};
-    const sec = usage.duration_ms != null ? (usage.duration_ms / 1000).toFixed(1) : clientSeconds.toFixed(1);
-    $("status-message").textContent = `Fertig: ${gen.use_case} (${gen.mode}) · ${gen.model || "LLM"} · ${sec} s`;
+    const sec = usage.duration_ms != null ? fmtSec(usage.duration_ms / 1000) : fmtSec(clientSeconds);
+    setStatus("status.done", { useCase: gen.use_case, mode: gen.mode, model: gen.model || "LLM", sec });
 
     renderMetrics(resp, clientSeconds);
     renderDiagnostics(resp);
 
-    $("tree-title").textContent = resp.metadata.title || "Themenbaum";
+    $("tree-title").textContent = resp.metadata.title || t("tree.defaultTitle");
     $("tree-description").textContent = resp.metadata.description || "";
     const st = gen.structure;
     $("tree-structure").textContent = st
-      ? `Ordnungsprinzip (${st.source}): ${st.order}${st.levels?.length ? ` · Ebenen: ${st.levels.join(" → ")}` : ""}`
+      ? t("tree.orderLine", { source: st.source, order: st.order }) + (st.levels?.length ? `${t("tree.levelsSep")}${st.levels.join(" → ")}` : "")
       : "";
 
     window.TopicTreeView.renderTree(
@@ -499,7 +514,8 @@
       resp.metadata.vocab_labels || {},
     );
     $("tree-container").classList.toggle("compact-tree", !$("opt-show-details").checked);
-    $("tree-filter").value = "";
+    const currentFilter = $("tree-filter").value;
+    if (currentFilter) window.TopicTreeView.filterTree($("tree-container"), currentFilter);
     renderRawJson();
   }
 
@@ -507,8 +523,8 @@
     $("empty-state").hidden = true;
     $("error-panel").hidden = false;
     const err = body?.error || {};
-    $("error-title").textContent = status ? `Fehler (HTTP ${status})` : "Netzwerkfehler";
-    $("error-message").textContent = err.message || body?.detail || "Die Anfrage konnte nicht verarbeitet werden.";
+    $("error-title").textContent = status ? t("error.http", { status }) : t("error.network");
+    $("error-message").textContent = err.message || body?.detail || t("error.generic");
     $("error-code").textContent = err.code || "HTTP_ERROR";
     $("error-status").textContent = String(status || "–");
     $("error-trace").textContent = err.trace_id || "–";
@@ -519,7 +535,7 @@
     } else {
       details.hidden = true;
     }
-    $("status-message").textContent = `Fehlgeschlagen: ${err.code || status}`;
+    setStatus("status.failed", { code: err.code || status });
   }
 
   function setLoading(active, startedAt) {
@@ -530,10 +546,9 @@
     if (active) {
       $("empty-state").hidden = true;
       $("error-panel").hidden = true;
-      $("status-message").textContent = "Anfrage an /v2/topic-tree läuft …";
+      setStatus("status.running");
       state.timerId = setInterval(() => {
-        const s = ((performance.now() - startedAt) / 1000).toFixed(1).replace(".", ",");
-        $("loading-timer").textContent = `${s} s`;
+        $("loading-timer").textContent = `${fmtSec((performance.now() - startedAt) / 1000)} s`;
       }, 100);
     }
   }
@@ -569,13 +584,14 @@
       if (!res.ok) {
         renderHttpError(res.status, body);
       } else {
+        $("tree-filter").value = "";
         renderSuccess(body, elapsed);
       }
     } catch (err) {
       if (err.name === "AbortError") {
-        $("status-message").textContent = "Anfrage abgebrochen.";
+        setStatus("status.aborted");
       } else {
-        renderHttpError(0, { error: { code: "NETWORK_ERROR", message: "Dienst nicht erreichbar." } });
+        renderHttpError(0, { error: { code: "NETWORK_ERROR", message: t("error.unreachable") } });
       }
     } finally {
       setLoading(false, startedAt);
@@ -596,7 +612,26 @@
     $("acc-refine").open = true;
     syncModeLabels();
     $("f-fb-text").focus();
-    $("status-message").textContent = `Antwort ${current.version} als current_tree übernommen – Rückmeldung eingeben und ausführen.`;
+    setStatus("status.adopted", { version: current.version });
+  }
+
+  function switchLanguage(lang) {
+    if (!i18n()) return;
+    i18n().setLang(lang);
+    for (const grp of document.querySelectorAll("optgroup[data-i18n-group]")) {
+      grp.label = t(grp.dataset.i18nGroup);
+    }
+    updateShapeLimitsNote();
+    syncModeLabels(false);
+    renderDisciplineChips();
+    if (state.lastResponse) {
+      renderSuccess(state.lastResponse, state.lastClientSeconds);
+    } else if (state.statusKey) {
+      const vars = state.statusKey === "status.presetLoaded"
+        ? { ...state.statusVars, action: $("btn-submit").textContent }
+        : state.statusVars;
+      setStatus(state.statusKey, vars);
+    }
   }
 
   async function init() {
@@ -604,6 +639,9 @@
     $("btn-cancel").addEventListener("click", () => state.controller?.abort());
     $("btn-retry").addEventListener("click", () => submitForm());
     $("btn-reset").addEventListener("click", resetForm);
+    for (const btn of document.querySelectorAll(".lang-btn")) {
+      btn.addEventListener("click", () => switchLanguage(btn.dataset.lang));
+    }
     $("f-mode").addEventListener("change", () => syncModeLabels(true));
     $("f-use-case").addEventListener("change", () => syncModeLabels(true));
     $("f-discipline").addEventListener("change", (e) => {
@@ -628,7 +666,7 @@
     $("btn-copy-json").addEventListener("click", async () => {
       if (!state.lastResponse) return;
       await navigator.clipboard.writeText(JSON.stringify(state.lastResponse, null, 2));
-      $("status-message").textContent = "Antwort-JSON in die Zwischenablage kopiert.";
+      setStatus("status.copied");
     });
 
     $("btn-download-json").addEventListener("click", () => {
@@ -651,10 +689,10 @@
     for (const tab of document.querySelectorAll(".tab-btn")) {
       tab.addEventListener("click", () => {
         state.activeRawTab = tab.dataset.tab;
-        for (const t of document.querySelectorAll(".tab-btn")) {
-          const active = t === tab;
-          t.classList.toggle("active", active);
-          t.setAttribute("aria-selected", String(active));
+        for (const elTab of document.querySelectorAll(".tab-btn")) {
+          const active = elTab === tab;
+          elTab.classList.toggle("active", active);
+          elTab.setAttribute("aria-selected", String(active));
         }
         renderRawJson();
       });
@@ -673,11 +711,10 @@
         $("f-main-max").max = String(wMax);
         $("f-child-min").max = String(wMax);
         $("f-child-max").max = String(wMax);
-        $("shape-limits-note").textContent =
-          `Leer = automatische Empfehlung nach Zielgruppe (Server-Limit: max. ${dMax} Ebenen, max. ${wMax} je Ebene).`;
+        updateShapeLimitsNote();
       }
-      populateSelect($("f-discipline"), data.vocabs.discipline, "Schulfächer (discipline)");
-      populateSelect($("f-discipline"), data.vocabs.hochschulfaechersystematik, "Hochschulfächer (hochschulfaechersystematik)");
+      populateSelect($("f-discipline"), data.vocabs.discipline, "group.school");
+      populateSelect($("f-discipline"), data.vocabs.hochschulfaechersystematik, "group.uni");
       populateSelect($("f-context"), data.vocabs.educationalContext);
       populateSelect($("f-role"), data.vocabs.intendedEndUserRole);
       state.presets = data.presets;
@@ -699,9 +736,10 @@
         card.addEventListener("click", () => applyPreset(preset));
         emptyGrid.appendChild(card);
       }
+      if (i18n()) i18n().applyDom();
       syncModeLabels(false);
     } catch {
-      showFormError("Musterszenarien konnten nicht geladen werden.");
+      showFormError(t("error.presetsLoad"));
     }
   }
 

@@ -685,6 +685,10 @@ Schritt 0: `/better-coding-workflow` laden.
 - `app/__main__.py`: legt `PROMETHEUS_MULTIPROC_DIR` an, falls gesetzt.
 - `.gitlab-ci.yml`: Image-Name an Dienst-ID `topic-tree` angeglichen; `chart release`-Job für OCI-Veröffentlichung bei Tags `vX.Y.Z`.
 - Tests: `tests/conftest.py` isoliert Host-Env-Variablen; `tests/stub_openai.py` + `tests/test_e2e_server.py` prüfen den laufenden Server Ende-zu-Ende.
+- **Nachbesserungen aus Live-Evaluation (`gpt-6-luna`)**:
+  - `topic`-Strategie auf **vollständiges Titel-Grundgerüst in einem Aufruf** (`plan_structure` über alle Ebenen) → **deterministische Duplikatbereinigung** (`eliminate_generated_duplicates` in `shape_rules.py`, auch für `contents`) → **parallele Beschreibungs-Batches** (`describe_nodes`, balancierte 10er-Batches mit vollständiger Baum-Übersicht im gemeinsamen Cache-Präfix) umgestellt: 0 Duplikate und 0 Warnungen bei `topic_sek1` (100 Knoten in 31,1 s, 65 % Cache), `topic_bne_auto_meta` (31,1 s, 73 % Cache) und `topic_beruf` (22,4 s, 76 % Cache).
+  - `infer_metadata` klassifiziert auf **exakte deutsche Vokabular-Labels** (ohne Roh-URIs im Prompt) und mappt deterministisch auf kanonische SkoHub-URIs (`METADATA_LABEL_UNKNOWN` bei ungültigen Labels).
+  - Test-UI (`/ui/`): doppelte Knotentitel farblich + mit `Duplikat`/`Duplicate`-Badge hervorgehoben, umschaltbare UI-Sprache `DE` (Standard) / `EN` (`i18n.js`), verifiziert frei von externen Schriften/CDNs.
 
 # Verifikationsplan
 

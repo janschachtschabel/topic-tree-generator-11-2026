@@ -13,6 +13,7 @@ from app.vocab.labels import scheme_options
 _STATIC = Path(__file__).parent / "static"
 _ASSETS: dict[str, str] = {
     "styles.css": "text/css; charset=utf-8",
+    "i18n.js": "application/javascript; charset=utf-8",
     "tree.js": "application/javascript; charset=utf-8",
     "app.js": "application/javascript; charset=utf-8",
 }
