@@ -74,3 +74,9 @@ def test_ui_presets_cover_all_use_cases_and_validate_against_v2_schema() -> None
     assert any("Physik" in v["label"] for v in vocabs["hochschulfaechersystematik"])
     assert any("Sekundarstufe I" in v["label"] for v in vocabs["educationalContext"])
     assert any(v["uri"].endswith("/teacher") for v in vocabs["intendedEndUserRole"])
+
+
+def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
+    client = _client(ui_enabled=True)
+    css = client.get("/ui/assets/styles.css").text
+    assert "[hidden] { display: none !important; }" in css
