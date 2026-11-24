@@ -30,6 +30,8 @@ Changed (operators)
   (`1–65535`, must differ).
 - `docker-compose.yml`: Traefik router/service name configurable via `TRAEFIK_ROUTER` (default `topic-tree`), so a
   second instance on the same host gets its own routing instead of sharing one load-balanced service.
+- `docker-compose.yml` runs without a domain: the API and UI are reachable at `http://<server-ip>:18000/`
+  (`HOST_PORT`); after setting `DOMAIN`, `HOST_BIND=127.0.0.1` closes the direct path.
 
 Unchanged
 - `/generate-topic-tree` and `/generate-collection-description`: same request, response and behaviour.

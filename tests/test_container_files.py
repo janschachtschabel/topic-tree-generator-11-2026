@@ -48,7 +48,9 @@ def test_canonical_compose_is_reverse_proxy_and_panel_compatible() -> None:
     service = data["services"]["topic-tree"]
     assert "build" not in service
     assert "volumes" not in service
-    assert "ports" not in service
+    # Reachable without a domain: one host port (default 18000, unlikely to be taken) on the public API port only;
+    # HOST_BIND=127.0.0.1 closes it once Traefik serves a DOMAIN. The internal port is never published.
+    assert service["ports"] == ["${HOST_BIND:-0.0.0.0}:${HOST_PORT:-18000}:${PUBLIC_PORT:-8000}"]
     assert service["read_only"] is True
     assert "/tmp" in service["tmpfs"]
     assert service["restart"] == "unless-stopped"
@@ -177,3 +179,31 @@ def test_canonical_compose_resolves_router_name_and_ports_per_instance(tmp_path:
     assert labels["traefik.http.services.topic-tree-staging.loadbalancer.server.port"] == "8010"
     assert not any(".topic-tree." in key for key in labels)
     assert "127.0.0.1:9010/health" in " ".join(service["healthcheck"]["test"])
+
+
+@pytest.mark.parametrize(
+    ("env", "expected"),
+    [
+        ("", ("0.0.0.0", "18000", 8000)),
+        ("HOST_PORT=18010\nPUBLIC_PORT=8010\n", ("0.0.0.0", "18010", 8010)),
+        ("DOMAIN=trees.example.org\nHOST_BIND=127.0.0.1\n", ("127.0.0.1", "18000", 8000)),
+    ],
+)
+def test_canonical_compose_publishes_one_configurable_host_port(
+    tmp_path: Path, env: str, expected: tuple[str, str, int]
+) -> None:
+    if shutil.which("docker") is None:
+        pytest.skip("docker CLI not installed")
+    (tmp_path / "docker-compose.yml").write_text((ROOT / "docker-compose.yml").read_text(encoding="utf-8"), "utf-8")
+    if env:
+        (tmp_path / ".env").write_text(env, encoding="utf-8")
+    result = subprocess.run(
+        ["docker", "compose", "-f", "docker-compose.yml", "config", "--format", "json"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    ports = json.loads(result.stdout)["services"]["topic-tree"]["ports"]
+    assert [(p.get("host_ip"), p["published"], p["target"]) for p in ports] == [expected]

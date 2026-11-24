@@ -65,11 +65,16 @@ and lie in `1–65535`; inside the container (non-root) choose ports `≥ 1024`.
 Uses [`docker-compose.yml`](docker-compose.yml) with Traefik HTTPS labels and zero required environment variables on first start:
 
 1. Deploy the repository with `docker-compose.yml` (starts cleanly using `.env.example` defaults; no external Docker network required—`TRAEFIK_NETWORK` is created/used automatically).
+   Without a domain the service is reachable directly at `http://<server-ip>:18000/` (UI: `/ui/`). Change the host
+   port with `HOST_PORT` if `18000` is taken.
 2. Configure `.env` with:
-   - `DOMAIN=trees.example.org` (bare hostname only—**no** `https://`, path, or port)
    - LLM credentials: `OPENAI_API_KEY=<your-key>` (standalone) **or** `SERVICE_MODE=bapi` + `B_API_BASE_URL` / `B_API_ROUTE`
-   - Optional hardening: `SERVICE_API_KEYS=<secret1>,<secret2>` and `UI_ENABLED=false`
-3. Redeploy and point your DNS A/AAAA record for `DOMAIN` to the host. Traefik terminates TLS and routes HTTPS traffic to container port `8000`; port `9000` stays internal only.
+   - `SERVICE_API_KEYS=<secret>` **together with the LLM key**: the direct port is public and unencrypted, so without
+     a service key anyone who finds it can generate trees at your LLM cost (the test UI has a token field for it).
+   - Optional hardening: `UI_ENABLED=false`
+3. Later, with a domain: `DOMAIN=trees.example.org` (bare hostname only—**no** `https://`, path, or port), point the
+   DNS A/AAAA record to the host and redeploy. Traefik terminates TLS and routes HTTPS traffic to container port
+   `8000`; port `9000` stays internal only. Then set `HOST_BIND=127.0.0.1` to close the unencrypted direct port.
 
 To pin a specific container image instead of building locally:
 
@@ -112,6 +117,8 @@ All settings are read from environment variables or `.env` and have defaults (se
 | `TRAEFIK_NETWORK` | `topic-tree-web` | Docker network name used by Traefik and the service container. |
 | `TRAEFIK_ENTRYPOINT` | `websecure` | Traefik entrypoint name for HTTPS routing. |
 | `TRAEFIK_CERTRESOLVER` | `letsencrypt` | Traefik TLS certificate resolver name. |
+| `HOST_PORT` | `18000` | Host port of `docker-compose.yml` for direct access without a domain (`http://<server-ip>:18000/`). |
+| `HOST_BIND` | `0.0.0.0` | Host interface for `HOST_PORT`; set `127.0.0.1` once `DOMAIN` is served via Traefik to close the direct path. |
 | `TRAEFIK_ROUTER` | `topic-tree` | Traefik router and service name. These names are global in Traefik: give every further instance on the same host its own value (e.g. `topic-tree-staging`), otherwise Traefik load-balances requests across both containers. |
 | `PUBLIC_PORT` | `8000` | Public API & UI port; Docker Compose publishes the same port on the host (alternative port per service). |
 | `INTERNAL_PORT` | `9000` | Internal port for `/health`, `/ready`, and Prometheus `/metrics` (do not expose publicly); must differ from `PUBLIC_PORT`. |
