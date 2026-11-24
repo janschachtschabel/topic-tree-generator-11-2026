@@ -1,83 +1,358 @@
 # topic-tree (Themenbaum-Dienst)
 
-FastAPI service that generates collection structures ("Themenbäume") for edu-sharing with an LLM:
-from a topic, from a structure document such as a curriculum, from uploaded folders and files, or from
-unstructured contents. Drafts can be refined with feedback, and content items are assigned to nodes.
+FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores.
 
-- `POST /v2/topic-tree` – current API (format in `docs/schemas/`, calls in `docs/api.md`)
-- `POST /generate-topic-tree`, `POST /generate-collection-description` – legacy v1, unchanged
-- Design and decisions: `docs/plans/2026-11-24-topic-tree-v2.md` · Operations: `docs/steckbrief.md` · Measurements & cost model: `docs/measurements/2026-11-24-openai-gpt-6-luna.md`
+- **`POST /v2/topic-tree`** – current v2 API ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
+- **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – legacy v1 endpoints (unchanged)
+- **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
+- **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [docs/measurements/2026-11-24-openai-gpt-6-luna.md](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
 
 ## How it works
 
+```text
+request → input & cap checks → resolve refs (allow-listed) → strategy per use case
+        → assign contents → optional auto_metadata (label → URI)
+        → dedup, short titles, keys, status, shape & quality checks → JSON response
 ```
-request → input checks → load refs (allow-listed) → strategy per use case → assign contents
-        → duplicates, short titles, keys, status, shape checks → answer with warnings/questions
+
+- **`topic`**: Generates the complete title-only skeleton across all requested levels in a single LLM call, eliminates any duplicate titles deterministically, and describes all nodes in parallel balanced batches of up to 10 nodes (each sharing the full tree outline in the prompt-cache prefix for crisp demarcation).
+- **`document`**: Parses Markdown headings and page markers deterministically, maps the outline into a tree with `origin.document` (`section`, `page`), and writes node descriptions from section excerpts.
+- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`) and optionally proposes renames/merges/moves when `options.improve=true`.
+- **`contents`**: Induces topic groups from a stratified sample of items (`origin.cluster`), eliminates duplicate group titles, and assigns every item with confidence.
+- **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree.
+- **Prompt caching**: All prompts live in `app/prompts/`; `system.md` is strictly static across every LLM call.
+
+---
+
+## Installation & Docker Setup
+
+### Option A: Docker Compose – local build & direct ports (quickest for local or single-host Docker)
+
+Uses [`docker-compose.build.yml`](docker-compose.build.yml) (builds the multi-stage `python:3.13-slim` image, ~193 MB, non-root `uid=10001`, read-only root filesystem, exposes `:8000` public and `:9000` internal).
+
+```shell
+git clone https://github.com/janschachtschabel/topic-tree-generator-11-2026.git
+cd topic-tree-generator-11-2026
+cp .env.example .env
+# Edit .env: set OPENAI_API_KEY (standalone) or configure B_API_BASE_URL / B_API_ROUTE
+docker compose -f docker-compose.build.yml up --build -d
 ```
 
-`topic` plans a skeleton in one call and expands each main topic in parallel (one call each). `document` turns the
-heading outline into the tree; `folders` keeps the folders (optionally improved); `contents` groups the items.
-`mode: refine` applies structured changes, then interpreted text feedback; locked nodes stay untouched.
-All prompts live in `app/prompts/`; `system.md` is static so providers can cache it.
+Verify the running container:
 
-## Requirements
+```shell
+curl -s http://localhost:8000/health     # {"status":"ok","vocab_snapshot":"..."}
+curl -s http://localhost:9000/ready      # 200 if LLM credentials or b-api mode are ready
+curl -s http://localhost:9000/metrics    # Prometheus metrics (internal port only)
+```
 
-Python 3.13 and [uv](https://docs.astral.sh/uv/).
+Open the built-in test UI at `http://localhost:8000/ui/` (or OpenAPI docs at `http://localhost:8000/docs`).
 
-## Run locally
+### Option B: Docker Compose – pre-built image behind Traefik (Compose-from-URL / reverse proxy)
+
+Uses [`docker-compose.yml`](docker-compose.yml) with Traefik HTTPS labels and zero required environment variables on first start:
+
+1. Deploy the repository with `docker-compose.yml` (starts cleanly using `.env.example` defaults; no external Docker network required—`TRAEFIK_NETWORK` is created/used automatically).
+2. Configure `.env` with:
+   - `DOMAIN=trees.example.org` (bare hostname only—**no** `https://`, path, or port)
+   - LLM credentials: `OPENAI_API_KEY=<your-key>` (standalone) **or** `SERVICE_MODE=bapi` + `B_API_BASE_URL` / `B_API_ROUTE`
+   - Optional hardening: `SERVICE_API_KEYS=<secret1>,<secret2>` and `UI_ENABLED=false`
+3. Redeploy and point your DNS A/AAAA record for `DOMAIN` to the host. Traefik terminates TLS and routes HTTPS traffic to container port `8000`; port `9000` stays internal only.
+
+To pin a specific container image instead of building locally:
+
+```shell
+IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:latest docker compose up -d
+```
+
+### Option C: Local Python development (without Docker)
+
+Requires **Python 3.13** and [uv](https://docs.astral.sh/uv/):
 
 ```shell
 uv sync
-cp .env.example .env          # set OPENAI_API_KEY (standalone) or call it through the b-api
-uv run python -m app          # public API :8000 (docs at /docs, test UI at /ui/), internal :9000 (/health, /ready, /metrics)
+cp .env.example .env          # set OPENAI_API_KEY or B_API_DEV_KEY
+uv run python -m app          # public API :8000 (/docs, /ui/), internal :9000 (/health, /ready, /metrics)
 ```
 
-Production-like: `uv run gunicorn -c gunicorn.conf.py app.main:app` or `docker compose -f docker-compose.build.yml up --build`.
+Production-like process manager: `uv run gunicorn -c gunicorn.conf.py app.main:app`.
 
-### Deploy behind Traefik (Compose from URL / VPS)
+---
 
-`docker-compose.yml` in the repository root is ready for container panels with Traefik HTTPS routing:
+## Configuration (Environment Variables)
 
-1. Deploy the stack from the repository URL without variables first (starts cleanly using `.env.example` defaults, no required variables, no external network).
-2. Edit `.env` to set `DOMAIN` (bare hostname without `https://`) and your LLM credentials (`OPENAI_API_KEY` or b-api settings, optionally `SERVICE_API_KEYS` and `UI_ENABLED=false`), then redeploy.
-3. Point the domain's DNS A record to the server; Traefik routes HTTPS traffic to container port `8000` while port `9000` stays internal.
+All settings are read from environment variables or `.env` and have defaults (see [`.env.example`](.env.example)). Empty strings in `.env` are treated as unset.
 
-Shortest call (standalone with an OpenAI key):
+### Service Mode & Authentication
+
+| Variable | Default | Description |
+|---|---|---|
+| `SERVICE_ID` | `topic-tree` | Service identifier used in logs, metrics, and cache keys. |
+| `SERVICE_MODE` | `auto` | `auto`: `Authorization: Bearer bdt_…` routes via b-api, anything else runs standalone. `bapi`: delegation tokens only. `standalone`: never calls b-api. |
+| `SERVICE_API_KEYS` | *(empty)* | Comma-separated bearer keys for standalone auth. Empty = open (no auth required in standalone). |
+
+### Docker & Reverse Proxy (`docker-compose.yml`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `DOMAIN` | *(empty)* | Bare public hostname for Traefik (`Host(...)`), e.g. `trees.example.org` (no scheme, port, or path). |
+| `IMAGE` | `ghcr.io/...:latest` | Pre-built image reference used by `docker-compose.yml`. |
+| `TRAEFIK_NETWORK` | `topic-tree-web` | Docker network name used by Traefik and the service container. |
+| `TRAEFIK_ENTRYPOINT` | `websecure` | Traefik entrypoint name for HTTPS routing. |
+| `TRAEFIK_CERTRESOLVER` | `letsencrypt` | Traefik TLS certificate resolver name. |
+| `PUBLIC_PORT` | `8000` | Public API & UI port. |
+| `INTERNAL_PORT` | `9000` | Internal port for `/health`, `/ready`, and Prometheus `/metrics` (do not expose publicly). |
+| `WEB_CONCURRENCY` | `2` | Number of Gunicorn worker processes (~125 MiB idle RAM with 2 workers). |
+
+### LLM Backend (b-api Router & Standalone OpenAI)
+
+| Variable | Default | Description |
+|---|---|---|
+| `B_API_BASE_URL` | `https://b-api.staging.openeduhub.net` | Base URL of the b-api gateway (router path `/api/v1/llm/router/` is appended automatically). |
+| `B_API_ROUTE` | `topic-tree-generator` | Route/model name at the b-api LLM router (legacy alias: `LLM_MODEL`). |
+| `B_API_DELEGATION_HEADER` | *(empty)* | Custom header name if the b-api proxy sends the delegation token outside `Authorization`. |
+| `B_API_DEV_KEY` | *(empty)* | Local developer key for direct b-api staging tests when `OPENAI_API_KEY` is not set. |
+| `OPENAI_API_KEY` | *(empty)* | API key for standalone OpenAI or OpenAI-compatible endpoints. |
+| `OPENAI_BASE_URL` | *(empty)* | Optional custom base URL for OpenAI-compatible providers. |
+| `OPENAI_MODEL` | `gpt-6-luna` | Model name in standalone mode. |
+
+### LLM Parameters, Concurrency & Cost-Control Caps
+
+| Variable | Default | Description |
+|---|---|---|
+| `LLM_PARAM_FAMILY` | `common` | `common` (`max_completion_tokens` + `reasoning_effort`), `gpt5` (caps reasoning at `low`), or `classic` (`max_tokens`). |
+| `LLM_REASONING_EFFORT` | `none` | Reasoning effort: `none`, `minimal`, or `low` (hard-capped at `low` for latency & cost control). |
+| `LLM_OUTPUT_MODE` | `json_schema` | Structured output mode: `json_schema` (strict), `json_object`, or `prompt`. |
+| `LLM_SEND_PROMPT_CACHE_KEY` | `auto` | Send `prompt_cache_key`: `auto` (on for OpenAI, off for b-api), `true`, or `false`. |
+| `LLM_MAX_CONCURRENCY` | `20` | Max parallel LLM calls per worker process (**env-only**, never configurable by API/UI callers). |
+| `MAX_TREE_DEPTH` | `3` | Hard upper limit (`1–4`) on `shape.depth`; higher client requests fail with `422 SHAPE_LIMIT_EXCEEDED`. |
+| `MAX_NODES_PER_LEVEL` | `20` | Hard upper limit (`2–20`) on `shape.main_topics.max` and `shape.children.max` (`422 SHAPE_LIMIT_EXCEEDED`). |
+| `LLM_TIMEOUT_SECONDS` | `120` | Per-LLM-call timeout in seconds (bounded by remaining request deadline). |
+| `LLM_MAX_RETRIES` | `3` | SDK transport retries on transient upstream errors (`429`, `5xx`). |
+| `REQUEST_TIMEOUT_SECONDS` | `280` | Overall synchronous request deadline (set reverse-proxy/b-api timeout ≥ `310s`). |
+| `LEGACY_MAX_RETRIES` | `4` | Retry count for frozen v1 endpoints (legacy alias: `MAX_RETRIES`). |
+
+### External References (`items_ref`, `fulltext.ref`), Logging & UI
+
+| Variable | Default | Description |
+|---|---|---|
+| `REF_ALLOWED_HOSTS` | *(empty)* | Comma-separated HTTPS host allowlist for `ref` URLs (`.example.org` allows subdomains). Empty = all `ref` URLs rejected (SSRF protection). |
+| `REF_MAX_BYTES` | `10485760` | Max download size per referenced resource (10 MiB). |
+| `REF_TIMEOUT_SECONDS` | `20` | Download timeout per `ref` URL. |
+| `ITEMS_INLINE_MAX` | `500` | Max inline items per request (larger batches use `items_ref`, up to 5,000 items). |
+| `LOG_LEVEL` | `INFO` | Log verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
+| `LOG_FORMAT` | `json` | `json` for container/production logs, `text` for readable local logs. |
+| `UI_ENABLED` | `true` | Enables (`true`) or completely disables (`false`) the built-in test UI at `/ui/`. |
+
+---
+
+## Built-in Test UI (`/ui/`)
+
+The service ships with a self-hosted interactive test UI (zero external scripts, zero third-party fonts/CDNs, zero token persistence, switchable **DE / EN** interface with German as default).
+
+- **Enable** (default in local dev and Docker Compose): `UI_ENABLED=true` → accessible at `http://localhost:8000/ui/` (and `/ui` redirects to `/ui/`).
+- **Disable** (recommended for production; default in the Helm chart): set `UI_ENABLED=false` in `.env` or container environment. All UI routes (`/ui`, `/ui/`, `/ui/presets`, `/ui/assets/*`) immediately return **`404 Not Found`**. UI routes are never exposed in `/openapi.json`.
+- **Capabilities**:
+  - Preset templates for all use cases (`topic`, `auto_metadata`, `document`, `folders`, `contents`, `refine`, `assign_only`) that pre-fill the form without auto-starting so you can edit any field before running.
+  - Full manual input for every v2 field (multi-select school & university disciplines, direct Markdown editor for `document`, optional `shape` fields that fall back to target-group recommendations when left empty).
+  - Default title-only collapsible tree view with an opt-in checkbox to show descriptions, keywords, and vocabulary pills; automatic visual highlighting (`Duplikat` / `Duplicate` badge) if a tree contains duplicate titles.
+  - Live metrics (node counts per level, duration, LLM calls, prompt-cache hit ratio), warnings/questions/changes panels, raw request/response JSON viewer, and one-click transfer into `refine` mode with locked branches.
+
+---
+
+## Use Cases & Examples (`POST /v2/topic-tree`)
+
+All examples below work directly against `http://localhost:8000/v2/topic-tree` (also saved under [`docs/examples/`](docs/examples/)). If `SERVICE_API_KEYS` is configured in standalone mode, add `-H "Authorization: Bearer <key>"`. When `shape` is omitted, the service automatically applies recommended depth and width ranges based on the educational context (`educational_context_uri`).
+
+### 1. `topic` – Generate a tree from a topic
+
+Generates a balanced topic tree from a topic string and OEH vocabulary frame. Set `"options": {"auto_metadata": true}` on interdisciplinary topics to let the service classify each node onto exact German vocabulary labels and map them deterministically to SkoHub URIs.
 
 ```shell
-curl -s localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @docs/examples/topic_minimal.json
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "create",
+    "use_case": "topic",
+    "topic": "Optik für die Sekundarstufe I, alltagsnah, mit Experimenten",
+    "frame": {
+      "discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"],
+      "educational_context_uri": ["http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"],
+      "intended_end_user_role_uri": ["http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"]
+    },
+    "shape": {
+      "depth": 3,
+      "main_topics": {"min": 6, "max": 10},
+      "children": {"min": 3, "max": 6},
+      "extra_topics": ["general"]
+    },
+    "hints": {
+      "context": "Unterricht Klasse 7 bis 9, viele Schülerexperimente",
+      "include": ["Farben"],
+      "exclude": ["Wellenoptik"]
+    }
+  }'
 ```
 
-## Modes
+*(Minimal call: `curl -s http://localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @docs/examples/topic_minimal.json`)*
 
-| Incoming | `SERVICE_MODE=auto` (default) |
-|---|---|
-| `Authorization: Bearer bdt_…` (b-api delegation token) | LLM via the b-api router, token forwarded unchanged |
-| other bearer or none | standalone: `OPENAI_API_KEY`/`OPENAI_BASE_URL`; `SERVICE_API_KEYS` enforces auth if set |
+### 2. `document` – Derive a tree from a structure document (curriculum / textbook TOC)
 
-`bapi` accepts only delegation tokens; `standalone` never uses the b-api. Disable the built-in test UI in production with `UI_ENABLED=false` (default in the Helm chart). All settings: `.env.example`.
+Pass one or more Markdown documents with `"use": ["structure"]` (optionally with page markers such as `<!-- page: 12 -->`). Additional items with `"use": ["content"]` are automatically sorted into the resulting tree.
+
+```shell
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "create",
+    "use_case": "document",
+    "items": [
+      {
+        "id": "d1",
+        "use": ["structure"],
+        "properties": {"cm:title": ["Lehrplan Physik, Klassen 7 bis 10"]},
+        "fulltext": {
+          "format": "markdown",
+          "text": "<!-- page: 12 -->\n## Themenfeld 1: Lichtausbreitung\nSchatten, Lochkamera.\n<!-- page: 14 -->\n## Themenfeld 2: Reflexion und Brechung\nSpiegel und Linsen."
+        }
+      },
+      {
+        "id": "c1",
+        "nodeId": "5c0e1f2a-1111-4000-8000-000000000001",
+        "use": ["content"],
+        "properties": {"cm:title": ["Arbeitsblatt Schattenwurf"]}
+      }
+    ],
+    "frame": {
+      "discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"],
+      "educational_context_uri": ["http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"]
+    },
+    "hints": {"exclude": ["Wahlpflicht"], "order": "Themenfelder"}
+  }'
+```
+
+### 3. `folders` – Keep and optionally improve an uploaded folder hierarchy
+
+Preserves the caller's folder tree (`origin.type="folder"`), writes descriptions/keywords for each folder, and keeps assigned items with confidence `1.0`. Set `"options": {"improve": true}` to let the service rename generic folders (like `Neuer Ordner (2)`) or suggest structural fixes reported in `changes[]`.
+
+```shell
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "create",
+    "use_case": "folders",
+    "folders": [
+      {"title": "Optik", "items": ["c1"], "subcollections": []},
+      {"title": "Neuer Ordner (2)", "items": ["c2"], "subcollections": []}
+    ],
+    "items": [
+      {"id": "c1", "nodeId": "5c0e1f2a-1111-4000-8000-000000000001", "properties": {"cm:title": ["Licht und Schatten"]}},
+      {"id": "c2", "nodeId": "71bd09e4-2222-4000-8000-000000000002", "properties": {"cm:title": ["Spiegelbilder am Hohlspiegel"]}}
+    ],
+    "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]},
+    "options": {"improve": true}
+  }'
+```
+
+### 4. `contents` – Cluster unstructured items into a new tree
+
+Induces thematic groups directly from the supplied items (`origin.type="cluster"`) and assigns every item with confidence scores; off-topic items are listed in `unassigned[]`.
+
+```shell
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "create",
+    "use_case": "contents",
+    "topic": "Optik",
+    "items": [
+      {"id": "c1", "properties": {"cm:title": ["Licht und Schatten"]}},
+      {"id": "c2", "properties": {"cm:title": ["Lochkamera basteln"]}},
+      {"id": "c3", "properties": {"cm:title": ["Sammellinsen im Alltag"]}},
+      {"id": "c4", "properties": {"cm:title": ["Hohlspiegel und Brennpunkt"]}}
+    ],
+    "frame": {
+      "discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"],
+      "educational_context_uri": ["http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"]
+    }
+  }'
+```
+
+### 5. `refine` – Iterate on an existing tree with feedback & locked branches
+
+Pass the previous response's `collection`, `metadata.version`, and `metadata.generation` inside `current_tree`, plus `feedback.text`, structured `feedback.changes`, and `feedback.locked` keys to protect finalized branches.
+
+```shell
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "refine",
+    "use_case": "topic",
+    "current_tree": {
+      "version": "v1",
+      "collection": [
+        {"key": "k-optik", "title": "Optik", "subcollections": []},
+        {"key": "k-akustik", "title": "Akustik", "subcollections": []}
+      ]
+    },
+    "feedback": {
+      "text": "Farben als eigenes Hauptthema ergänzen",
+      "locked": ["k-optik"]
+    },
+    "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]}
+  }'
+```
+
+### 6. `refine` + `assign_only` – Sort new items into a fixed tree
+
+Leaves the entire tree structure untouched and runs only content assignment for newly added items.
+
+```shell
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "refine",
+    "use_case": "topic",
+    "current_tree": {
+      "version": "v3",
+      "collection": [
+        {"key": "k-optik", "title": "Optik", "subcollections": []}
+      ]
+    },
+    "items": [
+      {"id": "c9", "use": ["content"], "properties": {"cm:title": ["Brechung am Prisma"]}}
+    ],
+    "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]},
+    "options": {"assign_only": true}
+  }'
+```
+
+---
 
 ## Tests and checks
 
 ```shell
-uv run pytest -q                       # includes a real gunicorn smoke test and helm checks if helm is installed
-uv run ruff check && uv run ruff format --check
-helm lint --strict deploy/helm/topic-tree
+uv run pytest -q                                # full suite incl. E2E server, gunicorn smoke test & helm checks
+uv run ruff check && uv run ruff format --check # lint & formatting (line length 120)
+helm lint --strict deploy/helm/topic-tree       # Helm chart validation
 uv run python -m scripts.export_schemas         # regenerate docs/schemas after model changes
-uv run python -m scripts.build_vocab_snapshot   # refresh vocabulary labels
-uv run python -m scripts.probe_llm --model <route> --base-url <router-url>   # which LLM features a route supports
+uv run python -m scripts.build_vocab_snapshot   # refresh bundled OEH vocabulary labels
+uv run python -m scripts.probe_llm --model <route> --base-url <router-url>
 uv run python -m scripts.loadtest --url http://localhost:8000/v2/topic-tree --payload docs/examples/topic_full.json
 ```
 
-## Layout
+## Repository layout
 
-```
+```text
 app/api        HTTP layer (v2 endpoint, errors, deps, OpenAPI examples)
 app/pipeline   orchestrator, strategies per use case, LLM steps, input loading, finalize
-app/domain     tree, keys, shape rules, change operations, status (no I/O, no LLM)
-app/schemas    request/response models
-app/llm        backend selection and the JSON client (no streaming, one repair, concurrency cap)
+app/domain     tree, keys, shape rules, quality guards, change ops, status (pure, no I/O)
+app/schemas    Pydantic v2 request/response models
+app/llm        backend selection and structured JSON client (no streaming, concurrency cap)
 app/context    tracing and caller/mode detection
+app/vocab      bundled SkoHub vocabulary snapshot (no runtime network)
+app/ui         optional self-hosted test UI (/ui/, toggled via UI_ENABLED)
 app/legacy     frozen v1 endpoints
 deploy/helm    Helm chart
+docs/          API reference, JSON schemas, request examples, benchmarks, design plan
 ```
