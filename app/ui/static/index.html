@@ -114,7 +114,7 @@
         </fieldset>
 
         <details class="accordion" id="acc-hints">
-          <summary>Hinweise (Kontext, Include/Exclude, Ordnung)</summary>
+          <summary><span>Hinweise (Kontext, Include/Exclude, Ordnung)</span></summary>
           <div class="accordion-body">
             <div class="field">
               <label for="f-hint-context">Kontext / Schwerpunkt</label>
@@ -122,7 +122,7 @@
             </div>
             <div class="row-2">
               <div class="field">
-                <label for="f-hint-order">Ordnungsprinzip (optional)</label>
+                <label for="f-hint-order">Ordnungsprinzip</label>
                 <input id="f-hint-order" type="text" maxlength="200" placeholder="leer = automatisch">
               </div>
               <div class="field">
@@ -144,7 +144,7 @@
         </details>
 
         <details class="accordion" id="acc-options">
-          <summary>Optionen (Zuordnung, Improve, Konfidenz)</summary>
+          <summary><span>Optionen (Zuordnung, Improve, Konfidenz)</span></summary>
           <div class="accordion-body">
             <div class="check-col">
               <label class="check"><input id="f-opt-auto-meta" type="checkbox"> Metadaten automatisch je Knoten (<code>auto_metadata</code>)</label>
@@ -161,7 +161,7 @@
         </details>
 
         <details class="accordion" id="acc-items">
-          <summary>Dateien / Dokumente / Inhalte (<code>items</code> / Markdown / <code>items_ref</code>)</summary>
+          <summary><span>Dateien / Dokumente / Inhalte (<code>items</code>, Markdown, <code>items_ref</code>)</span></summary>
           <div class="accordion-body">
             <div class="field">
               <label for="f-doc-markdown">Direktes Markdown-Dokument (optional, für <code>document</code> von Hand)</label>
@@ -182,7 +182,7 @@
         </details>
 
         <details class="accordion" id="acc-folders">
-          <summary>Ordnerstruktur (<code>folders</code> JSON)</summary>
+          <summary><span>Ordnerstruktur (<code>folders</code> JSON)</span></summary>
           <div class="accordion-body">
             <label for="f-folders" class="sr-only">Folders als JSON-Array</label>
             <textarea id="f-folders" class="code-area" rows="5" spellcheck="false" placeholder="[]"></textarea>
@@ -190,7 +190,7 @@
         </details>
 
         <details class="accordion" id="acc-refine">
-          <summary>Refine: Feedback &amp; Ist-Stand (<code>current_tree</code>)</summary>
+          <summary><span>Refine: Feedback &amp; Ist-Stand (<code>current_tree</code>)</span></summary>
           <div class="accordion-body">
             <div class="field">
               <label for="f-fb-text">Rückmeldung als Text</label>
@@ -212,7 +212,7 @@
         </details>
 
         <details class="accordion" id="acc-auth">
-          <summary>Anmeldung (optional, nur im Speicher)</summary>
+          <summary><span>Anmeldung (optional, nur im Speicher)</span></summary>
           <div class="accordion-body">
             <div class="field">
               <label for="f-token">Bearer-Token (Dienst-Schlüssel oder <code>bdt_…</code>)</label>

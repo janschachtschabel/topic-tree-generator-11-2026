@@ -80,6 +80,11 @@ def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
     client = _client(ui_enabled=True)
     css = client.get("/ui/assets/styles.css").text
     assert "[hidden] { display: none !important; }" in css
+    assert "align-items: end;" in css
+    html = client.get("/ui/").text
+    # Every accordion <summary> wraps its label in a single <span> so flex space-between does not split <code> nodes.
+    assert "<summary><span>" in html
+    assert html.count("<summary>") == html.count("<summary><span>")
 
 
 def test_ui_exposes_compact_preset_selector_and_all_manual_v2_inputs() -> None:

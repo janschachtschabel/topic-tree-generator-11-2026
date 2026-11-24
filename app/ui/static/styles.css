@@ -102,16 +102,16 @@ input[type="text"], input[type="number"], input[type="password"], input[type="se
   background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
 }
 textarea.code-area { font-family: var(--mono); font-size: 12px; line-height: 1.4; resize: vertical; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+.row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-items: end; }
 .check-row { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 2px; }
 .check-col { display: flex; flex-direction: column; gap: 6px; }
 .check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; cursor: pointer; min-height: 24px; }
 .check input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
 
 .accordion { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-.accordion > summary { padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 36px; }
-.accordion > summary::after { content: "▸"; color: var(--muted); }
+.accordion > summary { padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.accordion > summary::after { content: "▸"; color: var(--muted); flex-shrink: 0; }
 .accordion[open] > summary::after { content: "▾"; }
 .accordion-body { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
 
