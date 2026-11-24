@@ -118,6 +118,7 @@ class Metadata(_Out):
     schema_version: str = "2.0"
     version: str
     based_on: str | None = None
+    vocab_labels: dict[str, str] = Field(default_factory=dict)
     generation: Generation
 
 

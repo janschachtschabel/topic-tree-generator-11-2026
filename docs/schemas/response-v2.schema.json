@@ -476,6 +476,13 @@
           "default": null,
           "title": "Based On"
         },
+        "vocab_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Vocab Labels",
+          "type": "object"
+        },
         "generation": {
           "$ref": "#/$defs/Generation"
         }
@@ -605,6 +612,11 @@
           "minimum": 0,
           "title": "Min Confidence",
           "type": "number"
+        },
+        "auto_metadata": {
+          "default": false,
+          "title": "Auto Metadata",
+          "type": "boolean"
         }
       },
       "title": "Options",

@@ -104,3 +104,12 @@ def test_audience_resolves_other_oeh_roles_from_vocab() -> None:
     ]
     out = run(data)
     assert out["metadata"]["target_audience"] == "Eltern, Verwaltung"
+
+
+def test_metadata_carries_vocab_labels_for_all_used_uris() -> None:
+    out = run(ex.TOPIC)
+    vlabels = out["metadata"]["vocab_labels"]
+    assert vlabels[ex.DISC] == "Physik"
+    assert vlabels[OTHER_DISC] == "Biologie"
+    assert vlabels[ex.SEK1] == "Sekundarstufe I"
+    assert vlabels[ex.TEACHER] == "Lehrer/in"

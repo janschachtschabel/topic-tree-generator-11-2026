@@ -24,7 +24,7 @@ from app.schemas.response_v2 import (
     Usage,
 )
 from app.version import service_version
-from app.vocab.labels import label
+from app.vocab.labels import label, resolve_labels
 
 _VERSION = re.compile(r"^v(\d+)$")
 _TEACHER = "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
@@ -108,11 +108,29 @@ def _audience(frame: Frame) -> str:
     return ", ".join(dict.fromkeys(_AUDIENCE.get(r) or label(r) or r.rsplit("/", 1)[-1] for r in roles))
 
 
+def _collect_vocab_uris(frame: Frame, nodes: list[NodeOut]) -> list[str]:
+    uris: list[str] = [
+        *frame.discipline_uri,
+        *frame.educational_context_uri,
+        *frame.intended_end_user_role_uri,
+    ]
+
+    def visit(items: list[NodeOut]) -> None:
+        for node in items:
+            for key in ("ccm:taxonid", "ccm:educationalcontext", "ccm:educationalintendedenduserrole"):
+                uris.extend(node.properties.values(key))
+            visit(node.subcollections)
+
+    visit(nodes)
+    return uris
+
+
 def finalize(
     req: TopicTreeRequestV2, data: FinalizeInput, *, model: str | None, usage: dict[str, Any], duration_ms: int
 ) -> TopicTreeResponseV2:
     current = req.current_tree.version if req.current_tree else None
     version, based_on = next_version(current) if req.current_tree else ("v1", None)
+    collection = [to_node_out(node, req.frame) for node in data.roots]
     generation = Generation(
         mode=req.mode,
         use_case=req.use_case,
@@ -135,11 +153,12 @@ def finalize(
         created_at=datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         version=version,
         based_on=based_on,
+        vocab_labels=resolve_labels(_collect_vocab_uris(req.frame, collection)),
         generation=generation,
     )
     return TopicTreeResponseV2(
         metadata=metadata,
-        collection=[to_node_out(node, req.frame) for node in data.roots],
+        collection=collection,
         unassigned=data.unassigned,
         changes=data.changes,
         questions=data.questions,

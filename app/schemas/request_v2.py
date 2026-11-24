@@ -69,6 +69,7 @@ class Options(_Model):
     assign_only: bool = False
     multi_assign: bool = True
     min_confidence: float = Field(0.6, ge=0, le=1)
+    auto_metadata: bool = False
 
 
 class Fulltext(_Model):

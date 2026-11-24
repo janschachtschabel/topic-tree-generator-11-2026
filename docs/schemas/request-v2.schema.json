@@ -697,6 +697,11 @@
           "minimum": 0,
           "title": "Min Confidence",
           "type": "number"
+        },
+        "auto_metadata": {
+          "default": false,
+          "title": "Auto Metadata",
+          "type": "boolean"
         }
       },
       "title": "Options",

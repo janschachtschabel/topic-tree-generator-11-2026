@@ -1,0 +1,2408 @@
+{
+ "scheme": "hochschulfaechersystematik",
+ "source": "https://vocabs.openeduhub.de/w3id.org/openeduhub/vocabs/hochschulfaechersystematik/index.json",
+ "generated_at": "2026-11-24",
+ "labels": {
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n0": "Fachübergreifend",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n001": "Ägyptologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n002": "Afrikanistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n003": "Agrarwissenschaft/Landwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n004": "Interdisziplinäre Studien (Schwerpunkt Geisteswissenschaften)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n005": "Klassische Philologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n006": "Amerikanistik/Amerikakunde",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n007": "Angewandte Kunst",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n008": "Anglistik/Englisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n009": "Anthropologie (Humanbiologie)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n01": "Geisteswissenschaften allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n010": "Arabisch/Arabistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n011": "Arbeitslehre/Wirtschaftslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n012": "Archäologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n0128": "Physik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n013": "Architektur",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n014": "Astrophysik und Astronomie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n015": "Außereuropäische Sprachen und Kulturen in Ozeanien und Amerika",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n016": "Baltistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n017": "Bauingenieurwesen/Ingenieurbau",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n018": "Berufsbezogene Fremdsprachenausbildung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n019": "Orientierungsstudium MINT",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n02": "Evang. Theologie, -Religionslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n020": "Bergbau/Bergtechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n021": "Betriebswirtschaftslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n022": "Informations- und Bibliothekswissenschaften (nicht für Verwaltungsfachhochschulen)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n023": "Bildende Kunst/Graphik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n024": "Europäische Ethnologie und Kulturwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n025": "Biochemie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n026": "Biologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n028": "Brauwesen/Getränketechnologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n029": "Sportwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n03": "Kath. Theologie, -Religionslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n030": "Interdisziplinäre Studien (Schwerpunkt Rechts-, Wirtschafts- und Sozialwissenschaften)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n031": "Byzantinistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n032": "Chemie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n033": "Chemie-Ingenieurwesen/Chemieverfahrenstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n034": "Dänisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n035": "Darstellende Kunst/Bühnenkunst/Regie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n036": "Sonstige Regionalwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n037": "Archiv- und Dokumentationswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n038": "Lateinamerika-Studien",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n039": "Geowissenschaften allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n04": "Studienbereich Philosophie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n040": "Interdisziplinäre Studien (Schwerpunkt Kunst, Kunstwissenschaft)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n042": "Wirtschaftsrecht",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n043": "Neugriechisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n044": "Ost- und Südosteuropa-Studien",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n048": "Elektrotechnik/Elektronik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n049": "Interdisziplinäre Studien (Schwerpunkt Naturwissenschaften)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05": "Studienbereich Geschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n050": "Geographie/Erdkunde",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n052": "Erziehungswissenschaft (Pädagogik)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n053": "Evang. Theologie, -Religionslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n054": "Film und Fernsehen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n055": "Orientierungsstudium Gesellschaftswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n056": "Finno-Ugristik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n057": "Luft- und Raumfahrttechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n058": "Forstwissenschaft, -wirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n059": "Französisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n06": "Informations- und Bibliothekswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n060": "Gartenbau",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n061": "Meliorationswesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n064": "Naturschutz",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n065": "Geologie/Paläontologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n066": "Geophysik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n067": "Germanistik/Deutsch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n068": "Geschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n069": "Graphikdesign/Kommunikationsgestaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07": "Allgemeine und vergleichende Literatur- und Sprachwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n070": "Griechisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n071": "Haushalts- und Ernährungswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n072": "Interdisziplinäre Studien (Schwerpunkt Ingenieurwissenschaften)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n073": "Judaistik/Hebräisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n074": "Transport-/Fördertechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n075": "Holzwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n076": "Hütten- und Gießereiwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n077": "Wasserwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n078": "Indologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n079": "Informatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08": "Altphilologie (klass. Philologie), Neugriechisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n080": "Instrumentalmusik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n081": "Iranistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n082": "Holz-/Fasertechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n083": "Islamwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n084": "Italienisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n085": "Japanologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n086": "Kath. Theologie, -Religionslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n088": "Optoelektronik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n089": "Verkehrsingenieurwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09": "Germanistik (Deutsch, germanische Sprachen ohne Anglistik)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n090": "Lernbereich Geisteswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n091": "Kunsterziehung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n092": "Kunstgeschichte, Kunstwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n093": "Landespflege/Landschaftsgestaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n094": "Wasserbau",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n095": "Latein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n096": "Lebensmittelchemie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n097": "Lebensmitteltechnologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n098": "Sportpädagogik/Sportpsychologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1": "Geisteswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n10": "Anglistik, Amerikanistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n101": "Restaurierungskunde",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n102": "Schauspiel",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n103": "Markscheidewesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n104": "Maschinenbau/-wesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n105": "Mathematik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n106": "Tanzpädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n107": "Medizin (Allgemein-Medizin)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n108": "Metalltechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11": "Romanistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n110": "Meteorologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n111": "Mineralogie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n113": "Musikerziehung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n114": "Musikwissenschaft/-geschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n115": "Grundschul-/Primarstufenpädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n116": "Textilgestaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n117": "Ausländerpädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n118": "Technomathematik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n119": "Niederländisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12": "Slawistik, Baltistik, Finno-Ugristik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n120": "Nordistik/Skandinavistik (Nordische Philologie, Einzelsprachen a.n.g.)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n121": "Medieninformatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n122": "Orientalistik/Altorientalistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n123": "Ingenieurinformatik/Technische Informatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n124": "Ozeanographie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n125": "Agrarökonomie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n126": "Pharmazie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n127": "Philosophie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n129": "Politikwissenschaft/Politologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13": "Sonstige Sprach- und Kulturwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n130": "Westslawisch (allgemein und a.n.g.)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n131": "Portugiesisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n132": "Psychologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n134": "Raumplanung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n135": "Rechtswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n136": "Religionswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n137": "Romanistik (Roman. Philologie, Einzelsprachen a.n.g.)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n138": "Agrarbiologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n139": "Russisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n14": "Kulturwissenschaften i.e.S.",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n140": "Angewandte Systemwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n141": "Abfallwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n142": "Schiffbau/Schiffstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n143": "Augenoptik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n144": "Technische Kybernetik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n145": "Sinologie/Koreanistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n146": "Slawistik (Slaw. Philologie)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n147": "Sozialkunde",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n148": "Sozialwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n149": "Soziologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n150": "Spanisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n152": "Allgemeine Sprachwissenschaft/Indogermanistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n153": "Südslawisch (Bulgarisch, Serbokroatisch Slowenisch usw.)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n154": "Lernbereich Gesellschaftslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n155": "Theaterwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n156": "Tiermedizin/Veterinärmedizin",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n157": "Mikroelektronik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n158": "Turkologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n159": "Edelstein- und Schmuckdesign",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n160": "Computerlinguistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n161": "Diakoniewissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n162": "Caritaswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n163": "Rhythmik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n164": "Jazz und Popularmusik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n165": "Orchestermusik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n166": "Sportmanagement/Sportökonomie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n167": "Europäische Wirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n168": "Justizvollzug",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n169": "Ethik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n171": "Vermessungswesen (Geodäsie)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n172": "Verwaltungswissenschaft/-wesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n173": "Ethnologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n174": "Volkskunde",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n175": "Volkswirtschaftslehre",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n176": "Werkerziehung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n177": "Werkstofftechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n178": "Wirtschafts-/Sozialgeographie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n179": "Wirtschaftsingenieurwesen mit wirtschaftswissenschaftlichem Schwerpunkt",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n18": "Islamische Studien/Islamische Theologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n180": "Kaukasistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n181": "Wirtschaftspädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n182": "Internationale Betriebswirtschaft/Management",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n183": "Wirtschafts-/Sozialgeschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n184": "Wirtschaftswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n185": "Zahnmedizin",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n186": "Lernbereich Naturwissenschaften/Sachunterricht",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n187": "Asiatische Sprachen und Kulturen/Asienwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n188": "Allgemeine Literaturwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n189": "Niederdeutsch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n19": "Medienwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n190": "Sonderpädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n191": "Komposition",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n192": "Dirigieren",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n193": "Kirchenmusik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n194": "Tonmeister",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n195": "Gesundheitspädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n197": "Holzbau",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n199": "Lernbereich Technik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n2": "Sport",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n200": "Computer- und Kommunikationstechniken",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n201": "Werken (technisch)/Technologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n202": "Fertigungs-/Produktionstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n203": "Industriedesign/Produktgestaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n204": "Malerei",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n205": "Bildhauerei/Plastik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n206": "Polnisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n207": "Sorabistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n208": "Soziale Arbeit",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n209": "Tschechisch",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n210": "Verkehrswirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n211": "Energieverfahrenstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n212": "Feinwerktechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n213": "Versorgungstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n215": "Gesundheitstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n216": "Glastechnik/Keramik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n219": "Kunststofftechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n22": "Sport, Sportwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n220": "Milch- und Molkereiwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n221": "Bioinformatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n222": "Kommunikations- und Informationstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n223": "Nautik/Seefahrt",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n224": "Physikalische Technik/Mechanische Verfahrenstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n225": "Textil- und Bekleidungstechnik/-gewerbe",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n226": "Verfahrenstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n227": "Weinbau und Kellerwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n23": "Rechts-, Wirtschafts- und Sozialwissenschaften allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n230": "Gesang",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n231": "Druck- und Reproduktionstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n232": "Gesundheitswissenschaft/-management",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n233": "Nichtärztliche Heilberufe/Therapien",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n234": "Pflegewissenschaft/-management",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n235": "Fahrzeugtechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n24": "Regionalwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n242": "Innenarchitektur",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n245": "Sozialpädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n247": "Medizinische Informatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n25": "Politikwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n253": "Sozialwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n254": "Sachunterricht (einschl. Schulgarten)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n255": "Archivwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n256": "Rechtspflege",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n257": "Arbeits- und Berufsberatung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n258": "Arbeitsverwaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n259": "Auswärtige Angelegenheiten",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n26": "Sozialwissenschaften/Soziologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n260": "Bundeswehrverwaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n261": "Innere Verwaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n262": "Bibliothekswesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n263": "Polizei/Verfassungsschutz",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n264": "Sozialversicherung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n265": "Bankwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n266": "Finanzverwaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n268": "Verkehrswesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n269": "Zoll- und Steuerverwaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n27": "Studienbereich Sozialwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n270": "Berufs- und Wirtschaftspädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n271": "Deutsch als Fremdsprache oder als Zweitsprache",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n272": "Alte Geschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n273": "Mittlere und neuere Geschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n274": "Tourismuswirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n275": "Wissenschaftsgeschichte/Technikgeschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n276": "Wirtschaftsmathematik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n277": "Wirtschaftsinformatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n28": "Rechtswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n280": "Kartographie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n282": "Biotechnologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n283": "Landschaftsökologie/Biogeographie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n284": "Angewandte Sprachwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n286": "Mikrosystemtechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n287": "Neue Medien",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29": "Verwaltungswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n292": "Islamische Studien/Islamische Theologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n294": "Materialwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3": "Rechts-, Wirtschafts- und Sozialwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30": "Studienbereich Wirtschaftswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n300": "Biomedizin",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n302": "Medienwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n303": "Kommunikationswissenschaft/Publizistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n304": "Medienwirtschaft/Medienmanagement",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n305": "Medientechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n31": "Studienbereich Wirtschaftsingenieurwesen mit wirtschaftswissenschaftlichem Schwerpunkt",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n310": "Regenerative Energien",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n312": "Statistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n316": "Elektrische Energietechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n32": "Studienbereich Psychologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n320": "Ernährungswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n321": "Erwachsenenbildung und außerschulische Jugendbildung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33": "Erziehungswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n333": "Haushaltswissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n34": "Kommunikationswissenschaft/Publizistik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n353": "Pflanzenproduktion",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n36": "Mathematik, Naturwissenschaften allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n361": "Schulpädagogik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n365": "Pädagogik der frühen Kindheit",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n37": "Mathematik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n370": "Wirtschaftsingenieurwesen mit ingenieurwissenschaftlichem Schwerpunkt",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n371": "Tierproduktion",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n380": "Mechatronik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n385": "Geoökologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n39": "Physik, Astronomie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n390": "Archäometrie (Ingenieurarchäologie)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4": "Mathematik, Naturwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n40": "Studienbereich Chemie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n41": "Studienbereich Pharmazie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n42": "Studienbereich Biologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n429": "Stahlbau",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43": "Geowissenschaften (ohne Geographie)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n44": "Geographie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n457": "Umwelttechnik (einschl. Recycling)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n458": "Umweltschutz",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n464": "Facility Management",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n48": "Gesundheitswissenschaften allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n49": "Humanmedizin (ohne Zahnmedizin)",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n5": "Humanmedizin/Gesundheitswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n50": "Studienbereich Zahnmedizin",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n51": "Veterinärmedizin",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n544": "Evang. Religionspädagogik, kirchliche Bildungsarbeit",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n545": "Kath. Religionspädagogik, kirchliche Bildungsarbeit",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n548": "Ur- und Frühgeschichte",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n57": "Landespflege, Umweltgestaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58": "Agrarwissenschaften, Lebensmittel- und Getränketechnologie",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n59": "Forstwissenschaft, Holzwirtschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n60": "Ernährungs- und Haushaltswissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61": "Ingenieurwesen allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n62": "Bergbau, Hüttenwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63": "Maschinenbau/Verfahrenstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64": "Elektrotechnik und Informationstechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65": "Verkehrstechnik, Nautik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n66": "Architektur, Innenarchitektur",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n67": "Studienbereich Raumplanung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68": "Bauingenieurwesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n69": "Vermessungswesen",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7": "Agrar-, Forst- und Ernährungswissenschaften, Veterinärmedizin",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n70": "Studienbereich Wirtschaftsingenieurwesen mit ingenieurwissenschaftlichem Schwerpunkt",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71": "Studienbereich Informatik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n72": "Materialwissenschaft und Werkstofftechnik",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n74": "Kunst, Kunstwissenschaft allgemein",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n75": "Studienbereich Bildende Kunst",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76": "Gestaltung",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77": "Darstellende Kunst, Film und Fernsehen, Theaterwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78": "Musik, Musikwissenschaft",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8": "Ingenieurwissenschaften",
+  "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9": "Kunst, Kunstwissenschaft"
+ },
+ "entries": [
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n0",
+   "label": "Fachübergreifend",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1",
+   "label": "Geisteswissenschaften",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n01",
+   "label": "Geisteswissenschaften allgemein",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n004",
+   "label": "Interdisziplinäre Studien (Schwerpunkt Geisteswissenschaften)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n01"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n090",
+   "label": "Lernbereich Geisteswissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n01"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n02",
+   "label": "Evang. Theologie, -Religionslehre",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n161",
+   "label": "Diakoniewissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n02"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n544",
+   "label": "Evang. Religionspädagogik, kirchliche Bildungsarbeit",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n02"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n053",
+   "label": "Evang. Theologie, -Religionslehre",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n02"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n03",
+   "label": "Kath. Theologie, -Religionslehre",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n162",
+   "label": "Caritaswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n03"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n545",
+   "label": "Kath. Religionspädagogik, kirchliche Bildungsarbeit",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n03"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n086",
+   "label": "Kath. Theologie, -Religionslehre",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n03"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n04",
+   "label": "Studienbereich Philosophie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n169",
+   "label": "Ethik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n04"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n127",
+   "label": "Philosophie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n04"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n136",
+   "label": "Religionswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n04"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05",
+   "label": "Studienbereich Geschichte",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n272",
+   "label": "Alte Geschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n012",
+   "label": "Archäologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n068",
+   "label": "Geschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n273",
+   "label": "Mittlere und neuere Geschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n548",
+   "label": "Ur- und Frühgeschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n183",
+   "label": "Wirtschafts-/Sozialgeschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n275",
+   "label": "Wissenschaftsgeschichte/Technikgeschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n05"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n06",
+   "label": "Informations- und Bibliothekswissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n022",
+   "label": "Informations- und Bibliothekswissenschaften (nicht für Verwaltungsfachhochschulen)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n06"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n037",
+   "label": "Archiv- und Dokumentationswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n06"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07",
+   "label": "Allgemeine und vergleichende Literatur- und Sprachwissenschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n188",
+   "label": "Allgemeine Literaturwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n152",
+   "label": "Allgemeine Sprachwissenschaft/Indogermanistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n284",
+   "label": "Angewandte Sprachwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n018",
+   "label": "Berufsbezogene Fremdsprachenausbildung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n160",
+   "label": "Computerlinguistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n07"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08",
+   "label": "Altphilologie (klass. Philologie), Neugriechisch",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n031",
+   "label": "Byzantinistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n070",
+   "label": "Griechisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n005",
+   "label": "Klassische Philologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n095",
+   "label": "Latein",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n043",
+   "label": "Neugriechisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n08"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09",
+   "label": "Germanistik (Deutsch, germanische Sprachen ohne Anglistik)",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n034",
+   "label": "Dänisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n271",
+   "label": "Deutsch als Fremdsprache oder als Zweitsprache",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n067",
+   "label": "Germanistik/Deutsch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n189",
+   "label": "Niederdeutsch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n119",
+   "label": "Niederländisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n120",
+   "label": "Nordistik/Skandinavistik (Nordische Philologie, Einzelsprachen a.n.g.)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n09"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n10",
+   "label": "Anglistik, Amerikanistik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n006",
+   "label": "Amerikanistik/Amerikakunde",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n10"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n008",
+   "label": "Anglistik/Englisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n10"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11",
+   "label": "Romanistik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n059",
+   "label": "Französisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n084",
+   "label": "Italienisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n131",
+   "label": "Portugiesisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n137",
+   "label": "Romanistik (Roman. Philologie, Einzelsprachen a.n.g.)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n150",
+   "label": "Spanisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n11"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12",
+   "label": "Slawistik, Baltistik, Finno-Ugristik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n016",
+   "label": "Baltistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n056",
+   "label": "Finno-Ugristik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n206",
+   "label": "Polnisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n139",
+   "label": "Russisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n146",
+   "label": "Slawistik (Slaw. Philologie)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n207",
+   "label": "Sorabistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n153",
+   "label": "Südslawisch (Bulgarisch, Serbokroatisch Slowenisch usw.)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n209",
+   "label": "Tschechisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n130",
+   "label": "Westslawisch (allgemein und a.n.g.)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n12"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13",
+   "label": "Sonstige Sprach- und Kulturwissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n002",
+   "label": "Afrikanistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n001",
+   "label": "Ägyptologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n010",
+   "label": "Arabisch/Arabistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n187",
+   "label": "Asiatische Sprachen und Kulturen/Asienwissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n015",
+   "label": "Außereuropäische Sprachen und Kulturen in Ozeanien und Amerika",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n073",
+   "label": "Judaistik/Hebräisch",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n078",
+   "label": "Indologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n081",
+   "label": "Iranistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n083",
+   "label": "Islamwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n085",
+   "label": "Japanologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n180",
+   "label": "Kaukasistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n122",
+   "label": "Orientalistik/Altorientalistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n145",
+   "label": "Sinologie/Koreanistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n158",
+   "label": "Turkologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n13"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n14",
+   "label": "Kulturwissenschaften i.e.S.",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n173",
+   "label": "Ethnologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n14"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n024",
+   "label": "Europäische Ethnologie und Kulturwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n14"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n174",
+   "label": "Volkskunde",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n14"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n18",
+   "label": "Islamische Studien/Islamische Theologie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n292",
+   "label": "Islamische Studien/Islamische Theologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n18"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n19",
+   "label": "Medienwissenschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n302",
+   "label": "Medienwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n19"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n2",
+   "label": "Sport",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n22",
+   "label": "Sport, Sportwissenschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n2"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n098",
+   "label": "Sportpädagogik/Sportpsychologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n22"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n029",
+   "label": "Sportwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n22"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3",
+   "label": "Rechts-, Wirtschafts- und Sozialwissenschaften",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n23",
+   "label": "Rechts-, Wirtschafts- und Sozialwissenschaften allgemein",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n030",
+   "label": "Interdisziplinäre Studien (Schwerpunkt Rechts-, Wirtschafts- und Sozialwissenschaften)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n23"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n154",
+   "label": "Lernbereich Gesellschaftslehre",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n23"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n055",
+   "label": "Orientierungsstudium Gesellschaftswissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n23"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n24",
+   "label": "Regionalwissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n038",
+   "label": "Lateinamerika-Studien",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n24"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n044",
+   "label": "Ost- und Südosteuropa-Studien",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n24"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n036",
+   "label": "Sonstige Regionalwissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n24"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n25",
+   "label": "Politikwissenschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n129",
+   "label": "Politikwissenschaft/Politologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n25"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n26",
+   "label": "Sozialwissenschaften/Soziologie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n147",
+   "label": "Sozialkunde",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n26"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n148",
+   "label": "Sozialwissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n26"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n149",
+   "label": "Soziologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n26"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n27",
+   "label": "Studienbereich Sozialwesen",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n208",
+   "label": "Soziale Arbeit",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n27"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n245",
+   "label": "Sozialpädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n27"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n253",
+   "label": "Sozialwesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n27"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n28",
+   "label": "Rechtswissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n135",
+   "label": "Rechtswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n28"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n042",
+   "label": "Wirtschaftsrecht",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n28"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29",
+   "label": "Verwaltungswissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n257",
+   "label": "Arbeits- und Berufsberatung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n258",
+   "label": "Arbeitsverwaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n255",
+   "label": "Archivwesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n259",
+   "label": "Auswärtige Angelegenheiten",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n265",
+   "label": "Bankwesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n262",
+   "label": "Bibliothekswesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n260",
+   "label": "Bundeswehrverwaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n266",
+   "label": "Finanzverwaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n261",
+   "label": "Innere Verwaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n168",
+   "label": "Justizvollzug",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n263",
+   "label": "Polizei/Verfassungsschutz",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n256",
+   "label": "Rechtspflege",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n264",
+   "label": "Sozialversicherung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n268",
+   "label": "Verkehrswesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n172",
+   "label": "Verwaltungswissenschaft/-wesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n269",
+   "label": "Zoll- und Steuerverwaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n29"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30",
+   "label": "Studienbereich Wirtschaftswissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n011",
+   "label": "Arbeitslehre/Wirtschaftslehre",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n021",
+   "label": "Betriebswirtschaftslehre",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n167",
+   "label": "Europäische Wirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n182",
+   "label": "Internationale Betriebswirtschaft/Management",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n304",
+   "label": "Medienwirtschaft/Medienmanagement",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n166",
+   "label": "Sportmanagement/Sportökonomie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n274",
+   "label": "Tourismuswirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n210",
+   "label": "Verkehrswirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n175",
+   "label": "Volkswirtschaftslehre",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n181",
+   "label": "Wirtschaftspädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n184",
+   "label": "Wirtschaftswissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n30"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n31",
+   "label": "Studienbereich Wirtschaftsingenieurwesen mit wirtschaftswissenschaftlichem Schwerpunkt",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n464",
+   "label": "Facility Management",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n31"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n179",
+   "label": "Wirtschaftsingenieurwesen mit wirtschaftswissenschaftlichem Schwerpunkt",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n31"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n32",
+   "label": "Studienbereich Psychologie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n132",
+   "label": "Psychologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n32"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33",
+   "label": "Erziehungswissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n117",
+   "label": "Ausländerpädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n270",
+   "label": "Berufs- und Wirtschaftspädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n321",
+   "label": "Erwachsenenbildung und außerschulische Jugendbildung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n052",
+   "label": "Erziehungswissenschaft (Pädagogik)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n115",
+   "label": "Grundschul-/Primarstufenpädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n365",
+   "label": "Pädagogik der frühen Kindheit",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n254",
+   "label": "Sachunterricht (einschl. Schulgarten)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n361",
+   "label": "Schulpädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n190",
+   "label": "Sonderpädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n33"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n34",
+   "label": "Kommunikationswissenschaft/Publizistik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n3"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n303",
+   "label": "Kommunikationswissenschaft/Publizistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n34"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4",
+   "label": "Mathematik, Naturwissenschaften",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n36",
+   "label": "Mathematik, Naturwissenschaften allgemein",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n049",
+   "label": "Interdisziplinäre Studien (Schwerpunkt Naturwissenschaften)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n36"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n186",
+   "label": "Lernbereich Naturwissenschaften/Sachunterricht",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n36"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n019",
+   "label": "Orientierungsstudium MINT",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n36"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n312",
+   "label": "Statistik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n36"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n37",
+   "label": "Mathematik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n105",
+   "label": "Mathematik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n37"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n118",
+   "label": "Technomathematik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n37"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n276",
+   "label": "Wirtschaftsmathematik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n37"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n39",
+   "label": "Physik, Astronomie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n014",
+   "label": "Astrophysik und Astronomie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n39"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n0128",
+   "label": "Physik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n39"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n40",
+   "label": "Studienbereich Chemie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n025",
+   "label": "Biochemie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n40"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n032",
+   "label": "Chemie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n40"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n096",
+   "label": "Lebensmittelchemie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n40"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n41",
+   "label": "Studienbereich Pharmazie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n126",
+   "label": "Pharmazie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n41"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n42",
+   "label": "Studienbereich Biologie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n009",
+   "label": "Anthropologie (Humanbiologie)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n42"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n026",
+   "label": "Biologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n42"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n300",
+   "label": "Biomedizin",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n42"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n282",
+   "label": "Biotechnologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n42"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43",
+   "label": "Geowissenschaften (ohne Geographie)",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n065",
+   "label": "Geologie/Paläontologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n385",
+   "label": "Geoökologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n066",
+   "label": "Geophysik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n039",
+   "label": "Geowissenschaften allgemein",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n110",
+   "label": "Meteorologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n111",
+   "label": "Mineralogie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n124",
+   "label": "Ozeanographie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n43"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n44",
+   "label": "Geographie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n4"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n283",
+   "label": "Landschaftsökologie/Biogeographie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n44"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n050",
+   "label": "Geographie/Erdkunde",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n44"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n178",
+   "label": "Wirtschafts-/Sozialgeographie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n44"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n5",
+   "label": "Humanmedizin/Gesundheitswissenschaften",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n48",
+   "label": "Gesundheitswissenschaften allgemein",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n5"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n195",
+   "label": "Gesundheitspädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n48"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n232",
+   "label": "Gesundheitswissenschaft/-management",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n48"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n233",
+   "label": "Nichtärztliche Heilberufe/Therapien",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n48"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n234",
+   "label": "Pflegewissenschaft/-management",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n48"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n49",
+   "label": "Humanmedizin (ohne Zahnmedizin)",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n5"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n107",
+   "label": "Medizin (Allgemein-Medizin)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n49"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n50",
+   "label": "Studienbereich Zahnmedizin",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n5"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n185",
+   "label": "Zahnmedizin",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n50"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7",
+   "label": "Agrar-, Forst- und Ernährungswissenschaften, Veterinärmedizin",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n51",
+   "label": "Veterinärmedizin",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n156",
+   "label": "Tiermedizin/Veterinärmedizin",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n51"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n57",
+   "label": "Landespflege, Umweltgestaltung",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n093",
+   "label": "Landespflege/Landschaftsgestaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n57"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n061",
+   "label": "Meliorationswesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n57"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n064",
+   "label": "Naturschutz",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n57"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58",
+   "label": "Agrarwissenschaften, Lebensmittel- und Getränketechnologie",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n138",
+   "label": "Agrarbiologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n125",
+   "label": "Agrarökonomie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n003",
+   "label": "Agrarwissenschaft/Landwirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n028",
+   "label": "Brauwesen/Getränketechnologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n060",
+   "label": "Gartenbau",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n097",
+   "label": "Lebensmitteltechnologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n220",
+   "label": "Milch- und Molkereiwirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n353",
+   "label": "Pflanzenproduktion",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n371",
+   "label": "Tierproduktion",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n227",
+   "label": "Weinbau und Kellerwirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n58"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n59",
+   "label": "Forstwissenschaft, Holzwirtschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n058",
+   "label": "Forstwissenschaft, -wirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n59"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n075",
+   "label": "Holzwirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n59"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n60",
+   "label": "Ernährungs- und Haushaltswissenschaften",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n7"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n320",
+   "label": "Ernährungswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n60"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n071",
+   "label": "Haushalts- und Ernährungswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n60"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n333",
+   "label": "Haushaltswissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n60"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8",
+   "label": "Ingenieurwissenschaften",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61",
+   "label": "Ingenieurwesen allgemein",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n140",
+   "label": "Angewandte Systemwissenschaften",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n072",
+   "label": "Interdisziplinäre Studien (Schwerpunkt Ingenieurwissenschaften)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n199",
+   "label": "Lernbereich Technik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n380",
+   "label": "Mechatronik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n305",
+   "label": "Medientechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n310",
+   "label": "Regenerative Energien",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n201",
+   "label": "Werken (technisch)/Technologie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n61"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n62",
+   "label": "Bergbau, Hüttenwesen",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n390",
+   "label": "Archäometrie (Ingenieurarchäologie)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n62"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n020",
+   "label": "Bergbau/Bergtechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n62"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n076",
+   "label": "Hütten- und Gießereiwesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n62"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n103",
+   "label": "Markscheidewesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n62"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63",
+   "label": "Maschinenbau/Verfahrenstechnik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n141",
+   "label": "Abfallwirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n143",
+   "label": "Augenoptik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n033",
+   "label": "Chemie-Ingenieurwesen/Chemieverfahrenstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n231",
+   "label": "Druck- und Reproduktionstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n211",
+   "label": "Energieverfahrenstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n212",
+   "label": "Feinwerktechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n202",
+   "label": "Fertigungs-/Produktionstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n215",
+   "label": "Gesundheitstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n216",
+   "label": "Glastechnik/Keramik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n082",
+   "label": "Holz-/Fasertechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n219",
+   "label": "Kunststofftechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n104",
+   "label": "Maschinenbau/-wesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n108",
+   "label": "Metalltechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n224",
+   "label": "Physikalische Technik/Mechanische Verfahrenstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n144",
+   "label": "Technische Kybernetik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n225",
+   "label": "Textil- und Bekleidungstechnik/-gewerbe",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n074",
+   "label": "Transport-/Fördertechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n457",
+   "label": "Umwelttechnik (einschl. Recycling)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n226",
+   "label": "Verfahrenstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n213",
+   "label": "Versorgungstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n63"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64",
+   "label": "Elektrotechnik und Informationstechnik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n316",
+   "label": "Elektrische Energietechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n048",
+   "label": "Elektrotechnik/Elektronik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n222",
+   "label": "Kommunikations- und Informationstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n157",
+   "label": "Mikroelektronik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n286",
+   "label": "Mikrosystemtechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n088",
+   "label": "Optoelektronik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n64"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65",
+   "label": "Verkehrstechnik, Nautik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n235",
+   "label": "Fahrzeugtechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n057",
+   "label": "Luft- und Raumfahrttechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n223",
+   "label": "Nautik/Seefahrt",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n142",
+   "label": "Schiffbau/Schiffstechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n089",
+   "label": "Verkehrsingenieurwesen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n65"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n66",
+   "label": "Architektur, Innenarchitektur",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n013",
+   "label": "Architektur",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n66"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n242",
+   "label": "Innenarchitektur",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n66"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n67",
+   "label": "Studienbereich Raumplanung",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n134",
+   "label": "Raumplanung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n67"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n458",
+   "label": "Umweltschutz",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n67"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68",
+   "label": "Bauingenieurwesen",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n017",
+   "label": "Bauingenieurwesen/Ingenieurbau",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n197",
+   "label": "Holzbau",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n429",
+   "label": "Stahlbau",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n094",
+   "label": "Wasserbau",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n077",
+   "label": "Wasserwirtschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n68"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n69",
+   "label": "Vermessungswesen",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n280",
+   "label": "Kartographie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n69"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n171",
+   "label": "Vermessungswesen (Geodäsie)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n69"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n70",
+   "label": "Studienbereich Wirtschaftsingenieurwesen mit ingenieurwissenschaftlichem Schwerpunkt",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n370",
+   "label": "Wirtschaftsingenieurwesen mit ingenieurwissenschaftlichem Schwerpunkt",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n70"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71",
+   "label": "Studienbereich Informatik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n221",
+   "label": "Bioinformatik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n200",
+   "label": "Computer- und Kommunikationstechniken",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n079",
+   "label": "Informatik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n123",
+   "label": "Ingenieurinformatik/Technische Informatik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n121",
+   "label": "Medieninformatik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n247",
+   "label": "Medizinische Informatik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n277",
+   "label": "Wirtschaftsinformatik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n71"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n72",
+   "label": "Materialwissenschaft und Werkstofftechnik",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n8"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n294",
+   "label": "Materialwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n72"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n177",
+   "label": "Werkstofftechnik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n72"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9",
+   "label": "Kunst, Kunstwissenschaft",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n74",
+   "label": "Kunst, Kunstwissenschaft allgemein",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n040",
+   "label": "Interdisziplinäre Studien (Schwerpunkt Kunst, Kunstwissenschaft)",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n74"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n091",
+   "label": "Kunsterziehung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n74"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n092",
+   "label": "Kunstgeschichte, Kunstwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n74"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n101",
+   "label": "Restaurierungskunde",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n74"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n75",
+   "label": "Studienbereich Bildende Kunst",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n023",
+   "label": "Bildende Kunst/Graphik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n75"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n205",
+   "label": "Bildhauerei/Plastik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n75"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n204",
+   "label": "Malerei",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n75"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n287",
+   "label": "Neue Medien",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n75"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76",
+   "label": "Gestaltung",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n007",
+   "label": "Angewandte Kunst",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n159",
+   "label": "Edelstein- und Schmuckdesign",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n069",
+   "label": "Graphikdesign/Kommunikationsgestaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n203",
+   "label": "Industriedesign/Produktgestaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n116",
+   "label": "Textilgestaltung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n176",
+   "label": "Werkerziehung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n76"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77",
+   "label": "Darstellende Kunst, Film und Fernsehen, Theaterwissenschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n035",
+   "label": "Darstellende Kunst/Bühnenkunst/Regie",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n054",
+   "label": "Film und Fernsehen",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n102",
+   "label": "Schauspiel",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n106",
+   "label": "Tanzpädagogik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n155",
+   "label": "Theaterwissenschaft",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n77"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78",
+   "label": "Musik, Musikwissenschaft",
+   "depth": 2,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n9"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n192",
+   "label": "Dirigieren",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n230",
+   "label": "Gesang",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n080",
+   "label": "Instrumentalmusik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n164",
+   "label": "Jazz und Popularmusik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n193",
+   "label": "Kirchenmusik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n191",
+   "label": "Komposition",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n113",
+   "label": "Musikerziehung",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n114",
+   "label": "Musikwissenschaft/-geschichte",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n165",
+   "label": "Orchestermusik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n163",
+   "label": "Rhythmik",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n194",
+   "label": "Tonmeister",
+   "depth": 3,
+   "parent": "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n78"
+  }
+ ]
+}

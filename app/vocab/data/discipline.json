@@ -1,6 +1,6 @@
 {
  "scheme": "discipline",
- "source": "https://raw.githubusercontent.com/openeduhub/oeh-metadata-vocabs/master/discipline.ttl",
+ "source": "https://vocabs.openeduhub.de/w3id.org/openeduhub/vocabs/discipline/index.json",
  "generated_at": "2026-11-24",
  "labels": {
   "http://w3id.org/openeduhub/vocabs/discipline/020": "Arbeitslehre",
@@ -73,5 +73,436 @@
   "http://w3id.org/openeduhub/vocabs/discipline/niederdeutsch": "Niederdeutsch",
   "http://w3id.org/openeduhub/vocabs/discipline/oeh01": "Arbeit, Ernährung, Soziales",
   "http://w3id.org/openeduhub/vocabs/discipline/oeh04010": "Mechatronik"
- }
+ },
+ "entries": [
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/720",
+   "label": "Allgemein",
+   "depth": 1,
+   "alt": [
+    "Sonstiges"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20003",
+   "label": "Alt-Griechisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04001",
+   "label": "Agrarwirtschaft",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/oeh01",
+   "label": "Arbeit, Ernährung, Soziales",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/020",
+   "label": "Arbeitslehre",
+   "depth": 1,
+   "alt": [
+    "Arbeit, Wirtschaft, Technik",
+    "Polytechnischer Unterricht",
+    "Polytechnik"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04014",
+   "label": "Arbeitssicherheit",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/46014",
+   "label": "Astronomie",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04002",
+   "label": "Bautechnik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/040",
+   "label": "Berufliche Bildung",
+   "depth": 1,
+   "alt": [
+    "Berufsausbildung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/080",
+   "label": "Biologie",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/100",
+   "label": "Chemie",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20041",
+   "label": "Chinesisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/12002",
+   "label": "Darstellendes Spiel",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/120",
+   "label": "Deutsch",
+   "depth": 1,
+   "alt": [
+    "Muttersprache"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/28002",
+   "label": "Deutsch als Zweitsprache",
+   "depth": 1,
+   "alt": [
+    "DaZ",
+    "DaF",
+    "Deutsch als Zweit- / Fremdsprache",
+    "Deutsch als Fremdsprache"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04005",
+   "label": "Elektrotechnik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04006",
+   "label": "Ernährung und Hauswirtschaft",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20001",
+   "label": "Englisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/440",
+   "label": "Pädagogik",
+   "depth": 1,
+   "alt": [
+    "Erziehungswissenschaften"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20090",
+   "label": "Esperanto",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/160",
+   "label": "Ethik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04007",
+   "label": "Farbtechnik und Raumgestaltung",
+   "depth": 1,
+   "alt": [
+    "Raumgestaltung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20002",
+   "label": "Französisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/220",
+   "label": "Geografie",
+   "depth": 1,
+   "alt": [
+    "Erdkunde",
+    "Geographie"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/240",
+   "label": "Geschichte",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/48005",
+   "label": "Gesellschaftskunde",
+   "depth": 1,
+   "alt": [
+    "Gesellschaftspolitische Gegenwartsfragen"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/260",
+   "label": "Gesundheit",
+   "depth": 1,
+   "alt": [
+    "Gesundheitserziehung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/50001",
+   "label": "Hauswirtschaft",
+   "depth": 1,
+   "alt": [
+    "Verbraucherbildung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04009",
+   "label": "Holztechnik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/320",
+   "label": "Informatik",
+   "depth": 1,
+   "alt": [
+    "Informations- und Kommunikationstechnologie"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/340",
+   "label": "Interkulturelle Bildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20004",
+   "label": "Italienisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/060",
+   "label": "Kunst",
+   "depth": 1,
+   "alt": [
+    "Kunsterziehung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04010",
+   "label": "Körperpflege",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20005",
+   "label": "Latein",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/380",
+   "label": "Mathematik",
+   "depth": 1,
+   "alt": [
+    "Mathe"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/oeh04010",
+   "label": "Mechatronik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/900",
+   "label": "Medienbildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/400",
+   "label": "Mediendidaktik",
+   "depth": 1,
+   "alt": [
+    "Medienerziehung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04011",
+   "label": "Metalltechnik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04003",
+   "label": "MINT",
+   "depth": 1,
+   "alt": [
+    "Chemie, Physik, Biologie",
+    "Naturwissenschaften"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/420",
+   "label": "Musik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/64018",
+   "label": "Nachhaltigkeit",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/niederdeutsch",
+   "label": "Niederdeutsch",
+   "depth": 1,
+   "alt": [
+    "Platt"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/44099",
+   "label": "Open Educational Resources",
+   "depth": 1,
+   "alt": [
+    "OER"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/450",
+   "label": "Philosophie",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/460",
+   "label": "Physik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/480",
+   "label": "Politik",
+   "depth": 1,
+   "alt": [
+    "Politische Bildung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/510",
+   "label": "Psychologie",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/520",
+   "label": "Religion",
+   "depth": 1,
+   "alt": [
+    "Religionsunterricht"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20006",
+   "label": "Russisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/28010",
+   "label": "Sachunterricht",
+   "depth": 1,
+   "alt": [
+    "Heimatunterricht"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/560",
+   "label": "Sexualerziehung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/44006",
+   "label": "Sonderpädagogik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20009",
+   "label": "Sorbisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/44007",
+   "label": "Sozialpädagogik",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20007",
+   "label": "Spanisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/600",
+   "label": "Sport",
+   "depth": 1,
+   "alt": [
+    "Sportunterricht"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04012",
+   "label": "Textiltechnik und Bekleidung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/20008",
+   "label": "Türkisch",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/04013",
+   "label": "Wirtschaft und Verwaltung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/700",
+   "label": "Wirtschaftskunde",
+   "depth": 1,
+   "alt": [
+    "Wirtschaftswissenschaften"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/640",
+   "label": "Umweltgefährdung, Umweltschutz",
+   "depth": 1,
+   "alt": [
+    "Umwelterziehung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/660",
+   "label": "Verkehrserziehung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/680",
+   "label": "Weiterbildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/50005",
+   "label": "Werken",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/72001",
+   "label": "Zeitgemäße Bildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/72002",
+   "label": "Projektmanagement",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/72003",
+   "label": "Evidenzbasierte Medizin",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/discipline/999",
+   "label": "Sonstiges",
+   "depth": 1
+  }
+ ]
 }

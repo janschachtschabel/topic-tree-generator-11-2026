@@ -1,6 +1,6 @@
 {
  "scheme": "intendedEndUserRole",
- "source": "https://raw.githubusercontent.com/openeduhub/oeh-metadata-vocabs/master/intendedEndUserRole.ttl",
+ "source": "https://vocabs.openeduhub.de/w3id.org/openeduhub/vocabs/intendedEndUserRole/index.json",
  "generated_at": "2026-11-24",
  "labels": {
   "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/author": "Autor/in",
@@ -10,5 +10,67 @@
   "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/other": "andere",
   "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/parent": "Eltern",
   "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher": "Lehrer/in"
- }
+ },
+ "entries": [
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/author",
+   "label": "Autor/in",
+   "depth": 1,
+   "alt": [
+    "Autorin",
+    "Autor"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/counsellor",
+   "label": "Berater/in",
+   "depth": 1,
+   "alt": [
+    "Ratgeber/in"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/learner",
+   "label": "Lerner/in",
+   "depth": 1,
+   "alt": [
+    "Schüler",
+    "Schülerin",
+    "Lernende",
+    "Lernender"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/manager",
+   "label": "Verwaltung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/parent",
+   "label": "Eltern",
+   "depth": 1,
+   "alt": [
+    "Elter",
+    "Elternteil",
+    "Erziehungsberechtigter",
+    "Sorgeberechtigter"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher",
+   "label": "Lehrer/in",
+   "depth": 1,
+   "alt": [
+    "Lehrer",
+    "Lehrerin",
+    "Lehrende",
+    "Lehrender"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/other",
+   "label": "andere",
+   "depth": 1
+  }
+ ]
 }

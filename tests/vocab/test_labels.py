@@ -13,6 +13,19 @@ def test_known_uris_resolve_to_german_labels() -> None:
     assert label(PHYSIK) == "Physik"
     assert label("http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1") == "Sekundarstufe I"
     assert label("http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher") == "Lehrer/in"
+    assert label("http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/n1") == "Geisteswissenschaften"
+
+
+def test_scheme_entries_and_resolve_labels() -> None:
+    from app.vocab.labels import entries, resolve_labels
+
+    hs_top = entries("hochschulfaechersystematik", max_depth=2)
+    assert any(e["uri"].endswith("/n1") for e in hs_top)
+    assert all(e["depth"] <= 2 for e in hs_top)
+    assert len(hs_top) < len(entries("hochschulfaechersystematik"))
+
+    resolved = resolve_labels([PHYSIK, "http://w3id.org/openeduhub/vocabs/discipline/does-not-exist"])
+    assert resolved == {PHYSIK: "Physik"}
 
 
 def test_https_and_trailing_slash_variants_resolve() -> None:

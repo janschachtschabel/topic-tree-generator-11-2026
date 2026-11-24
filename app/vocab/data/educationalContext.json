@@ -1,6 +1,6 @@
 {
  "scheme": "educationalContext",
- "source": "https://raw.githubusercontent.com/openeduhub/oeh-metadata-vocabs/master/educationalContext.ttl",
+ "source": "https://vocabs.openeduhub.de/w3id.org/openeduhub/vocabs/educationalContext/index.json",
  "generated_at": "2026-11-24",
  "labels": {
   "http://w3id.org/openeduhub/vocabs/educationalContext/berufliche_bildung": "Berufliche Bildung",
@@ -15,5 +15,82 @@
   "http://w3id.org/openeduhub/vocabs/educationalContext/schule": "Schule",
   "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1": "Sekundarstufe I",
   "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2": "Sekundarstufe II"
- }
+ },
+ "entries": [
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/elementarbereich",
+   "label": "Elementarbereich",
+   "depth": 1,
+   "alt": [
+    "Elementarstufe"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/schule",
+   "label": "Schule",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/grundschule",
+   "label": "Primarstufe",
+   "depth": 1,
+   "alt": [
+    "Grundschule"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1",
+   "label": "Sekundarstufe I",
+   "depth": 1,
+   "alt": [
+    "Sekundarstufe 1"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2",
+   "label": "Sekundarstufe II",
+   "depth": 1,
+   "alt": [
+    "Sekundarstufe 2"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/hochschule",
+   "label": "Hochschule",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/berufliche_bildung",
+   "label": "Berufliche Bildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/fortbildung",
+   "label": "Fortbildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/erwachsenenbildung",
+   "label": "Erwachsenenbildung",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/foerderschule",
+   "label": "Förderschule",
+   "depth": 1,
+   "alt": [
+    "Sonderpädagogische Förderung"
+   ]
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/fernunterricht",
+   "label": "Fernunterricht",
+   "depth": 1
+  },
+  {
+   "uri": "http://w3id.org/openeduhub/vocabs/educationalContext/informelles_lernen",
+   "label": "Informelles Lernen",
+   "depth": 1
+  }
+ ]
 }

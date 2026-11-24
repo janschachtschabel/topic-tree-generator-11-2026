@@ -21,6 +21,7 @@ from app.pipeline.inputs.refs import resolve_refs
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
+from app.pipeline.steps.infer_metadata import infer_metadata
 from app.pipeline.strategies import contents, document, folders, refine, topic
 from app.schemas.common import ItemUse, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
@@ -121,6 +122,8 @@ async def run(
     try:
         result = await strategy(req, rc)
         await _assign(req, rc, result)
+        if req.options.auto_metadata:
+            await infer_metadata(result.roots, req, rc)
     except LLMStepError as error:
         raise _llm_unavailable(error, rc.mode) from error
     if rc.expired() and not any(w.code == "DEADLINE_EXCEEDED" for w in rc.warnings):
