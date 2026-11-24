@@ -17,6 +17,7 @@ from app.pipeline.context_block import build_context_block
 from app.pipeline.effective import effective_request
 from app.pipeline.finalize import FinalizeInput, finalize
 from app.pipeline.input_checks import check_request
+from app.pipeline.inputs.refs import resolve_refs
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
@@ -85,6 +86,10 @@ async def run(
 ) -> TopicTreeResponseV2:
     started = time.perf_counter()
     check_request(req, rc.settings)
+    resolved = await resolve_refs(req, rc.settings)
+    if resolved is not req:
+        req = resolved
+        check_request(req, rc.settings, loaded=True)
     req = effective_request(req)
     if req.mode == Mode.refine:
         strategy: Strategy | None = refine.build

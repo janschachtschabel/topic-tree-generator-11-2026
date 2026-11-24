@@ -18,9 +18,9 @@ def _folder_item_ids(folders: list[FolderNode]) -> Iterator[str]:
         yield from _folder_item_ids(folder.subcollections)
 
 
-def _check_items(req: TopicTreeRequestV2, settings: Settings) -> None:
+def _check_items(req: TopicTreeRequestV2, settings: Settings, loaded: bool) -> None:
     items = req.items or []
-    if len(items) > settings.items_inline_max:
+    if not loaded and len(items) > settings.items_inline_max:
         raise ApiError(
             422, "ITEMS_TOO_LARGE", f"Mehr als {settings.items_inline_max} Einträge inline; bitte items_ref nutzen."
         )
@@ -50,11 +50,12 @@ def _check_create_inputs(req: TopicTreeRequestV2) -> None:
             raise _missing("use_case 'document' braucht ein Strukturdokument (use: structure) mit Volltext.")
 
 
-def check_request(req: TopicTreeRequestV2, settings: Settings) -> None:
+def check_request(req: TopicTreeRequestV2, settings: Settings, *, loaded: bool = False) -> None:
+    """`loaded=True` re-checks a request after items_ref was resolved (no inline limit then)."""
     if req.mode == Mode.refine and req.current_tree is None:
         raise _missing("mode 'refine' braucht 'current_tree'.")
     if req.options.assign_only and req.mode != Mode.refine:
         raise ApiError(422, "INVALID_OPTION", "options.assign_only ist nur mit mode 'refine' möglich.")
-    _check_items(req, settings)
+    _check_items(req, settings, loaded)
     if req.mode == Mode.create:
         _check_create_inputs(req)

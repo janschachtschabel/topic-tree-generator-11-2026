@@ -155,3 +155,12 @@ def test_text_fields_are_length_limited() -> None:
         parse({**ex.TOPIC, "topic": "x" * 2001})
     with pytest.raises(ValidationError):
         parse({**ex.TOPIC, "feedback": {"text": "x" * 8001}})
+
+
+def test_loaded_items_may_exceed_the_inline_limit_but_are_still_checked() -> None:
+    items = [ex.content_item(f"c{i}", f"T{i}") for i in range(4)]
+    small = Settings(_env_file=None, items_inline_max=3)
+    check_request(parse({**ex.CONTENTS, "items": items}), small, loaded=True)
+    with pytest.raises(ApiError) as err:
+        check_request(parse({**ex.CONTENTS, "items": [items[0], items[0]]}), small, loaded=True)
+    assert err.value.code == "DUPLICATE_ID"
