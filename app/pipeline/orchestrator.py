@@ -10,7 +10,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from app.domain.diff import mark_status_against_folders, mark_status_against_previous
 from app.domain.keys import assign_missing_keys
 from app.domain.shape_rules import ShapePlan, check_descriptions, check_shape, dedup_titles, normalize_shorttitles
-from app.domain.tree import from_tree_in
+from app.domain.tree import from_tree_in, walk
 from app.errors import ApiError
 from app.llm.client import LLMStepError
 from app.pipeline.context_block import build_context_block
@@ -18,8 +18,9 @@ from app.pipeline.finalize import FinalizeInput, finalize
 from app.pipeline.input_checks import check_request
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
+from app.pipeline.steps.assign_contents import assign_contents
 from app.pipeline.strategies import topic
-from app.schemas.common import Mode, UseCase
+from app.schemas.common import ItemUse, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import TopicTreeResponseV2
 
@@ -43,6 +44,17 @@ def _llm_unavailable(error: LLMStepError) -> ApiError:
         details={"step": error.step, "reason": error.reason, "status": error.status},
         headers={"Retry-After": "30"} if retry else None,
     )
+
+
+async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
+    """Assign content items that the strategy did not place itself."""
+    if not req.options.assign_contents or result.contents_assigned:
+        return
+    assign_missing_keys(result.roots)
+    placed = {ref.id for node, _, _ in walk(result.roots) for ref in node.contents}
+    pending = [i for i in req.items or [] if ItemUse.content in req.effective_use(i) and i.id not in placed]
+    if pending:
+        result.unassigned.extend(await assign_contents(result.roots, pending, rc, req.options))
 
 
 def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
@@ -80,6 +92,7 @@ async def run(
         rc.warn("VOCAB_UNKNOWN", f"Unbekannter Vokabularwert: {uri}", step="context")
     try:
         result = await strategy(req, rc)
+        await _assign(req, rc, result)
     except LLMStepError as error:
         raise _llm_unavailable(error) from error
     if rc.expired() and not any(w.code == "DEADLINE_EXCEEDED" for w in rc.warnings):

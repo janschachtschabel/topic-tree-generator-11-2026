@@ -132,3 +132,32 @@ async def test_orchestrator_end_to_end_without_warnings() -> None:
     assert len(resp.collection) == 6
     assert resp.metadata.generation.usage.llm_calls == 7
     assert llm.calls[0][1].startswith("## Anfragekontext")
+
+
+async def test_orchestrator_assigns_content_items_after_building() -> None:
+    def assign(prompt: str) -> dict:
+        return {
+            "items": [
+                {"id": "c1", "nodes": [{"key": "k-haupt-0", "confidence": 0.9}]},
+                {"id": "c2", "nodes": [], "off_topic": True},
+            ]
+        }
+
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch, "assign_contents": assign})
+    items = [
+        ex.content_item("c1", "Linse"),
+        ex.content_item("c2", "Kochrezept"),
+        {"id": "s1", "use": ["structure"], "properties": {"cm:title": ["Reihe"]}},
+    ]
+    context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(req(items=items), context)
+    assert [c.id for c in resp.collection[0].contents] == ["c1"]
+    assert [(u.id, u.reason) for u in resp.unassigned] == [("c2", "off_topic")]
+    assert "s1" not in llm.prompts("assign_contents")[0]
+
+
+async def test_assignment_can_be_switched_off() -> None:
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "expand_branch": branch})
+    context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    await orchestrator.run(req(items=[ex.content_item("c1", "Linse")], options={"assign_contents": False}), context)
+    assert llm.prompts("assign_contents") == []
