@@ -635,24 +635,33 @@ Schritt 0: `/better-coding-workflow` laden.
 
 Schritt 0: `/better-coding-workflow` laden.
 
-- [ ] **T5.1 Dockerfile und Compose**
+- [x] **T5.1 Dockerfile und Compose**
   Multi-Stage (uv-Build → `python:3.13-slim`), Nutzer `app` (uid 10001), nur `/tmp` beschreibbar, `CMD gunicorn -c gunicorn.conf.py app.main:app`,
   `EXPOSE 8000 9000`. Compose mit beiden Ports und `.env`.
   Verifikation: falls Docker verfügbar `docker build` + `docker run` + `curl :8000/health :9000/metrics`; sonst Hinweis im Bericht.
 
-- [ ] **T5.2 Helm-Chart**
+- [x] **T5.2 Helm-Chart**
   `deploy/helm/<dienst-id>`: Deployment (zwei Ports, Liveness intern `/health`, Readiness öffentlich `/health`), Service,
   optional Ingress, NetworkPolicy (Standard aus), ServiceMonitor, PrometheusRule (Fehlerrate LLM, P90 > Frist, Warnungsrate),
   HPA optional, Pod Security restricted, `values.yaml` mit `## @param` je Wert, Secrets nur als Namen.
   Tests: `tests/test_chart_version.py` (`Chart.version == appVersion == pyproject version`); `helm lint --strict`, `helm template`.
 
-- [ ] **T5.3 CI**
+- [x] **T5.3 CI**
   `.gitlab-ci.yml`: ruff, pytest, Build mit Tag `X.Y.Z` und Branch-Slug, Chart-Lint; GitHub Actions `ci.yml`: ruff, pytest, helm lint.
 
-- [ ] **T5.4 Doku und Übergabe**
+- [x] **T5.4 Doku und Übergabe**
   `README.md` (Zweck, Start, Env, Modi, Tests), `docs/api.md` (Aufrufe je Use Case), `docs/steckbrief.md` (Vorlage nach Leitfaden, Ressourcen-Messanleitung),
   `scripts/loadtest.py`, `scripts/probe_llm.py` (prüft `response_format`, `reasoning_effort`, `prompt_cache_key` gegen eine Route),
   `CHANGELOG.md` mit Verhaltensänderung aus E3, Version `2.0.0` in `pyproject.toml`.
+
+**Abweichungen in Phase 5:**
+- Docker ist in der Arbeitsumgebung nicht verfügbar: Dockerfile/Compose nur statisch geprüft; der Build ist Aufgabe der CI.
+- Helm v4.3.2 (conda-forge) lokal verfügbar: `helm lint --strict` und `helm template` laufen in den Tests;
+  kubeconform nur in der CI.
+- Fund: Eine aktive NetworkPolicy ohne Peers hätte `from: []` gerendert, was in Kubernetes alle Quellen erlaubt;
+  Regeln werden jetzt nur für genannte Peers erzeugt (Regressionstest).
+- `docker login` liest das Passwort aus stdin. Beispielaufrufe als Dateien unter `docs/examples/`.
+- Tests halten `.env.example` und `CHANGELOG.md` synchron mit Settings und Version.
 
 ## Phase 6 – Prüfen
 
