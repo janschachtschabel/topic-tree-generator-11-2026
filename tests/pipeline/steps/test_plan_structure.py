@@ -1,7 +1,7 @@
 import copy
 
 from app.pipeline.run_context import RunContext
-from app.pipeline.steps.plan_structure import plan_structure
+from app.pipeline.steps.plan_structure import _max_tokens, plan_structure
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.settings import Settings
 from tests.fakes.llm import FakeLLM
@@ -134,3 +134,16 @@ async def test_extra_topics_do_not_count_against_main_max() -> None:
     result = await plan_structure(req(data), context, context="CTX")
     assert len(result.roots) == 7
     assert context.warnings == []
+
+
+def test_token_budget_scales_with_shape_and_respects_bounds() -> None:
+    def budget(shape: dict) -> int:
+        return _max_tokens(TopicTreeRequestV2.model_validate({**ex.TOPIC, "shape": shape}))
+
+    small = budget({"depth": 1, "main_topics": {"min": 3, "max": 5}})
+    medium = budget({"depth": 3, "main_topics": {"min": 6, "max": 12}, "children": {"min": 3, "max": 8}})
+    huge = budget({"depth": 3, "main_topics": {"min": 6, "max": 20}, "children": {"min": 3, "max": 20}})
+    assert small == 4000
+    # 12 + 96 + 768 = 876 skeleton nodes must fit without truncating the JSON answer.
+    assert medium >= 876 * 30
+    assert huge == 32000

@@ -69,12 +69,17 @@ def _children_instruction(req: TopicTreeRequestV2) -> str:
     )
 
 
+_TOKENS_PER_NODE = 32  # title + shorttitle + JSON punctuation of one skeleton node, with headroom
+_MAX_PLAN_TOKENS = 32000  # same ceiling as the other tree-producing steps
+
+
 def _max_tokens(req: TopicTreeRequestV2) -> int:
+    """Output budget for the worst case the shape allows; a truncated skeleton would fail the whole request."""
     shape = req.shape
     mains = shape.main_topics.max + len(shape.extra_topics)
     width = shape.children.max
     estimated_nodes = sum(mains * (width**level) for level in range(shape.depth))
-    return max(4000, min(16000, 1000 + estimated_nodes * 28))
+    return max(4000, min(_MAX_PLAN_TOKENS, 1000 + estimated_nodes * _TOKENS_PER_NODE))
 
 
 def _node(title: str, shorttitle: str, children: list[Node], suggested: bool = False) -> Node:
