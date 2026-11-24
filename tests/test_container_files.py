@@ -71,11 +71,15 @@ def test_canonical_compose_is_reverse_proxy_and_panel_compatible() -> None:
     labels = service["labels"]
     assert "traefik.enable=true" in labels
     assert "traefik.docker.network=${TRAEFIK_NETWORK:-topic-tree-web}" in labels
-    assert "traefik.http.routers.topic-tree.rule=Host(`${DOMAIN:-}`)" in labels
-    assert "traefik.http.routers.topic-tree.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}" in labels
-    assert "traefik.http.routers.topic-tree.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}" in labels
+    # Router and service names are global in Traefik: a second instance on the same host needs its own name,
+    # otherwise Traefik merges both containers into one load-balanced service.
+    router = "${TRAEFIK_ROUTER:-topic-tree}"
+    assert f"traefik.http.routers.{router}.rule=Host(`${{DOMAIN:-}}`)" in labels
+    assert f"traefik.http.routers.{router}.entrypoints=${{TRAEFIK_ENTRYPOINT:-websecure}}" in labels
+    assert f"traefik.http.routers.{router}.tls.certresolver=${{TRAEFIK_CERTRESOLVER:-letsencrypt}}" in labels
+    assert f"traefik.http.routers.{router}.service={router}" in labels
     # Container ports follow PUBLIC_PORT / INTERNAL_PORT so a changed port in .env keeps routing and health intact.
-    assert "traefik.http.services.topic-tree.loadbalancer.server.port=${PUBLIC_PORT:-8000}" in labels
+    assert f"traefik.http.services.{router}.loadbalancer.server.port=${{PUBLIC_PORT:-8000}}" in labels
     assert "127.0.0.1:${INTERNAL_PORT:-9000}/health" in " ".join(service["healthcheck"]["test"])
 
 
@@ -148,3 +152,28 @@ def test_build_compose_resolves_custom_ports_from_env(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     ports = json.loads(result.stdout)["services"]["topic-tree"]["ports"]
     assert {(p["published"], p["target"]) for p in ports} == {("8010", 8010), ("9010", 9010)}
+
+
+def test_canonical_compose_resolves_router_name_and_ports_per_instance(tmp_path: Path) -> None:
+    if shutil.which("docker") is None:
+        pytest.skip("docker CLI not installed")
+    (tmp_path / "docker-compose.yml").write_text((ROOT / "docker-compose.yml").read_text(encoding="utf-8"), "utf-8")
+    (tmp_path / ".env").write_text(
+        "DOMAIN=trees2.example.org\nTRAEFIK_ROUTER=topic-tree-staging\nPUBLIC_PORT=8010\nINTERNAL_PORT=9010\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["docker", "compose", "-f", "docker-compose.yml", "config", "--format", "json"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    service = json.loads(result.stdout)["services"]["topic-tree"]
+    labels = service["labels"]
+    assert labels["traefik.http.routers.topic-tree-staging.rule"] == "Host(`trees2.example.org`)"
+    assert labels["traefik.http.routers.topic-tree-staging.service"] == "topic-tree-staging"
+    assert labels["traefik.http.services.topic-tree-staging.loadbalancer.server.port"] == "8010"
+    assert not any(".topic-tree." in key for key in labels)
+    assert "127.0.0.1:9010/health" in " ".join(service["healthcheck"]["test"])

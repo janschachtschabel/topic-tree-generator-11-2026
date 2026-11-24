@@ -2,6 +2,8 @@
 # First start works without any variables; set DOMAIN and credentials in .env afterwards and redeploy.
 # For local builds with direct host ports, use: docker compose -f docker-compose.build.yml up --build
 # PUBLIC_PORT / INTERNAL_PORT in .env change the container ports; Traefik routing and the healthcheck follow them.
+# A second instance on the same host (e.g. staging) needs its own TRAEFIK_ROUTER name: Traefik router and service
+# names are global, and equal names would merge both containers into one load-balanced service.
 services:
   topic-tree:
     image: ${IMAGE:-ghcr.io/janschachtschabel/topic-tree-generator-11-2026:latest}
@@ -28,10 +30,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-topic-tree-web}"
-      - "traefik.http.routers.topic-tree.rule=Host(`${DOMAIN:-}`)"
-      - "traefik.http.routers.topic-tree.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
-      - "traefik.http.routers.topic-tree.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.services.topic-tree.loadbalancer.server.port=${PUBLIC_PORT:-8000}"
+      - "traefik.http.routers.${TRAEFIK_ROUTER:-topic-tree}.rule=Host(`${DOMAIN:-}`)"
+      - "traefik.http.routers.${TRAEFIK_ROUTER:-topic-tree}.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.${TRAEFIK_ROUTER:-topic-tree}.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.${TRAEFIK_ROUTER:-topic-tree}.service=${TRAEFIK_ROUTER:-topic-tree}"
+      - "traefik.http.services.${TRAEFIK_ROUTER:-topic-tree}.loadbalancer.server.port=${PUBLIC_PORT:-8000}"
 
 networks:
   default:

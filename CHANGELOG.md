@@ -28,6 +28,8 @@ Changed (operators)
 - `PUBLIC_PORT` / `INTERNAL_PORT` now also drive both Compose files (host port mapping, Traefik service port,
   healthcheck), so a service can move to alternative ports with one change in `.env`. Both ports are validated
   (`1–65535`, must differ).
+- `docker-compose.yml`: Traefik router/service name configurable via `TRAEFIK_ROUTER` (default `topic-tree`), so a
+  second instance on the same host gets its own routing instead of sharing one load-balanced service.
 
 Unchanged
 - `/generate-topic-tree` and `/generate-collection-description`: same request, response and behaviour.

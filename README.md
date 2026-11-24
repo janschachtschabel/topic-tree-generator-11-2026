@@ -112,6 +112,7 @@ All settings are read from environment variables or `.env` and have defaults (se
 | `TRAEFIK_NETWORK` | `topic-tree-web` | Docker network name used by Traefik and the service container. |
 | `TRAEFIK_ENTRYPOINT` | `websecure` | Traefik entrypoint name for HTTPS routing. |
 | `TRAEFIK_CERTRESOLVER` | `letsencrypt` | Traefik TLS certificate resolver name. |
+| `TRAEFIK_ROUTER` | `topic-tree` | Traefik router and service name. These names are global in Traefik: give every further instance on the same host its own value (e.g. `topic-tree-staging`), otherwise Traefik load-balances requests across both containers. |
 | `PUBLIC_PORT` | `8000` | Public API & UI port; Docker Compose publishes the same port on the host (alternative port per service). |
 | `INTERNAL_PORT` | `9000` | Internal port for `/health`, `/ready`, and Prometheus `/metrics` (do not expose publicly); must differ from `PUBLIC_PORT`. |
 | `WEB_CONCURRENCY` | `2` | Number of Gunicorn worker processes (~125 MiB idle RAM with 2 workers). |
