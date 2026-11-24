@@ -1,8 +1,6 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
-from src.DTOs.collection import Collection
+from app.legacy.dtos.collection import Collection
 
 
 class TopicTree(BaseModel):
@@ -10,7 +8,7 @@ class TopicTree(BaseModel):
     Der komplette Themenbaum mit Metadaten und einer Liste von Collections.
     """
 
-    collection: List[Collection]
+    collection: list[Collection]
     metadata: dict = Field(
         default_factory=lambda: {
             "title": "",

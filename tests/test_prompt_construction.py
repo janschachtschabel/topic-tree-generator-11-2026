@@ -4,13 +4,11 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from src.DTOs.collection import Collection
-from src.DTOs.properties import Properties
-from src.structured_text_helper import generate_structured_text
-
-# Importing the application otherwise fetches remote vocabularies at module load time.
-with patch("rdflib.Graph.parse"):
-    import main
+from app.legacy import router as legacy
+from app.legacy.dtos.collection import Collection
+from app.legacy.dtos.properties import Properties
+from app.legacy.structured_text_helper import generate_structured_text
+from app.main import app
 
 
 class RecordingChatClient:
@@ -59,10 +57,10 @@ def test_topic_tree_prompts_list_previous_topics_by_title_only() -> None:
         return []
 
     with (
-        patch.object(main, "AsyncOpenAI", lambda **_: object()),
-        patch.object(main, "generate_structured_text", generate_fake_topics),
+        patch.object(legacy, "AsyncOpenAI", lambda **_: object()),
+        patch.object(legacy, "generate_structured_text", generate_fake_topics),
     ):
-        response = TestClient(main.app).post(
+        response = TestClient(app).post(
             "/generate-topic-tree",
             json={"theme": "Physik", "num_main_topics": 1},
             headers={"Authorization": "Bearer caller-b-api-key"},

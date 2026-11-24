@@ -15,10 +15,12 @@ RouteClasses = Mapping[tuple[str, str], str]
 
 
 class AccessLogMiddleware:
-    def __init__(self, app: ASGIApp, route_classes: RouteClasses, on_finish=None) -> None:
+    def __init__(self, app: ASGIApp, route_classes: RouteClasses, on_finish=None, quiet_routes=frozenset()) -> None:
         self.app = app
         self.route_classes = route_classes
         self.on_finish = on_finish
+        # Probe traffic (e.g. readiness checks every few seconds) is logged at DEBUG only.
+        self.quiet_routes = quiet_routes
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -41,8 +43,9 @@ class AccessLogMiddleware:
             await self.app(scope, receive, send_wrapper)
         finally:
             duration = time.perf_counter() - start
-            logger.bind(event="request", route=route, status=status, duration_ms=round(duration * 1000, 1)).info(
-                "request finished"
+            level = "DEBUG" if route in self.quiet_routes and status < 400 else "INFO"
+            logger.bind(event="request", route=route, status=status, duration_ms=round(duration * 1000, 1)).log(
+                level, "request finished"
             )
             if self.on_finish:
                 self.on_finish(route, status, duration)

@@ -3,11 +3,9 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from src.core.config import Settings
-
-# Importing the application otherwise fetches remote vocabularies at module load time.
-with patch("rdflib.Graph.parse"):
-    import main
+from app.legacy import router as legacy
+from app.main import app
+from app.settings import Settings
 
 
 class FakeAsyncOpenAI:
@@ -27,7 +25,7 @@ class FakeAsyncOpenAI:
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="Generated description"))])
 
 
-client = TestClient(main.app)
+client = TestClient(app)
 
 
 def test_non_b_api_routes_are_public() -> None:
@@ -58,7 +56,7 @@ def test_description_forwards_the_callers_bearer_token_to_b_api() -> None:
     FakeAsyncOpenAI.api_keys = []
     FakeAsyncOpenAI.max_retries = []
 
-    with patch.object(main, "AsyncOpenAI", FakeAsyncOpenAI):
+    with patch.object(legacy, "AsyncOpenAI", FakeAsyncOpenAI):
         response = client.post(
             "/generate-collection-description",
             json={"text_context": "Mathematik"},
@@ -68,7 +66,7 @@ def test_description_forwards_the_callers_bearer_token_to_b_api() -> None:
     assert response.status_code == 200
     assert response.json() == "Generated description"
     assert FakeAsyncOpenAI.api_keys == ["caller-b-api-key"]
-    assert FakeAsyncOpenAI.max_retries == [main.settings.max_retries]
+    assert FakeAsyncOpenAI.max_retries == [legacy.settings.legacy_max_retries]
 
 
 def test_topic_tree_forwards_the_callers_bearer_token_to_b_api() -> None:
@@ -79,8 +77,8 @@ def test_topic_tree_forwards_the_callers_bearer_token_to_b_api() -> None:
         return {"collections": [], "description": "Generated topic tree"}
 
     with (
-        patch.object(main, "AsyncOpenAI", FakeAsyncOpenAI),
-        patch.object(main, "generate_structured_text", generate_empty_topic_tree),
+        patch.object(legacy, "AsyncOpenAI", FakeAsyncOpenAI),
+        patch.object(legacy, "generate_structured_text", generate_empty_topic_tree),
     ):
         response = client.post(
             "/generate-topic-tree",
@@ -90,13 +88,13 @@ def test_topic_tree_forwards_the_callers_bearer_token_to_b_api() -> None:
 
     assert response.status_code == 200
     assert FakeAsyncOpenAI.api_keys == ["another-caller-b-api-key"]
-    assert FakeAsyncOpenAI.max_retries == [main.settings.max_retries]
+    assert FakeAsyncOpenAI.max_retries == [legacy.settings.legacy_max_retries]
 
 
 def test_max_retries_uses_environment_override(monkeypatch) -> None:
     monkeypatch.setenv("MAX_RETRIES", "7")
 
-    assert Settings(_env_file=None).max_retries == 7
+    assert Settings(_env_file=None).legacy_max_retries == 7
 
 
 def test_openapi_marks_only_b_api_endpoints_as_protected() -> None:
@@ -104,4 +102,6 @@ def test_openapi_marks_only_b_api_endpoints_as_protected() -> None:
 
     assert schema["paths"]["/generate-topic-tree"]["post"]["security"] == [{"HTTPBearer": []}]
     assert schema["paths"]["/generate-collection-description"]["post"]["security"] == [{"HTTPBearer": []}]
-    assert "security" not in schema["paths"]["/_ping"]["get"]
+    # Leitfaden: infrastructure paths are reachable but not part of the public spec.
+    assert "/_ping" not in schema["paths"]
+    assert "/health" not in schema["paths"]

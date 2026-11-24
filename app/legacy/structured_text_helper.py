@@ -1,18 +1,17 @@
 import json
-from typing import Optional, List
 
 from loguru import logger
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from src.DTOs.collection import Collection
-from src.DTOs.properties import Properties
-from src.prompts import BASE_INSTRUCTIONS
+from app.legacy.dtos.collection import Collection
+from app.legacy.dtos.properties import Properties
+from app.legacy.prompts import BASE_INSTRUCTIONS
 
 
 async def generate_structured_text(
     client: AsyncOpenAI, prompt: str, model: str, max_description_length: int, require_list=True
-) -> Optional[List[Collection] | dict]:
+) -> list[Collection] | dict | None:
     """
     Schickt die Prompt-Anfrage an das konfigurierte LLM
     und parst das zurückgegebene reine JSON-Array in eine Liste von Collection-Objekten.
@@ -54,7 +53,6 @@ async def generate_structured_text(
             if desc:
                 # check the length of the description w.r.t. the word-limit (which is defined in prompts.py)
                 logger.debug(f'Description length for "{title}": {len(desc.split())} words ({len(desc)} chars)')
-                pass
             # Falls das Modell aus irgendeinem Grund leere Werte geliefert hat
             if not desc:
                 desc = f"Beschreibung für {title}"

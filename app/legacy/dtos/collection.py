@@ -1,8 +1,6 @@
-from typing import Optional, List
-
 from pydantic import BaseModel, Field
 
-from src.DTOs.properties import Properties
+from app.legacy.dtos.properties import Properties
 
 
 class Collection(BaseModel):
@@ -14,7 +12,7 @@ class Collection(BaseModel):
     title: str
     shorttitle: str
     properties: Properties
-    subcollections: Optional[List["Collection"]] = Field(default_factory=list)
+    subcollections: list["Collection"] | None = Field(default_factory=list)
 
     def to_dict(self) -> dict:
         """

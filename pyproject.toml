@@ -22,11 +22,17 @@ dependencies = [
 dev = [
     "pytest>=8.3.5",
     "pytest-asyncio>=1.5.0",
+    "rdflib>=7.1.4",
     "ruff>=0.17.6",
 ]
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint.per-file-ignores]
+# Frozen legacy endpoints: behaviour must not change, so known findings are accepted here, not fixed.
+"app/legacy/**" = ["BLE001", "B005", "TRY002", "RUF010"]
+"tests/**" = ["RUF012", "S101"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

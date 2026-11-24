@@ -1,5 +1,3 @@
-from typing import Optional, List
-
 from pydantic import BaseModel, Field
 
 
@@ -32,12 +30,12 @@ class TopicTreeRequest(BaseModel):
         examples=[True, False],
     )
 
-    discipline_uri: Optional[List[str]] = Field(
+    discipline_uri: list[str] | None = Field(
         None,
         description="Optionale URIs für den Fachbereich.",
         examples=[["http://w3id.org/openeduhub/vocabs/discipline/460"]],
     )
-    educational_context_uri: Optional[List[str]] = Field(
+    educational_context_uri: list[str] | None = Field(
         None,
         description="Optionale URIs für die Bildungsstufe.",
         examples=[
@@ -55,7 +53,7 @@ class TopicTreeRequest(BaseModel):
         examples=[60, 40, 200],
     )
 
-    model: Optional[str] = Field(
+    model: str | None = Field(
         None,
         description=(
             "Optionaler Legacy-Parameter. Er wird aus Kompatibilitätsgründen akzeptiert, aber ignoriert. "
