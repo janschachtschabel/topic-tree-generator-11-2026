@@ -1,13 +1,16 @@
 import asyncio
+import hmac
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 
+from app.context.caller import DELEGATION_PREFIX
 from app.legacy.dtos.collection import Collection
 from app.legacy.dtos.description_request import DescriptionRequest
 from app.legacy.dtos.properties import Properties
@@ -20,7 +23,7 @@ from app.legacy.prompts import (
 )
 from app.legacy.structured_text_helper import generate_structured_text
 from app.legacy.vocab_helper import get_discipline_pref_labels, get_educational_context_pref_labels
-from app.settings import get_settings
+from app.settings import Settings, get_settings
 from app.version import service_version
 
 # ToDo: allow dynamic prompt updates
@@ -38,21 +41,105 @@ Collection.model_rebuild()
 
 API_VERSION = service_version()
 settings = get_settings()
+_DEFAULT_SETTINGS = settings
 
 b_api_key_scheme = HTTPBearer(auto_error=False)
 
 
-async def require_b_api_key(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(b_api_key_scheme)],
-) -> str:
-    """Return the B-API key supplied by the caller as a bearer token."""
-    if credentials is None or not credentials.credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization Bearer token required",
-            headers={"WWW-Authenticate": "Bearer"},
+@dataclass(frozen=True)
+class _LegacyTarget:
+    api_key: str = field(repr=False)
+    base_url: str | None
+    model: str
+    max_retries: int
+
+
+def _active_settings(request: Request) -> Settings:
+    if settings is not _DEFAULT_SETTINGS:
+        return settings
+    return getattr(request.app.state, "settings", None) or settings
+
+
+def _unauthorized() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authorization Bearer token required",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def _delegation_token(request: Request, cfg: Settings, bearer_token: str | None) -> str | None:
+    if cfg.b_api_delegation_header:
+        raw = request.headers.get(cfg.b_api_delegation_header)
+        if raw and raw.strip().startswith(DELEGATION_PREFIX):
+            return raw.strip()
+    if bearer_token and bearer_token.startswith(DELEGATION_PREFIX):
+        return bearer_token
+    return None
+
+
+def _standalone_target(cfg: Settings) -> _LegacyTarget | None:
+    if cfg.openai_api_key:
+        return _LegacyTarget(
+            cfg.openai_api_key.get_secret_value(),
+            cfg.openai_base_url,
+            cfg.openai_model,
+            cfg.legacy_max_retries,
         )
-    return credentials.credentials
+    if cfg.b_api_dev_key:
+        return _LegacyTarget(
+            cfg.b_api_dev_key.get_secret_value(),
+            cfg.b_api_router_url,
+            cfg.legacy_route,
+            cfg.legacy_max_retries,
+        )
+    return None
+
+
+async def resolve_legacy_target(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(b_api_key_scheme)],
+) -> _LegacyTarget:
+    """Resolve auth and LLM target consistently with v2 while keeping legacy b-api passthrough."""
+    cfg = _active_settings(request)
+    token = credentials.credentials.strip() if credentials and credentials.credentials.strip() else None
+
+    if cfg.service_mode != "standalone":
+        delegation = _delegation_token(request, cfg, token)
+        if delegation:
+            return _LegacyTarget(delegation, cfg.b_api_router_url, cfg.legacy_route, cfg.legacy_max_retries)
+        if cfg.service_mode == "bapi":
+            if not token:
+                raise _unauthorized()
+            return _LegacyTarget(token, cfg.b_api_router_url, cfg.legacy_route, cfg.legacy_max_retries)
+
+    if cfg.service_api_keys:
+        valid = token is not None and any(
+            hmac.compare_digest(token.encode(), key.encode()) for key in cfg.service_api_keys
+        )
+        if not valid:
+            raise _unauthorized()
+        target = _standalone_target(cfg)
+        if target is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Kein LLM konfiguriert (OPENAI_API_KEY oder B_API_DEV_KEY).",
+            )
+        return target
+
+    if token and cfg.service_mode != "standalone":
+        return _LegacyTarget(token, cfg.b_api_router_url, cfg.legacy_route, cfg.legacy_max_retries)
+
+    target = _standalone_target(cfg)
+    if target is not None:
+        return target
+
+    if cfg.service_mode == "standalone":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Kein LLM konfiguriert (OPENAI_API_KEY oder B_API_DEV_KEY).",
+        )
+    raise _unauthorized()
 
 
 # Frozen legacy endpoints (v1). Behaviour must stay unchanged; new work goes to the v2 pipeline.
@@ -128,7 +215,7 @@ router = APIRouter()
 )
 async def generate_topic_tree(
     topic_tree_request: TopicTreeRequest,
-    b_api_key: Annotated[str, Depends(require_b_api_key)],
+    target: Annotated[_LegacyTarget, Depends(resolve_legacy_target)],
 ):
     """
     Generiert einen strukturierten Themenbaum basierend auf den Eingabeparametern.
@@ -142,16 +229,16 @@ async def generate_topic_tree(
     - ``max_description_length``: Maximale Anzahl von Wörtern für Beschreibungstexte (Default: 70, Bereich: 40-200)
     - ``discipline_uri``: Falls übergeben, werden diese URIs in den ``ccm:taxonid``-Properties eingebettet und fließen als Kontext in die AI-Prompts ein
     - ``educational_context_uri``: Falls übergeben, werden diese URIs in den ``ccm:educationalcontext``-Properties eingebettet und fließen als Kontext in die AI-Prompts ein
-    - ``model``: Optionaler Legacy-Parameter, der ignoriert wird. Das Modell wird ausschließlich über ``LLM_MODEL`` serverseitig ausgewählt.
+    - ``model``: Optionaler Legacy-Parameter, der ignoriert wird. Das Modell wird ausschließlich serverseitig ausgewählt.
     """
     logger.info(
         f"Request received. Starting LLM chat completion request with the following settings: {topic_tree_request}"
     )
     try:
         client = AsyncOpenAI(
-            api_key=b_api_key,
-            base_url=settings.b_api_router_url,
-            max_retries=settings.legacy_max_retries,
+            api_key=target.api_key,
+            base_url=target.base_url,
+            max_retries=target.max_retries,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM-Client-Init-Fehler: {str(e)}")
@@ -204,7 +291,7 @@ async def generate_topic_tree(
                 special_instructions=special_instructions,
                 context_instructions=context_instructions,
             ),
-            model=settings.legacy_route,
+            model=target.model,
             max_description_length=topic_tree_request.max_description_length,
             require_list=False,
         )
@@ -238,7 +325,7 @@ async def generate_topic_tree(
             _task = generate_structured_text(
                 client=client,
                 prompt=_subtopic_prompt,
-                model=settings.legacy_route,
+                model=target.model,
                 max_description_length=topic_tree_request.max_description_length,
             )
             sub_topic_tasks.append(_task)
@@ -278,7 +365,7 @@ async def generate_topic_tree(
                 _lp_task = generate_structured_text(
                     client=client,
                     prompt=_lp_prompt,
-                    model=settings.legacy_route,
+                    model=target.model,
                     max_description_length=topic_tree_request.max_description_length,
                 )
                 lp_tasks.append(_lp_task)
@@ -365,7 +452,7 @@ async def generate_topic_tree(
 )
 async def generate_collection_description(
     description_request: DescriptionRequest,
-    b_api_key: Annotated[str, Depends(require_b_api_key)],
+    target: Annotated[_LegacyTarget, Depends(resolve_legacy_target)],
 ) -> str:
     """
     Generiert eine ansprechende Sammlungsbeschreibung basierend auf gegebenem Text und Kontext.
@@ -378,9 +465,9 @@ async def generate_collection_description(
 
     try:
         client = AsyncOpenAI(
-            api_key=b_api_key,
-            base_url=settings.b_api_router_url,
-            max_retries=settings.legacy_max_retries,
+            api_key=target.api_key,
+            base_url=target.base_url,
+            max_retries=target.max_retries,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM-Client-Init-Fehler: {str(e)}")
@@ -409,7 +496,7 @@ async def generate_collection_description(
         )
         _ts_before: datetime = datetime.now()
         response = await client.chat.completions.create(
-            model=settings.legacy_route,
+            model=target.model,
             messages=[
                 _system_prompt,
                 _user_prompt,
