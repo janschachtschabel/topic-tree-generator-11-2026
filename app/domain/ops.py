@@ -87,6 +87,8 @@ class _Applier:
 
     def rename(self, change: Change) -> None:
         node = self.node(change.key)
+        if change.title.strip() == node.title.strip():
+            return  # no-op proposal: nothing changes, so nothing is reported
         node.title, node.shorttitle = change.title, ""
         self.record(change)
 
@@ -107,6 +109,8 @@ class _Applier:
         target = self.node(change.to)
         if target.key in {n.key for n, _, _ in walk([node])}:
             raise _Rejected(f"{change.key} kann nicht unter sich selbst verschoben werden")
+        if any(child is node for child in target.children):
+            return  # already there
         _detach(self.roots, node.key)
         target.children.append(node)
         self.record(change)

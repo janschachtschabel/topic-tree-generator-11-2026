@@ -126,3 +126,11 @@ def test_merge_deduplicates_shared_contents_keeping_max_confidence() -> None:
     roots, _ = run([ch(op="merge", keys=["k-optik", "k-akustik"], title="Optik und Akustik")], roots=roots)
     merged = find(roots, "k-optik")
     assert [(c.id, c.confidence) for c in merged.contents] == [("c1", 0.9), ("c3", 0.8)]
+
+
+def test_no_op_rename_and_move_are_not_recorded() -> None:
+    roots, result = run(
+        [ch(op="rename", key="k-linsen", title=" Linsen "), ch(op="move", key="k-linsen", to="k-optik")]
+    )
+    assert result.applied == [] and result.rejected == []
+    assert [c.key for c in find(roots, "k-optik").children] == ["k-linsen", "k-spiegel"]
