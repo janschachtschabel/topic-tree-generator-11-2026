@@ -7,7 +7,7 @@
   const state = {
     presets: [],
     activePresetId: null,
-    multiDisciplineUris: null,
+    disciplineUris: [],
     vocabIndex: {},
     lastRequest: null,
     lastResponse: null,
@@ -68,29 +68,104 @@
     selectEl.value = uri;
   }
 
-  function applyPreset(preset) {
-    state.activePresetId = preset.id;
-    for (const btn of document.querySelectorAll(".preset-btn")) {
-      btn.classList.toggle("active", btn.dataset.presetId === preset.id);
+  function renderDisciplineChips() {
+    const box = $("discipline-chips");
+    box.replaceChildren();
+    for (const uri of state.disciplineUris) {
+      const name = state.vocabIndex[uri] || uri.split("/").pop() || uri;
+      const chip = el("span", "chip");
+      chip.appendChild(document.createTextNode(name));
+      const rm = el("button", "chip-remove", "×");
+      rm.type = "button";
+      rm.setAttribute("aria-label", `Fach ${name} entfernen`);
+      rm.addEventListener("click", () => {
+        state.disciplineUris = state.disciplineUris.filter((u) => u !== uri);
+        renderDisciplineChips();
+      });
+      chip.appendChild(rm);
+      box.appendChild(chip);
     }
+    box.hidden = state.disciplineUris.length === 0;
+  }
+
+  function addDiscipline(uri) {
+    if (!uri || state.disciplineUris.includes(uri) || state.disciplineUris.length >= 20) return;
+    state.disciplineUris = [...state.disciplineUris, uri];
+    renderDisciplineChips();
+  }
+
+  function syncActivePresetCards(presetId) {
+    state.activePresetId = presetId || null;
+    $("f-preset").value = presetId || "";
+    for (const card of document.querySelectorAll(".empty-preset-card")) {
+      card.classList.toggle("active", Boolean(presetId) && card.dataset.presetId === presetId);
+    }
+  }
+
+  function resetForm() {
+    syncActivePresetCards(null);
+    $("f-mode").value = "create";
+    $("f-use-case").value = "topic";
+    $("f-topic").value = "";
+    state.disciplineUris = [];
+    renderDisciplineChips();
+    $("f-discipline").value = "";
+    $("f-context").value = "";
+    $("f-role").value = "";
+
+    $("f-depth").value = 3;
+    $("f-main-min").value = 6;
+    $("f-main-max").value = 12;
+    $("f-child-min").value = 3;
+    $("f-child-max").value = 8;
+    $("f-desc-len").value = 60;
+    $("f-extra-general").checked = false;
+    $("f-extra-methodology").checked = false;
+
+    $("f-hint-context").value = "";
+    $("f-hint-order").value = "";
+    $("f-hint-lang").value = "de";
+    $("f-hint-include").value = "";
+    $("f-hint-exclude").value = "";
+
+    $("f-opt-auto-meta").checked = false;
+    $("f-opt-improve").checked = false;
+    $("f-opt-assign").checked = true;
+    $("f-opt-assign-only").checked = false;
+    $("f-opt-multi").checked = true;
+    $("f-opt-conf").value = 0.6;
+
+    $("f-doc-markdown").value = "";
+    $("f-items").value = "";
+    $("f-items-ref").value = "";
+    $("f-folders").value = "";
+    $("f-current-tree").value = "";
+    $("f-fb-text").value = "";
+    $("f-fb-locked").value = "";
+    $("f-fb-changes").value = "";
+    state.lockedKeys = new Set();
+
+    $("acc-items").open = false;
+    $("acc-folders").open = false;
+    $("acc-refine").open = false;
+    $("acc-hints").open = false;
+    $("acc-options").open = false;
+    syncModeLabels();
+    showFormError("");
+    $("status-message").textContent = "Formular geleert – Werte links eingeben oder eine Vorlage auswählen.";
+  }
+
+  function applyPreset(preset) {
+    syncActivePresetCards(preset.id);
     const p = preset.payload;
     $("f-mode").value = p.mode || "create";
     $("f-use-case").value = p.use_case || "topic";
     $("f-topic").value = p.topic || "";
 
     const frame = p.frame || {};
-    const discUris = frame.discipline_uri || [];
-    if (discUris.length > 1) {
-      state.multiDisciplineUris = discUris;
-      setSelectValue($("f-discipline"), "");
-      const names = discUris.map((u) => state.vocabIndex[u] || u.split("/").pop()).join(", ");
-      $("multi-discipline-note").textContent = `Mehrfach-Fächer aus Szenario aktiv: ${names}`;
-      $("multi-discipline-note").hidden = false;
-    } else {
-      state.multiDisciplineUris = null;
-      $("multi-discipline-note").hidden = true;
-      setSelectValue($("f-discipline"), discUris[0] || "");
-    }
+    state.disciplineUris = [...(frame.discipline_uri || [])];
+    renderDisciplineChips();
+    $("f-discipline").value = "";
     setSelectValue($("f-context"), (frame.educational_context_uri || [])[0] || "");
     setSelectValue($("f-role"), (frame.intended_end_user_role_uri || [])[0] || "");
 
@@ -107,6 +182,7 @@
     const hints = p.hints || {};
     $("f-hint-context").value = hints.context || "";
     $("f-hint-order").value = hints.order || "";
+    $("f-hint-lang").value = hints.language || "de";
     $("f-hint-include").value = (hints.include || []).join(", ");
     $("f-hint-exclude").value = (hints.exclude || []).join(", ");
     $("f-desc-len").value = hints.description_length ?? 60;
@@ -119,7 +195,9 @@
     $("f-opt-multi").checked = opts.multi_assign ?? true;
     $("f-opt-conf").value = opts.min_confidence ?? 0.6;
 
+    $("f-doc-markdown").value = "";
     $("f-items").value = p.items ? JSON.stringify(p.items, null, 2) : "";
+    $("f-items-ref").value = p.items_ref || "";
     $("f-folders").value = p.folders ? JSON.stringify(p.folders, null, 2) : "";
     $("f-current-tree").value = p.current_tree ? JSON.stringify(p.current_tree, null, 2) : "";
 
@@ -129,37 +207,57 @@
     $("f-fb-changes").value = fb.changes?.length ? JSON.stringify(fb.changes, null, 2) : "";
     state.lockedKeys = new Set(fb.locked || []);
 
-    $("acc-items").open = Boolean(p.items && p.items.length);
+    $("acc-items").open = Boolean((p.items && p.items.length) || p.items_ref);
     $("acc-folders").open = Boolean(p.folders && p.folders.length);
     $("acc-refine").open = p.mode === "refine";
-    $("acc-hints").open = Boolean(hints.context || hints.order || (hints.include || []).length || (hints.exclude || []).length);
+    $("acc-hints").open = Boolean(
+      hints.context || hints.order || (hints.language && hints.language !== "de") || (hints.include || []).length || (hints.exclude || []).length,
+    );
     $("acc-options").open = Boolean(opts.auto_metadata || opts.improve || opts.assign_only);
     syncModeLabels();
     showFormError("");
-    $("status-message").textContent = `Musterszenario „${preset.title}“ geladen – bereit zum Ausführen.`;
+    $("tree-form").scrollTop = 0;
+    $("status-message").textContent = `Vorlage „${preset.title}“ ins Formular geladen – links anpassen und unten auf „${$("btn-submit").textContent}“ klicken.`;
   }
 
-  function syncModeLabels() {
-    const isRefine = $("f-mode").value === "refine";
+  function syncModeLabels(autoOpen) {
+    const mode = $("f-mode").value;
+    const useCase = $("f-use-case").value;
+    const isRefine = mode === "refine";
     $("btn-submit").textContent = isRefine ? "Entwurf weiterentwickeln" : "Themenbaum erzeugen";
-    $("topic-req").textContent = $("f-use-case").value === "topic" && !isRefine ? "(Pflicht)" : "(optional)";
+    $("topic-req").textContent = useCase === "topic" && !isRefine ? "(Pflicht)" : "(optional)";
+    if (autoOpen) {
+      if (isRefine) $("acc-refine").open = true;
+      if (useCase === "document" || useCase === "contents") $("acc-items").open = true;
+      if (useCase === "folders") $("acc-folders").open = true;
+    }
   }
 
   function buildPayload() {
     const mode = $("f-mode").value;
     const useCase = $("f-use-case").value;
+    const mainMin = Number($("f-main-min").value) || 6;
+    const mainMax = Number($("f-main-max").value) || 12;
+    const childMin = Number($("f-child-min").value) || 3;
+    const childMax = Number($("f-child-max").value) || 8;
+    if (mainMin > mainMax) throw new Error("„Haupt min“ darf nicht größer als „Haupt max“ sein.");
+    if (childMin > childMax) throw new Error("„Kinder min“ darf nicht größer als „Kinder max“ sein.");
+
+    const lang = ($("f-hint-lang").value || "de").trim().toLowerCase();
+    if (!/^[a-z]{2}$/.test(lang)) throw new Error("„Sprache“ muss ein zweibuchstabiger ISO-Code sein (z. B. de, en).");
+
     const payload = {
       mode,
       use_case: useCase,
       frame: {
-        discipline_uri: $("f-discipline").value ? [$("f-discipline").value] : (state.multiDisciplineUris || []),
+        discipline_uri: [...state.disciplineUris],
         educational_context_uri: $("f-context").value ? [$("f-context").value] : [],
         intended_end_user_role_uri: $("f-role").value ? [$("f-role").value] : [],
       },
       shape: {
         depth: Number($("f-depth").value) || 3,
-        main_topics: { min: Number($("f-main-min").value) || 6, max: Number($("f-main-max").value) || 12 },
-        children: { min: Number($("f-child-min").value) || 3, max: Number($("f-child-max").value) || 8 },
+        main_topics: { min: mainMin, max: mainMax },
+        children: { min: childMin, max: childMax },
         extra_topics: [
           ...($("f-extra-general").checked ? ["general"] : []),
           ...($("f-extra-methodology").checked ? ["methodology"] : []),
@@ -167,7 +265,7 @@
       },
       hints: {
         description_length: Number($("f-desc-len").value) || 60,
-        language: "de",
+        language: lang,
       },
       options: {
         auto_metadata: $("f-opt-auto-meta").checked,
@@ -188,8 +286,27 @@
     if (inc.length) payload.hints.include = inc;
     if (exc.length) payload.hints.exclude = exc;
 
-    const items = parseOptionalJson($("f-items").value, "items");
-    if (items && items.length) payload.items = items;
+    const docMd = $("f-doc-markdown").value.trim();
+    const parsedItems = parseOptionalJson($("f-items").value, "items");
+    if (parsedItems !== null && !Array.isArray(parsedItems)) {
+      throw new Error("„items“ muss ein JSON-Array ([…]) sein.");
+    }
+    const items = parsedItems ? [...parsedItems] : [];
+    if (docMd) {
+      items.unshift({
+        id: "doc-manual",
+        use: ["structure"],
+        properties: { "cm:title": [topic || "Strukturdokument"] },
+        fulltext: { format: "markdown", text: docMd },
+      });
+    }
+    const itemsRef = $("f-items-ref").value.trim();
+    if (items.length && itemsRef) {
+      throw new Error("Bitte entweder „items“/Markdown-Text ODER „items_ref“ angeben, nicht beides gleichzeitig.");
+    }
+    if (items.length) payload.items = items;
+    if (itemsRef) payload.items_ref = itemsRef;
+
     const folders = parseOptionalJson($("f-folders").value, "folders");
     if (folders && folders.length) payload.folders = folders;
     const currentTree = parseOptionalJson($("f-current-tree").value, "current_tree");
@@ -458,11 +575,19 @@
     $("tree-form").addEventListener("submit", (e) => { e.preventDefault(); submitForm(); });
     $("btn-cancel").addEventListener("click", () => state.controller?.abort());
     $("btn-retry").addEventListener("click", () => submitForm());
-    $("f-mode").addEventListener("change", syncModeLabels);
-    $("f-use-case").addEventListener("change", syncModeLabels);
-    $("f-discipline").addEventListener("change", () => {
-      state.multiDisciplineUris = null;
-      $("multi-discipline-note").hidden = true;
+    $("btn-reset").addEventListener("click", resetForm);
+    $("f-mode").addEventListener("change", () => syncModeLabels(true));
+    $("f-use-case").addEventListener("change", () => syncModeLabels(true));
+    $("f-discipline").addEventListener("change", (e) => {
+      if (e.target.value) {
+        addDiscipline(e.target.value);
+        e.target.value = "";
+      }
+    });
+    $("f-preset").addEventListener("change", (e) => {
+      const preset = state.presets.find((p) => p.id === e.target.value);
+      if (preset) applyPreset(preset);
+      else resetForm();
     });
     $("btn-expand-all").addEventListener("click", () => window.TopicTreeView.setAllExpanded($("tree-container"), true));
     $("btn-collapse-all").addEventListener("click", () => window.TopicTreeView.setAllExpanded($("tree-container"), false));
@@ -514,27 +639,24 @@
       populateSelect($("f-role"), data.vocabs.intendedEndUserRole);
       state.presets = data.presets;
 
-      const list = $("preset-list");
+      const presetSelect = $("f-preset");
       const emptyGrid = $("empty-presets");
       for (const preset of state.presets) {
-        const btn = el("button", "preset-btn");
-        btn.type = "button";
-        btn.dataset.presetId = preset.id;
-        btn.title = preset.summary;
-        btn.appendChild(el("span", "preset-tag", preset.badge));
-        btn.appendChild(document.createTextNode(preset.title));
-        btn.addEventListener("click", () => applyPreset(preset));
-        list.appendChild(btn);
+        const opt = document.createElement("option");
+        opt.value = preset.id;
+        opt.textContent = `[${preset.badge}] ${preset.title}`;
+        presetSelect.appendChild(opt);
 
         const card = el("button", "empty-preset-card");
         card.type = "button";
+        card.dataset.presetId = preset.id;
         card.appendChild(el("span", "preset-tag", preset.badge));
         card.appendChild(el("strong", "", preset.title));
         card.appendChild(el("span", "", preset.summary));
         card.addEventListener("click", () => applyPreset(preset));
         emptyGrid.appendChild(card);
       }
-      if (state.presets.length) applyPreset(state.presets[0]);
+      syncModeLabels(false);
     } catch {
       showFormError("Musterszenarien konnten nicht geladen werden.");
     }

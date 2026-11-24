@@ -20,11 +20,15 @@
       </div>
 
       <form id="tree-form" class="sidebar-form" novalidate>
-        <section class="field-group" aria-labelledby="presets-heading">
-          <h2 id="presets-heading" class="section-label">Musterszenarien</h2>
-          <p class="help-text">Ein Klick füllt alle Felder für den jeweiligen Use Case.</p>
-          <div id="preset-list" class="preset-grid" role="group" aria-label="Musterszenarien laden"></div>
-        </section>
+        <div class="field">
+          <label for="f-preset">Vorlage laden <span class="req-tag">(füllt Felder, startet nicht)</span></label>
+          <div class="preset-row">
+            <select id="f-preset" name="preset">
+              <option value="">– eigene Eingabe / Vorlage wählen –</option>
+            </select>
+            <button type="button" id="btn-reset" class="btn-outline" title="Alle Eingabefelder auf Standard zurücksetzen">Leeren</button>
+          </div>
+        </div>
 
         <div class="row-2">
           <div class="field">
@@ -53,11 +57,11 @@
         <fieldset class="fieldset">
           <legend class="section-label">Rahmen (OEH-Vokabulare)</legend>
           <div class="field">
-            <label for="f-discipline">Fach (<code>discipline_uri</code> – Schul- &amp; Hochschulfach)</label>
+            <label for="f-discipline">Fächer (<code>discipline_uri</code> – Schul- &amp; Hochschulfach, mehrfach wählbar)</label>
             <select id="f-discipline" name="discipline_uri">
-              <option value="">– beliebig / automatisch –</option>
+              <option value="">– Fach hinzufügen (leer = beliebig) –</option>
             </select>
-            <p id="multi-discipline-note" class="help-text" hidden></p>
+            <div id="discipline-chips" class="chip-list" aria-label="Ausgewählte Fächer" hidden></div>
           </div>
           <div class="field">
             <label for="f-context">Bildungsstufe (<code>educational_context_uri</code>)</label>
@@ -116,9 +120,15 @@
               <label for="f-hint-context">Kontext / Schwerpunkt</label>
               <textarea id="f-hint-context" rows="2" maxlength="2000" placeholder="z. B. Unterricht Klasse 7–9, viele Experimente"></textarea>
             </div>
-            <div class="field">
-              <label for="f-hint-order">Ordnungsprinzip (optional)</label>
-              <input id="f-hint-order" type="text" maxlength="200" placeholder="leer = automatisch nach Bildungsstufe">
+            <div class="row-2">
+              <div class="field">
+                <label for="f-hint-order">Ordnungsprinzip (optional)</label>
+                <input id="f-hint-order" type="text" maxlength="200" placeholder="leer = automatisch">
+              </div>
+              <div class="field">
+                <label for="f-hint-lang">Sprache (ISO-2)</label>
+                <input id="f-hint-lang" type="text" maxlength="2" pattern="[a-z]{2}" value="de" placeholder="de">
+              </div>
             </div>
             <div class="row-2">
               <div class="field">
@@ -151,11 +161,23 @@
         </details>
 
         <details class="accordion" id="acc-items">
-          <summary>Dateien / Dokumente / Inhalte (<code>items</code> JSON)</summary>
+          <summary>Dateien / Dokumente / Inhalte (<code>items</code> / Markdown / <code>items_ref</code>)</summary>
           <div class="accordion-body">
-            <label for="f-items" class="sr-only">Items als JSON-Array</label>
-            <textarea id="f-items" class="code-area" rows="7" spellcheck="false" placeholder="[]"></textarea>
-            <p class="help-text">Strukturdokumente (<code>use: ["structure"]</code> mit <code>fulltext</code>) und Inhalte (<code>use: ["content"]</code>).</p>
+            <div class="field">
+              <label for="f-doc-markdown">Direktes Markdown-Dokument (optional, für <code>document</code> von Hand)</label>
+              <textarea id="f-doc-markdown" class="code-area" rows="5" spellcheck="false" placeholder="# Kapitel 1&#10;Text …&#10;## Unterkapitel 1.1&#10;…"></textarea>
+              <p class="help-text">Wird automatisch als Strukturdokument (<code>use: ["structure"]</code>) übergeben – ohne JSON-Escaping.</p>
+            </div>
+            <div class="field">
+              <label for="f-items">Items als JSON-Array (<code>items</code>)</label>
+              <textarea id="f-items" class="code-area" rows="7" spellcheck="false" placeholder="[]"></textarea>
+              <p class="help-text">Strukturdokumente (<code>use: ["structure"]</code> mit <code>fulltext</code>) und Inhalte (<code>use: ["content"]</code>).</p>
+            </div>
+            <div class="field">
+              <label for="f-items-ref">Alternativ: externe Items-URL (<code>items_ref</code>, nur HTTPS)</label>
+              <input id="f-items-ref" type="url" placeholder="https://…/items.json">
+              <p class="help-text">Entweder <code>items</code>/Markdown oder <code>items_ref</code> nutzen (Host muss in <code>REF_ALLOWED_HOSTS</code> stehen).</p>
+            </div>
           </div>
         </details>
 
@@ -236,7 +258,7 @@
 
       <section id="empty-state" class="card empty-card">
         <h2>Themenbaum-Dienst v2 testen</h2>
-        <p>Simuliere alle vier Use Cases (<strong>topic</strong>, <strong>document</strong>, <strong>folders</strong>, <strong>contents</strong>) sowie iterative Weiterentwicklung im Modus <strong>refine</strong> – mit direkter Anzeige von Baumstruktur, Warnungen, Rückfragen, Laufzeit und Token-Verbrauch inkl. Prompt-Cache.</p>
+        <p>Wähle eine Vorlage als Ausgangspunkt oder fülle das Formular links direkt von Hand aus. Ein Klick auf eine Vorlage füllt alle Felder voraus, ohne sofort zu starten – so kannst du jeden Parameter vor dem Klick auf <strong>„Themenbaum erzeugen“</strong> anpassen.</p>
         <div id="empty-presets" class="empty-preset-grid"></div>
       </section>
 

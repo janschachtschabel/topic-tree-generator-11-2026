@@ -80,3 +80,26 @@ def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
     client = _client(ui_enabled=True)
     css = client.get("/ui/assets/styles.css").text
     assert "[hidden] { display: none !important; }" in css
+
+
+def test_ui_exposes_compact_preset_selector_and_all_manual_v2_inputs() -> None:
+    client = _client(ui_enabled=True)
+    html = client.get("/ui/").text
+    # Compact dropdown in sidebar instead of a tall preset button wall.
+    assert 'id="f-preset"' in html
+    assert 'id="btn-reset"' in html
+    assert 'id="preset-list"' not in html
+    # Full manual input coverage for v2 request fields.
+    for field_id in (
+        "discipline-chips",
+        "f-hint-lang",
+        "f-items-ref",
+        "f-doc-markdown",
+        "f-items",
+        "f-folders",
+        "f-current-tree",
+        "f-fb-text",
+        "f-fb-locked",
+        "f-fb-changes",
+    ):
+        assert f'id="{field_id}"' in html, f"missing UI control #{field_id}"
