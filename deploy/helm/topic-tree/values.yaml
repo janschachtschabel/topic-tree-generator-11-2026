@@ -1,0 +1,133 @@
+## @section Image
+## @param image.repository Image of the service (production: mirrored into the platform registry)
+## @param image.tag Image tag; defaults to the chart appVersion. Never use "latest" in production.
+## @param image.pullPolicy Pull policy
+image:
+  repository: registry.example.org/projects/wlo/topic-tree
+  tag: ""
+  pullPolicy: IfNotPresent
+
+## @param imagePullSecrets Pull secrets if the registry is private
+imagePullSecrets: []
+
+## @param replicaCount Number of pods (the service is stateless; any pod answers any request)
+replicaCount: 2
+
+## @section Service configuration (each value becomes an environment variable, see .env.example)
+## @param config.serviceMode auto | bapi | standalone (behind the b-api in production: bapi)
+## @param config.bApiBaseUrl Base URL of the b-api
+## @param config.bApiRoute Route name on the b-api LLM router
+## @param config.llmParamFamily common | gpt5 | classic (must match the route's models)
+## @param config.llmOutputMode json_schema | json_object | prompt
+## @param config.llmSendPromptCacheKey auto | true | false
+## @param config.llmTimeoutSeconds Timeout per LLM call
+## @param config.llmMaxRetries Transport retries per LLM call
+## @param config.llmMaxConcurrency Parallel LLM calls per worker process
+## @param config.requestTimeoutSeconds Deadline per request; the b-api proxy timeout must be larger
+## @param config.webConcurrency gunicorn workers per pod
+## @param config.refAllowedHosts Comma-separated hosts allowed for items_ref/fulltext.ref (empty: none)
+## @param config.logLevel Log level
+## @param config.extraEnv Additional environment variables (name: value)
+config:
+  serviceMode: auto
+  bApiBaseUrl: https://b-api.staging.openeduhub.net
+  bApiRoute: topic-tree-generator
+  llmParamFamily: common
+  llmOutputMode: json_schema
+  llmSendPromptCacheKey: auto
+  llmTimeoutSeconds: 120
+  llmMaxRetries: 3
+  llmMaxConcurrency: 8
+  requestTimeoutSeconds: 280
+  webConcurrency: 2
+  refAllowedHosts: ""
+  logLevel: INFO
+  extraEnv: {}
+
+## @section Secrets (names only, never values)
+## @param secrets.existingSecret Secret with OPENAI_API_KEY / SERVICE_API_KEYS for standalone mode (optional)
+secrets:
+  existingSecret: ""
+
+## @section Ports
+## @param ports.http Public API port (reached only via the b-api)
+## @param ports.internal Internal port: /health, /ready, /metrics (cluster-internal only)
+ports:
+  http: 8000
+  internal: 9000
+
+## @param resources Requests and limits. Measure before production (see docs/steckbrief.md).
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+## @param terminationGracePeriodSeconds Lets running requests finish (gunicorn graceful timeout is 70 s)
+terminationGracePeriodSeconds: 90
+
+## @section Ingress (normally not needed: the b-api reaches the Service directly)
+## @param ingress.enabled Create an Ingress for the public port
+## @param ingress.className Ingress class
+## @param ingress.annotations Annotations (set proxy timeouts above requestTimeoutSeconds)
+## @param ingress.hosts Hosts and paths
+## @param ingress.tls TLS configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: topic-tree.example.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+## @section NetworkPolicy (off until T6 names the namespaces of b-api/ingress and monitoring)
+## @param networkPolicy.enabled Create a NetworkPolicy
+## @param networkPolicy.publicFrom Peers allowed on the public port (e.g. the b-api namespace)
+## @param networkPolicy.internalFrom Peers allowed on the internal port (monitoring)
+## @param networkPolicy.egress Additional egress rules besides DNS (e.g. ipBlock of the b-api or LLM endpoint)
+networkPolicy:
+  enabled: false
+  publicFrom: []
+  internalFrom: []
+  egress: []
+
+## @section Monitoring
+## @param serviceMonitor.enabled Create a ServiceMonitor (Prometheus Operator)
+## @param serviceMonitor.interval Scrape interval
+serviceMonitor:
+  enabled: false
+  interval: 30s
+
+## @param prometheusRule.enabled Create alert rules (Prometheus Operator)
+## @param prometheusRule.llmErrorRatio Alert when this share of LLM calls fails over 10 minutes
+## @param prometheusRule.slowRequestSeconds Alert when p90 request duration exceeds this
+## @param prometheusRule.branchFailuresPerHour Alert when more branches fail per hour
+prometheusRule:
+  enabled: false
+  llmErrorRatio: 0.2
+  slowRequestSeconds: 240
+  branchFailuresPerHour: 20
+
+## @section Autoscaling
+## @param autoscaling.enabled Create a HorizontalPodAutoscaler
+## @param autoscaling.minReplicas Minimum pods
+## @param autoscaling.maxReplicas Maximum pods
+## @param autoscaling.targetCPUUtilizationPercentage CPU target (the service mostly waits on the LLM)
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+## @param podAnnotations Extra pod annotations
+podAnnotations: {}
+## @param nodeSelector Node selector
+nodeSelector: {}
+## @param tolerations Tolerations
+tolerations: []
+## @param affinity Affinity
+affinity: {}

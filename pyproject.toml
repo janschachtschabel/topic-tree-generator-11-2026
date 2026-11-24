@@ -1,6 +1,6 @@
 [project]
 name = "topic-tree-generator"
-version = "0.4.0"
+version = "2.0.0"
 description = "Themenbaum-Dienst: generates edu-sharing collection structures with an LLM"
 readme = "README.md"
 requires-python = ">=3.13"

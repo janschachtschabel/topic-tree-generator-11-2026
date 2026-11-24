@@ -1,0 +1,32 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "topic-tree.fullname" . }}
+  labels: {{- include "topic-tree.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: topic-tree
+      rules:
+        - alert: TopicTreeLLMErrors
+          expr: |
+            sum(rate(topic_tree_llm_calls_total{outcome!="ok"}[10m]))
+              / clamp_min(sum(rate(topic_tree_llm_calls_total[10m])), 1e-9) > {{ .Values.prometheusRule.llmErrorRatio }}
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Themenbaum-Dienst: viele fehlgeschlagene LLM-Aufrufe"
+        - alert: TopicTreeSlowRequests
+          expr: |
+            histogram_quantile(0.9, sum by (le) (rate(topic_tree_request_seconds_bucket{route="v2.topic_tree"}[15m])))
+              > {{ .Values.prometheusRule.slowRequestSeconds }}
+          for: 15m
+          labels: { severity: warning }
+          annotations:
+            summary: "Themenbaum-Dienst: P90 der Antwortzeit nahe der Frist"
+        - alert: TopicTreeBranchFailures
+          expr: sum(increase(topic_tree_warnings_total{code="BRANCH_FAILED"}[1h])) > {{ .Values.prometheusRule.branchFailuresPerHour }}
+          labels: { severity: info }
+          annotations:
+            summary: "Themenbaum-Dienst: viele Äste konnten nicht erzeugt werden"
+{{- end }}

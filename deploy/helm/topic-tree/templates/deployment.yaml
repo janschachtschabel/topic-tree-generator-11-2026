@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "topic-tree.fullname" . }}
+  labels: {{- include "topic-tree.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "topic-tree.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "topic-tree.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: topic-tree
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.ports.http }}
+            - name: internal
+              containerPort: {{ .Values.ports.internal }}
+          env:
+            - { name: SERVICE_ID, value: "topic-tree" }
+            - { name: SERVICE_MODE, value: {{ .Values.config.serviceMode | quote }} }
+            - { name: B_API_BASE_URL, value: {{ .Values.config.bApiBaseUrl | quote }} }
+            - { name: B_API_ROUTE, value: {{ .Values.config.bApiRoute | quote }} }
+            - { name: LLM_PARAM_FAMILY, value: {{ .Values.config.llmParamFamily | quote }} }
+            - { name: LLM_OUTPUT_MODE, value: {{ .Values.config.llmOutputMode | quote }} }
+            - { name: LLM_SEND_PROMPT_CACHE_KEY, value: {{ .Values.config.llmSendPromptCacheKey | quote }} }
+            - { name: LLM_TIMEOUT_SECONDS, value: {{ .Values.config.llmTimeoutSeconds | quote }} }
+            - { name: LLM_MAX_RETRIES, value: {{ .Values.config.llmMaxRetries | quote }} }
+            - { name: LLM_MAX_CONCURRENCY, value: {{ .Values.config.llmMaxConcurrency | quote }} }
+            - { name: REQUEST_TIMEOUT_SECONDS, value: {{ .Values.config.requestTimeoutSeconds | quote }} }
+            - { name: WEB_CONCURRENCY, value: {{ .Values.config.webConcurrency | quote }} }
+            - { name: REF_ALLOWED_HOSTS, value: {{ .Values.config.refAllowedHosts | quote }} }
+            - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
+            - { name: LOG_FORMAT, value: "json" }
+            - { name: PUBLIC_PORT, value: {{ .Values.ports.http | quote }} }
+            - { name: INTERNAL_PORT, value: {{ .Values.ports.internal | quote }} }
+            - { name: PROMETHEUS_MULTIPROC_DIR, value: "/tmp/prometheus" }
+            {{- range $name, $value := .Values.config.extraEnv }}
+            - { name: {{ $name }}, value: {{ $value | quote }} }
+            {{- end }}
+          {{- if .Values.secrets.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.secrets.existingSecret }}
+          {{- end }}
+          livenessProbe:
+            httpGet: { path: /health, port: internal }
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+            failureThreshold: 3
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
