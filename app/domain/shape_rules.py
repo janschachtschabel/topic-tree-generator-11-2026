@@ -49,6 +49,16 @@ def check_shape(roots: list[Node], plan: ShapePlan, extra: int = 0) -> list[Serv
     deepest = max((depth for _, _, depth in walk(roots)), default=0)
     if deepest > plan.depth:
         warnings.append(_warning("SHAPE_DEPTH", f"Baum hat {deepest} Ebenen, vorgesehen {plan.depth}."))
+    if len(roots) >= 2 and deepest >= 2:
+        branch_depths = [max(depth for _, _, depth in walk([root])) for root in roots]
+        lo, hi = min(branch_depths), max(branch_depths)
+        if hi - lo > 1:
+            warnings.append(
+                _warning(
+                    "SHAPE_UNBALANCED",
+                    f"Äste sind unterschiedlich tief (Tiefe {lo} bis {hi}; Unterschied höchstens 1 empfohlen).",
+                )
+            )
     for node, _, depth in walk(roots):
         if len(node.children) == 1:
             warnings.append(_warning("SHAPE_SINGLE_CHILD", f"„{node.title}“ hat genau ein Kind.", node.key))

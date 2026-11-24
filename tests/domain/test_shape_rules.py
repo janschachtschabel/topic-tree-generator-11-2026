@@ -102,3 +102,13 @@ def test_description_length_outliers_are_summarized_in_one_warning() -> None:
 def test_missing_descriptions_are_reported() -> None:
     warnings = check_descriptions([Node(key="k-a", title="A")], target_words=60)
     assert codes(warnings) == ["DESCRIPTION_MISSING"]
+
+
+def test_unbalanced_branch_depths_are_reported() -> None:
+    deep = n("k-a", "A", n("k-a1", "A1", n("k-a11", "A11"), n("k-a12", "A12")), n("k-a2", "A2"))
+    shallow = n("k-b", "B")
+    plan = ShapePlan.from_shape(Shape(depth=3, main_topics={"min": 2, "max": 6}, children={"min": 2, "max": 6}))
+    assert "SHAPE_UNBALANCED" in codes(check_shape([deep, shallow], plan))
+
+    balanced = [deep, n("k-b", "B", n("k-b1", "B1"), n("k-b2", "B2"))]
+    assert "SHAPE_UNBALANCED" not in codes(check_shape(balanced, plan))

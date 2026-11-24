@@ -134,7 +134,7 @@ async def run(
     if resolved is not req:
         req = resolved
         check_request(req, rc.settings, loaded=True)
-    req = effective_request(req)
+    req = effective_request(req, rc.settings)
     if req.mode == Mode.refine:
         strategy: Strategy | None = refine.build
     else:

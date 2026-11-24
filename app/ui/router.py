@@ -2,9 +2,10 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
+from app.settings import get_settings
 from app.ui.presets import PRESETS
 from app.version import service_version
 from app.vocab.labels import scheme_options
@@ -38,10 +39,15 @@ async def ui_asset(name: str) -> FileResponse:
 
 
 @router.get("/ui/presets")
-async def ui_presets() -> JSONResponse:
+async def ui_presets(request: Request) -> JSONResponse:
+    settings = getattr(request.app.state, "settings", None) or get_settings()
     return JSONResponse(
         {
             "version": service_version(),
+            "limits": {
+                "max_tree_depth": settings.max_tree_depth,
+                "max_nodes_per_level": settings.max_nodes_per_level,
+            },
             "presets": PRESETS,
             "vocabs": {
                 "discipline": scheme_options("discipline"),

@@ -189,3 +189,23 @@ def test_loaded_items_may_exceed_the_inline_limit_but_are_still_checked() -> Non
     with pytest.raises(ApiError) as err:
         check_request(parse({**ex.CONTENTS, "items": [items[0], items[0]]}), small, loaded=True)
     assert err.value.code == "DUPLICATE_ID"
+
+
+def test_env_shape_cost_limits_reject_explicit_excess_but_allow_omitted_shape() -> None:
+    strict = Settings(_env_file=None, max_tree_depth=3, max_nodes_per_level=12)
+    with pytest.raises(ApiError) as err_depth:
+        check_request(parse({**ex.TOPIC, "shape": {"depth": 4}}), strict)
+    assert (err_depth.value.status, err_depth.value.code) == (422, "SHAPE_LIMIT_EXCEEDED")
+
+    with pytest.raises(ApiError) as err_main:
+        check_request(parse({**ex.TOPIC, "shape": {"main_topics": {"min": 4, "max": 15}}}), strict)
+    assert (err_main.value.status, err_main.value.code) == (422, "SHAPE_LIMIT_EXCEEDED")
+
+    with pytest.raises(ApiError) as err_child:
+        check_request(parse({**ex.TOPIC, "shape": {"children": {"min": 2, "max": 14}}}), strict)
+    assert (err_child.value.status, err_child.value.code) == (422, "SHAPE_LIMIT_EXCEEDED")
+
+    # Omitting shape must still pass even when operator sets tighter caps (effective_request clamps defaults).
+    very_strict = Settings(_env_file=None, max_tree_depth=2, max_nodes_per_level=8)
+    minimal = parse({"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}})
+    check_request(minimal, very_strict)

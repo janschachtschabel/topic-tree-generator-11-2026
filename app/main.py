@@ -38,6 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(service=settings.service_id, level=settings.log_level, fmt=settings.log_format)
     app = FastAPI(title="Themenbaum-Generator", description=DESCRIPTION, version=service_version())
+    app.state.settings = settings
     install_error_handlers(app)
     app.add_middleware(
         AccessLogMiddleware,

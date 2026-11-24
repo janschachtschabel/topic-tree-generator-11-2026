@@ -7,6 +7,7 @@
   const state = {
     presets: [],
     activePresetId: null,
+    limits: { max_tree_depth: 3, max_nodes_per_level: 20 },
     disciplineUris: [],
     vocabIndex: {},
     lastRequest: null,
@@ -113,11 +114,11 @@
     $("f-context").value = "";
     $("f-role").value = "";
 
-    $("f-depth").value = 3;
-    $("f-main-min").value = 6;
-    $("f-main-max").value = 12;
-    $("f-child-min").value = 3;
-    $("f-child-max").value = 8;
+    $("f-depth").value = "";
+    $("f-main-min").value = "";
+    $("f-main-max").value = "";
+    $("f-child-min").value = "";
+    $("f-child-max").value = "";
     $("f-desc-len").value = 60;
     $("f-extra-general").checked = false;
     $("f-extra-methodology").checked = false;
@@ -170,11 +171,11 @@
     setSelectValue($("f-role"), (frame.intended_end_user_role_uri || [])[0] || "");
 
     const shape = p.shape || {};
-    $("f-depth").value = shape.depth ?? 3;
-    $("f-main-min").value = shape.main_topics?.min ?? 6;
-    $("f-main-max").value = shape.main_topics?.max ?? 12;
-    $("f-child-min").value = shape.children?.min ?? 3;
-    $("f-child-max").value = shape.children?.max ?? 8;
+    $("f-depth").value = shape.depth ?? "";
+    $("f-main-min").value = shape.main_topics?.min ?? "";
+    $("f-main-max").value = shape.main_topics?.max ?? "";
+    $("f-child-min").value = shape.children?.min ?? "";
+    $("f-child-max").value = shape.children?.max ?? "";
     const extras = shape.extra_topics || [];
     $("f-extra-general").checked = extras.includes("general");
     $("f-extra-methodology").checked = extras.includes("methodology");
@@ -233,18 +234,52 @@
     }
   }
 
+  function optionalInt(id) {
+    const raw = ($(id).value || "").trim();
+    if (!raw) return null;
+    const n = Number(raw);
+    if (!Number.isInteger(n)) throw new Error(`Ungültige Zahl in „${id}“.`);
+    return n;
+  }
+
   function buildPayload() {
     const mode = $("f-mode").value;
     const useCase = $("f-use-case").value;
-    const mainMin = Number($("f-main-min").value) || 6;
-    const mainMax = Number($("f-main-max").value) || 12;
-    const childMin = Number($("f-child-min").value) || 3;
-    const childMax = Number($("f-child-max").value) || 8;
-    if (mainMin > mainMax) throw new Error("„Haupt min“ darf nicht größer als „Haupt max“ sein.");
-    if (childMin > childMax) throw new Error("„Kinder min“ darf nicht größer als „Kinder max“ sein.");
+    const depth = optionalInt("f-depth");
+    const mainMin = optionalInt("f-main-min");
+    const mainMax = optionalInt("f-main-max");
+    const childMin = optionalInt("f-child-min");
+    const childMax = optionalInt("f-child-max");
+    if (mainMin !== null && mainMax !== null && mainMin > mainMax) {
+      throw new Error("„Haupt min“ darf nicht größer als „Haupt max“ sein.");
+    }
+    if (childMin !== null && childMax !== null && childMin > childMax) {
+      throw new Error("„Kinder min“ darf nicht größer als „Kinder max“ sein.");
+    }
 
     const lang = ($("f-hint-lang").value || "de").trim().toLowerCase();
     if (!/^[a-z]{2}$/.test(lang)) throw new Error("„Sprache“ muss ein zweibuchstabiger ISO-Code sein (z. B. de, en).");
+
+    const shape = {};
+    if (depth !== null) shape.depth = depth;
+    const wCap = state.limits.max_nodes_per_level;
+    if (mainMin !== null || mainMax !== null) {
+      shape.main_topics = {
+        min: mainMin ?? Math.min(6, mainMax),
+        max: mainMax ?? Math.min(wCap, Math.max(12, mainMin)),
+      };
+    }
+    if (childMin !== null || childMax !== null) {
+      shape.children = {
+        min: childMin ?? Math.min(3, childMax),
+        max: childMax ?? Math.min(wCap, Math.max(8, childMin)),
+      };
+    }
+    const extraTopics = [
+      ...($("f-extra-general").checked ? ["general"] : []),
+      ...($("f-extra-methodology").checked ? ["methodology"] : []),
+    ];
+    if (extraTopics.length) shape.extra_topics = extraTopics;
 
     const payload = {
       mode,
@@ -253,15 +288,6 @@
         discipline_uri: [...state.disciplineUris],
         educational_context_uri: $("f-context").value ? [$("f-context").value] : [],
         intended_end_user_role_uri: $("f-role").value ? [$("f-role").value] : [],
-      },
-      shape: {
-        depth: Number($("f-depth").value) || 3,
-        main_topics: { min: mainMin, max: mainMax },
-        children: { min: childMin, max: childMax },
-        extra_topics: [
-          ...($("f-extra-general").checked ? ["general"] : []),
-          ...($("f-extra-methodology").checked ? ["methodology"] : []),
-        ],
       },
       hints: {
         description_length: Number($("f-desc-len").value) || 60,
@@ -276,6 +302,7 @@
         min_confidence: Number($("f-opt-conf").value),
       },
     };
+    if (Object.keys(shape).length) payload.shape = shape;
 
     const topic = $("f-topic").value.trim();
     if (topic) payload.topic = topic;
@@ -637,6 +664,18 @@
       const res = await fetch("/ui/presets");
       const data = await res.json();
       $("service-version").textContent = `v${data.version}`;
+      if (data.limits) {
+        state.limits = data.limits;
+        const dMax = data.limits.max_tree_depth;
+        const wMax = data.limits.max_nodes_per_level;
+        $("f-depth").max = String(dMax);
+        $("f-main-min").max = String(wMax);
+        $("f-main-max").max = String(wMax);
+        $("f-child-min").max = String(wMax);
+        $("f-child-max").max = String(wMax);
+        $("shape-limits-note").textContent =
+          `Leer = automatische Empfehlung nach Zielgruppe (Server-Limit: max. ${dMax} Ebenen, max. ${wMax} je Ebene).`;
+      }
       populateSelect($("f-discipline"), data.vocabs.discipline, "Schulfächer (discipline)");
       populateSelect($("f-discipline"), data.vocabs.hochschulfaechersystematik, "Hochschulfächer (hochschulfaechersystematik)");
       populateSelect($("f-context"), data.vocabs.educationalContext);

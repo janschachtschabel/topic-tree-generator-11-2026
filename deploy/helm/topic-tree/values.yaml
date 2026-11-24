@@ -24,6 +24,8 @@ replicaCount: 2
 ## @param config.llmTimeoutSeconds Timeout per LLM call
 ## @param config.llmMaxRetries Transport retries per LLM call
 ## @param config.llmMaxConcurrency Parallel LLM calls per worker process
+## @param config.maxTreeDepth Hard upper limit on requested tree depth (cost control)
+## @param config.maxNodesPerLevel Hard upper limit on requested nodes per level (cost control)
 ## @param config.requestTimeoutSeconds Deadline per request; the b-api proxy timeout must be larger
 ## @param config.webConcurrency gunicorn workers per pod
 ## @param config.refAllowedHosts Comma-separated hosts allowed for items_ref/fulltext.ref (empty: none)
@@ -40,7 +42,9 @@ config:
   llmSendPromptCacheKey: auto
   llmTimeoutSeconds: 120
   llmMaxRetries: 3
-  llmMaxConcurrency: 8
+  llmMaxConcurrency: 20
+  maxTreeDepth: 3
+  maxNodesPerLevel: 20
   requestTimeoutSeconds: 280
   webConcurrency: 2
   refAllowedHosts: ""

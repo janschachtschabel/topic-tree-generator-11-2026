@@ -43,7 +43,11 @@ class Settings(BaseSettings):
     llm_send_prompt_cache_key: Literal["auto", "true", "false"] = "auto"
     llm_timeout_seconds: float = Field(120, gt=0)
     llm_max_retries: int = Field(3, ge=0)
-    llm_max_concurrency: int = Field(8, ge=1)
+    llm_max_concurrency: int = Field(20, ge=1)
+
+    # Hard operator cost-control caps enforced on every v2 request (cannot be exceeded by callers).
+    max_tree_depth: int = Field(3, ge=1, le=4)
+    max_nodes_per_level: int = Field(20, ge=2, le=20)
 
     # Retry count used by the frozen legacy endpoints (env name kept for backward compatibility).
     legacy_max_retries: int = Field(4, ge=0, validation_alias=AliasChoices("legacy_max_retries", "MAX_RETRIES"))

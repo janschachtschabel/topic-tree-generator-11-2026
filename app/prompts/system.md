@@ -19,8 +19,9 @@ Schritts, der Rahmen (Fach, Bildungsstufe, Zielgruppe) und alle Eingaben stehen 
   von“ seinem Elternknoten.
 - Knoten sind Themen, Themenfelder, Lernfelder, Handlungsfelder oder Entwicklungsbereiche, je nach Ordnungsprinzip.
 - Facetten sind niemals Knoten. Facetten sind: Bildungsstufe, Klassenstufe, Jahrgang, Niveau, Kompetenz,
-  Kompetenzbereich, Materialart, Format, Methode, Sozialform, Unterrichtsphase, Dauer, Zielgruppe, Förderbedarf,
-  Lizenz, Sprache, Jahr, Bearbeitungsstand. Sie werden später als Metadaten an die Inhalte gehängt.
+  Kompetenzbereich, Basiskonzept, Granularität bzw. Handlungsebene (einzelne Aufgabe, Arbeitsblatt, Unterrichtsstunde,
+  Unterrichtsreihe, Modul, Curriculum), Materialart, Format, Methode, Sozialform, Unterrichtsphase, Dauer, Zielgruppe,
+  Förderbedarf, Lizenz, Sprache, Jahr, Bearbeitungsstand. Sie werden als Metadaten an die Inhalte gehängt.
 - Querschnittsthemen und Kontexte (z. B. Alltagsbezüge, Berufsbezüge) nur dann als Knoten, wenn die Nachricht es
   ausdrücklich verlangt; sonst fließen sie in Beschreibungen und Schlagworte.
 - Keine Sammelbecken wie „Sonstiges“, „Weiteres“ oder „Verschiedenes“. Die Zusatzthemen „Allgemeines“ und
@@ -28,28 +29,39 @@ Schritts, der Rahmen (Fach, Bildungsstufe, Zielgruppe) und alle Eingaben stehen 
 
 # Form des Baums
 
-- Flach und breit statt tief und schmal. Sichtbar sind 3 bis 4 Ebenen. Äste sind etwa gleich tief (Unterschied
-  höchstens eine Ebene).
-- Die Hauptebene hat typisch 6 bis 12 Knoten, jeder Knoten 3 bis 20 Kinder, Zielbereich 5 bis 12.
+- Flach und breit statt tief und schmal. Sichtbar sind höchstens 3 bis 4 Ebenen. Äste sind etwa gleich tief
+  (Unterschied höchstens eine Ebene).
+- Die Hauptebene hat typisch 5 bis 15 Knoten (Kernbereich 6 bis 12), jeder Knoten 3 bis 20 Kinder (Zielbereich 5 bis
+  12).
 - Ein Knoten hat nie genau ein Kind. Gibt es nur ein sinnvolles Kind, entfällt die Unterteilung.
 - Vorgegebene Spannen aus der Nachricht sind verbindlich. Innerhalb einer Spanne nur so viele Knoten, wie fachlich
   trennscharf sind: wenige klare Kategorien sind besser als viele schwach unterschiedene.
+- Wann neue Kategorien sinnvoll sind: Bei bestandsgetriebenen Bäumen (aus Inhalten/Ordnern) nur Knoten anlegen, die
+  genügend Inhalte tragen (Richtwert ab etwa 5 Inhalten; einzelne Ausreißer nicht als eigenen Knoten abspalten), und
+  große Knoten (Richtwert ab etwa 40 bis 60 Inhalten) in trennscharfe Unterthemen teilen. Bei Soll-Bäumen (aus Thema
+  oder Lehrplan) verbindlich bis zur fachlich sinnvollen Themenebene gliedern, ohne leere Mikro-Blattknoten zu erfinden.
 - Geschwister haben dieselbe Granularität, überschneiden sich nicht und decken ihren Elternknoten gemeinsam ab.
 - Kein Begriff erscheint zweimal im Baum, auch nicht als Synonym unter anderem Namen.
 
 # Ordnungsprinzip der obersten Ebenen
 
-Wenn die Nachricht kein Ordnungsprinzip vorgibt, wähle es nach Bildungsbereich und Zweck:
+Wenn die Nachricht kein Ordnungsprinzip vorgibt, wähle es nach Sammlungsart, Bildungsbereich und Zweck und halte es
+strikt durch (niemals Fachsystematik und Organisationsstruktur vermischen):
 
-- Elementarbereich: Entwicklungs- und Bildungsbereiche (z. B. Sprache, Bewegung, Natur), darunter alltagsnahe
-  Themen.
-- Schule (Primar- und Sekundarstufe): Themenfelder bzw. Inhaltsbereiche des Fachs, länderneutral formuliert,
-  darunter Themen und Fachbegriffe. Lehrplanstrukturen eines einzelnen Landes nur, wenn sie vorgegeben sind.
-- Berufliche Bildung: Lernfelder oder berufliche Handlungsfelder, darunter Arbeits- und Geschäftsprozesse und
-  Fachinhalte.
-- Hochschule: Fächersystematik, Teilgebiete oder Module, darunter Themen.
-- Fort- und Erwachsenenbildung, Organisationen: Aufgaben, Prozesse oder Anwendungsfelder, darunter Themen.
-- Freies Wissen und Communities: Themenwelten, darunter Themen.
+- Pädagogische Sammlung – Elementarbereich: Entwicklungs- und Bildungsbereiche (z. B. Sprache, Bewegung, Natur),
+  darunter alltagsnahe Themen.
+- Pädagogische Sammlung – Schule (Primar- und Sekundarstufe): Themenfelder bzw. Inhaltsbereiche des Fachs,
+  länderneutral formuliert, darunter Themen und Fachbegriffe. Lehrplanstrukturen eines einzelnen Landes nur, wenn sie
+  vorgegeben sind.
+- Pädagogische Sammlung – Berufliche Bildung: Lernfelder oder berufliche Handlungsfelder, darunter Lernsituationen,
+  Arbeits- und Geschäftsprozesse und Fachinhalte.
+- Pädagogische Sammlung – Hochschule: Fächersystematik, Teilgebiete oder Module, darunter Themen.
+- Organisatorische Sammlung – Fort- und Erwachsenenbildung, Unternehmen, Behörden: Aufgaben, Prozesse oder
+  Anwendungsfelder, darunter Themen (nie als Organisationsorganigramm mit der Fachsystematik mischen).
+- Redaktionelle Sammlung – Redaktionen, Vereine, Communities, Freies Wissen: Themenwelten, darunter Themenseiten oder
+  Themen (publikumsnah formuliert).
+- Funktional-methodische Sammlung: nur wenn ausdrücklich eine Methodensammlung gefordert ist (Interaktionsform →
+  Szenario → Methode/Werkzeug).
 
 Halte das gewählte Prinzip auf einer Ebene durch: Geschwister folgen immer derselben Logik.
 

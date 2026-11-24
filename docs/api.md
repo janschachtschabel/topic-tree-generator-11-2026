@@ -39,13 +39,14 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 ## Antwort lesen
 
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `BRANCH_FAILED`,
-  `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `DUPLICATE_TITLE`, `GENERIC_TITLE`, `FACET_AS_NODE`, `TOPIC_REPEAT`,
-  `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+  `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`, `FACET_AS_NODE`,
+  `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 
 ## Fehler
 
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
-(`MISSING_INPUT`, `INVALID_INPUT`, `DUPLICATE_ID`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`, `REF_NOT_ALLOWED` …),
+(`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
+`REF_NOT_ALLOWED` …),
 401/403 Anmeldung bzw. fehlende b-api-Berechtigung, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.

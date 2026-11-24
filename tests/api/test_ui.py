@@ -118,3 +118,13 @@ def test_ui_tree_defaults_to_titles_only_with_details_toggle() -> None:
     assert 'id="opt-show-details" type="checkbox" checked' not in html
     assert 'id="tree-container" class="tree-root compact-tree"' in html
     assert ".tree-root.compact-tree .node-body" in css
+
+
+def test_ui_presets_expose_operator_shape_limits_and_keep_concurrency_env_only() -> None:
+    client = TestClient(create_app(Settings(_env_file=None, ui_enabled=True, max_tree_depth=3, max_nodes_per_level=15)))
+    data = client.get("/ui/presets").json()
+    assert data["limits"] == {"max_tree_depth": 3, "max_nodes_per_level": 15}
+    html = client.get("/ui/").text
+    assert 'id="shape-limits-note"' in html
+    # Worker / concurrency limits stay strictly env-controlled, never editable from the UI.
+    assert "llm_max_concurrency" not in html and "web_concurrency" not in html

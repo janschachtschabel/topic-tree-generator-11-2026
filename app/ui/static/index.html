@@ -78,35 +78,36 @@
         </fieldset>
 
         <fieldset class="fieldset">
-          <legend class="section-label">Form (Shape)</legend>
+          <legend class="section-label">Form (Shape – leer = Empfehlung)</legend>
           <div class="row-3">
             <div class="field">
               <label for="f-depth">Ebenen</label>
-              <input id="f-depth" type="number" inputmode="numeric" min="1" max="4" value="3">
+              <input id="f-depth" type="number" inputmode="numeric" min="1" max="3" placeholder="auto">
             </div>
             <div class="field">
               <label for="f-main-min">Haupt min</label>
-              <input id="f-main-min" type="number" inputmode="numeric" min="1" max="20" value="6">
+              <input id="f-main-min" type="number" inputmode="numeric" min="1" max="20" placeholder="auto">
             </div>
             <div class="field">
               <label for="f-main-max">Haupt max</label>
-              <input id="f-main-max" type="number" inputmode="numeric" min="1" max="20" value="12">
+              <input id="f-main-max" type="number" inputmode="numeric" min="1" max="20" placeholder="auto">
             </div>
           </div>
           <div class="row-3">
             <div class="field">
               <label for="f-child-min">Kinder min</label>
-              <input id="f-child-min" type="number" inputmode="numeric" min="2" max="20" value="3">
+              <input id="f-child-min" type="number" inputmode="numeric" min="2" max="20" placeholder="auto">
             </div>
             <div class="field">
               <label for="f-child-max">Kinder max</label>
-              <input id="f-child-max" type="number" inputmode="numeric" min="2" max="20" value="8">
+              <input id="f-child-max" type="number" inputmode="numeric" min="2" max="20" placeholder="auto">
             </div>
             <div class="field">
               <label for="f-desc-len">Wörter/Text</label>
               <input id="f-desc-len" type="number" inputmode="numeric" min="40" max="200" value="60">
             </div>
           </div>
+          <p id="shape-limits-note" class="help-text">Leer = automatische Empfehlung nach Zielgruppe (Server-Limit: max. 3 Ebenen, max. 20 je Ebene).</p>
           <div class="check-row">
             <label class="check"><input id="f-extra-general" type="checkbox"> „Allgemeines“ vorn</label>
             <label class="check"><input id="f-extra-methodology" type="checkbox"> „Methodik &amp; Didaktik“ hinten</label>

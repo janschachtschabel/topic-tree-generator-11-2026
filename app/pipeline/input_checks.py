@@ -62,12 +62,37 @@ def _check_create_inputs(req: TopicTreeRequestV2) -> None:
             raise _missing("use_case 'document' braucht ein Strukturdokument (use: structure) mit Volltext.")
 
 
+def _check_shape_limits(req: TopicTreeRequestV2, settings: Settings) -> None:
+    if "shape" not in req.model_fields_set:
+        return
+    sent = req.shape.model_fields_set
+    if "depth" in sent and req.shape.depth > settings.max_tree_depth:
+        raise ApiError(
+            422,
+            "SHAPE_LIMIT_EXCEEDED",
+            f"Maximale Baumtiefe ist auf {settings.max_tree_depth} Ebenen begrenzt.",
+        )
+    if "main_topics" in sent and req.shape.main_topics.max > settings.max_nodes_per_level:
+        raise ApiError(
+            422,
+            "SHAPE_LIMIT_EXCEEDED",
+            f"Hauptebene darf höchstens {settings.max_nodes_per_level} Knoten anfordern.",
+        )
+    if "children" in sent and req.shape.children.max > settings.max_nodes_per_level:
+        raise ApiError(
+            422,
+            "SHAPE_LIMIT_EXCEEDED",
+            f"Je Knoten sind höchstens {settings.max_nodes_per_level} Kinder zulässig.",
+        )
+
+
 def check_request(req: TopicTreeRequestV2, settings: Settings, *, loaded: bool = False) -> None:
     """`loaded=True` re-checks a request after items_ref was resolved (no inline limit then)."""
     if req.mode == Mode.refine and req.current_tree is None:
         raise _missing("mode 'refine' braucht 'current_tree'.")
     if req.options.assign_only and req.mode != Mode.refine:
         raise ApiError(422, "INVALID_OPTION", "options.assign_only ist nur mit mode 'refine' möglich.")
+    _check_shape_limits(req, settings)
     _check_items(req, settings, loaded)
     if req.mode == Mode.create:
         _check_create_inputs(req)

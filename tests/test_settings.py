@@ -19,7 +19,8 @@ def test_defaults_match_the_plan(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.llm_param_family == "common"
     assert s.llm_output_mode == "json_schema"
     assert s.llm_send_prompt_cache_key == "auto"
-    assert (s.llm_timeout_seconds, s.llm_max_retries, s.llm_max_concurrency) == (120, 3, 8)
+    assert (s.llm_timeout_seconds, s.llm_max_retries, s.llm_max_concurrency) == (120, 3, 20)
+    assert (s.max_tree_depth, s.max_nodes_per_level) == (3, 20)
     assert s.request_timeout_seconds == 280
     assert (s.public_port, s.internal_port) == (8000, 9000)
     assert s.ref_allowed_hosts == []
@@ -105,3 +106,15 @@ def test_reasoning_effort_accepts_up_to_low(effort: str) -> None:
 def test_reasoning_effort_rejects_anything_above_low(effort: str) -> None:
     with pytest.raises(ValidationError):
         make(LLM_REASONING_EFFORT=effort)
+
+
+def test_shape_cost_limits_validate_bounds() -> None:
+    assert make(MAX_TREE_DEPTH="2", MAX_NODES_PER_LEVEL="12").max_tree_depth == 2
+    with pytest.raises(ValidationError):
+        make(MAX_TREE_DEPTH="0")
+    with pytest.raises(ValidationError):
+        make(MAX_TREE_DEPTH="5")
+    with pytest.raises(ValidationError):
+        make(MAX_NODES_PER_LEVEL="1")
+    with pytest.raises(ValidationError):
+        make(MAX_NODES_PER_LEVEL="21")

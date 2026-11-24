@@ -47,6 +47,8 @@ spec:
             - { name: LLM_TIMEOUT_SECONDS, value: {{ .Values.config.llmTimeoutSeconds | quote }} }
             - { name: LLM_MAX_RETRIES, value: {{ .Values.config.llmMaxRetries | quote }} }
             - { name: LLM_MAX_CONCURRENCY, value: {{ .Values.config.llmMaxConcurrency | quote }} }
+            - { name: MAX_TREE_DEPTH, value: {{ .Values.config.maxTreeDepth | quote }} }
+            - { name: MAX_NODES_PER_LEVEL, value: {{ .Values.config.maxNodesPerLevel | quote }} }
             - { name: REQUEST_TIMEOUT_SECONDS, value: {{ .Values.config.requestTimeoutSeconds | quote }} }
             - { name: WEB_CONCURRENCY, value: {{ .Values.config.webConcurrency | quote }} }
             - { name: REF_ALLOWED_HOSTS, value: {{ .Values.config.refAllowedHosts | quote }} }

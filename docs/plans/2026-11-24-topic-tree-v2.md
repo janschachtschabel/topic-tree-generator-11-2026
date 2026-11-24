@@ -347,7 +347,8 @@ class CallerContext:
 | `LLM_PARAM_FAMILY` | `common` | E5 |
 | `LLM_OUTPUT_MODE` | `json_schema` | E5 |
 | `LLM_SEND_PROMPT_CACHE_KEY` | `auto` (an bei openai, aus bei bapi) | E2 |
-| `LLM_TIMEOUT_SECONDS` / `LLM_MAX_RETRIES` / `LLM_MAX_CONCURRENCY` | 120 / 3 / 8 | E4 |
+| `LLM_TIMEOUT_SECONDS` / `LLM_MAX_RETRIES` / `LLM_MAX_CONCURRENCY` | 120 / 3 / 20 | E4 (Parallelität nur per Env) |
+| `MAX_TREE_DEPTH` / `MAX_NODES_PER_LEVEL` | 3 / 20 | Kostenkontrolle (harte Obergrenze je Anfrage) |
 | `REQUEST_TIMEOUT_SECONDS` | 280 | E4 |
 | `WEB_CONCURRENCY` | 2 | gunicorn-Worker |
 | `PUBLIC_PORT` / `INTERNAL_PORT` | 8000 / 9000 | Leitfaden Kap. 3 |
