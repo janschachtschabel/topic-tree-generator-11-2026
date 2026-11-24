@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+
 from src.core.config import Settings
 
 # Importing the application otherwise fetches remote vocabularies at module load time.

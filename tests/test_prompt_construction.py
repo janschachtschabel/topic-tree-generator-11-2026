@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+
 from src.DTOs.collection import Collection
 from src.DTOs.properties import Properties
 from src.structured_text_helper import generate_structured_text

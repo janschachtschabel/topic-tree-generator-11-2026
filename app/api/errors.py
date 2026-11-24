@@ -12,28 +12,11 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.context.tracing import get_trace
+from app.errors import ApiError
+
+__all__ = ["ApiError", "error_response", "install_error_handlers"]
 
 V2_PREFIX = "/v2/"
-
-
-class ApiError(Exception):
-    """An error the caller should see. `message` must not contain secrets or raw exception text."""
-
-    def __init__(
-        self,
-        status: int,
-        code: str,
-        message: str,
-        *,
-        details: Any = None,
-        headers: dict[str, str] | None = None,
-    ) -> None:
-        super().__init__(f"{code}: {message}")
-        self.status = status
-        self.code = code
-        self.message = message
-        self.details = details
-        self.headers = headers
 
 
 def error_response(status: int, code: str, message: str, details: Any = None, headers=None) -> JSONResponse:
