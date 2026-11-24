@@ -1,0 +1,963 @@
+{
+  "$defs": {
+    "ChangeOp": {
+      "enum": [
+        "add",
+        "remove",
+        "rename",
+        "edit",
+        "move",
+        "merge",
+        "split"
+      ],
+      "title": "ChangeOp",
+      "type": "string"
+    },
+    "ChangeRecord": {
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/ChangeOp"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "keys": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keys"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "from": {
+          "$ref": "#/$defs/ChangeSource"
+        }
+      },
+      "required": [
+        "op",
+        "from"
+      ],
+      "title": "ChangeRecord",
+      "type": "object"
+    },
+    "ChangeSource": {
+      "enum": [
+        "feedback_text",
+        "feedback_changes",
+        "service"
+      ],
+      "title": "ChangeSource",
+      "type": "string"
+    },
+    "ChildRange": {
+      "properties": {
+        "min": {
+          "default": 3,
+          "maximum": 20,
+          "minimum": 2,
+          "title": "Min",
+          "type": "integer"
+        },
+        "max": {
+          "default": 8,
+          "maximum": 20,
+          "minimum": 2,
+          "title": "Max",
+          "type": "integer"
+        }
+      },
+      "title": "ChildRange",
+      "type": "object"
+    },
+    "ContentRef": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "nodeId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodeid"
+        },
+        "confidence": {
+          "default": 1.0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    },
+    "ExtraTopic": {
+      "enum": [
+        "general",
+        "methodology"
+      ],
+      "title": "ExtraTopic",
+      "type": "string"
+    },
+    "FeedbackEntry": {
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        }
+      },
+      "title": "FeedbackEntry",
+      "type": "object"
+    },
+    "Frame": {
+      "properties": {
+        "discipline_uri": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Discipline Uri",
+          "type": "array"
+        },
+        "educational_context_uri": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Educational Context Uri",
+          "type": "array"
+        },
+        "intended_end_user_role_uri": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Intended End User Role Uri",
+          "type": "array"
+        }
+      },
+      "title": "Frame",
+      "type": "object"
+    },
+    "Generation": {
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/Mode"
+        },
+        "use_case": {
+          "$ref": "#/$defs/UseCase"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Topic"
+        },
+        "frame": {
+          "$ref": "#/$defs/Frame"
+        },
+        "shape": {
+          "$ref": "#/$defs/Shape"
+        },
+        "hints": {
+          "$ref": "#/$defs/Hints"
+        },
+        "options": {
+          "$ref": "#/$defs/Options"
+        },
+        "inputs": {
+          "$ref": "#/$defs/InputCounts"
+        },
+        "feedback": {
+          "items": {
+            "$ref": "#/$defs/FeedbackEntry"
+          },
+          "title": "Feedback",
+          "type": "array"
+        },
+        "structure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StructureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Usage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "generator_version": {
+          "title": "Generator Version",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        }
+      },
+      "required": [
+        "mode",
+        "use_case",
+        "frame",
+        "shape",
+        "hints",
+        "options",
+        "generator_version"
+      ],
+      "title": "Generation",
+      "type": "object"
+    },
+    "Hints": {
+      "properties": {
+        "context": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context"
+        },
+        "include": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Include",
+          "type": "array"
+        },
+        "exclude": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Exclude",
+          "type": "array"
+        },
+        "order": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Order"
+        },
+        "description_length": {
+          "default": 60,
+          "description": "Ziellänge der Beschreibungen in Wörtern",
+          "maximum": 200,
+          "minimum": 40,
+          "title": "Description Length",
+          "type": "integer"
+        },
+        "language": {
+          "default": "de",
+          "pattern": "^[a-z]{2}$",
+          "title": "Language",
+          "type": "string"
+        }
+      },
+      "title": "Hints",
+      "type": "object"
+    },
+    "InputCounts": {
+      "properties": {
+        "folders": {
+          "default": 0,
+          "title": "Folders",
+          "type": "integer"
+        },
+        "items": {
+          "$ref": "#/$defs/ItemCounts"
+        }
+      },
+      "title": "InputCounts",
+      "type": "object"
+    },
+    "ItemCounts": {
+      "properties": {
+        "structure": {
+          "default": 0,
+          "title": "Structure",
+          "type": "integer"
+        },
+        "content": {
+          "default": 0,
+          "title": "Content",
+          "type": "integer"
+        }
+      },
+      "title": "ItemCounts",
+      "type": "object"
+    },
+    "MainRange": {
+      "properties": {
+        "min": {
+          "default": 6,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Min",
+          "type": "integer"
+        },
+        "max": {
+          "default": 12,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max",
+          "type": "integer"
+        }
+      },
+      "title": "MainRange",
+      "type": "object"
+    },
+    "Metadata": {
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "target_audience": {
+          "default": "Lehrkräfte",
+          "title": "Target Audience",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "author": {
+          "default": "Themenbaum Generator",
+          "title": "Author",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "based_on": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Based On"
+        },
+        "generation": {
+          "$ref": "#/$defs/Generation"
+        }
+      },
+      "required": [
+        "title",
+        "created_at",
+        "version",
+        "generation"
+      ],
+      "title": "Metadata",
+      "type": "object"
+    },
+    "Mode": {
+      "enum": [
+        "create",
+        "refine"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "NodeOut": {
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "shorttitle": {
+          "title": "Shorttitle",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Origin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "properties": {
+          "$ref": "#/$defs/Properties"
+        },
+        "contents": {
+          "items": {
+            "$ref": "#/$defs/ContentRef"
+          },
+          "title": "Contents",
+          "type": "array"
+        },
+        "subcollections": {
+          "items": {
+            "$ref": "#/$defs/NodeOut"
+          },
+          "title": "Subcollections",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "shorttitle",
+        "status"
+      ],
+      "title": "NodeOut",
+      "type": "object"
+    },
+    "NodeStatus": {
+      "enum": [
+        "new",
+        "unchanged",
+        "changed",
+        "moved",
+        "suggested"
+      ],
+      "title": "NodeStatus",
+      "type": "string"
+    },
+    "Options": {
+      "properties": {
+        "improve": {
+          "default": false,
+          "title": "Improve",
+          "type": "boolean"
+        },
+        "assign_contents": {
+          "default": true,
+          "title": "Assign Contents",
+          "type": "boolean"
+        },
+        "assign_only": {
+          "default": false,
+          "title": "Assign Only",
+          "type": "boolean"
+        },
+        "multi_assign": {
+          "default": true,
+          "title": "Multi Assign",
+          "type": "boolean"
+        },
+        "min_confidence": {
+          "default": 0.6,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Min Confidence",
+          "type": "number"
+        }
+      },
+      "title": "Options",
+      "type": "object"
+    },
+    "Origin": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/OriginType"
+        },
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Origin",
+      "type": "object"
+    },
+    "OriginType": {
+      "enum": [
+        "topic",
+        "document",
+        "folder",
+        "cluster",
+        "feedback"
+      ],
+      "title": "OriginType",
+      "type": "string"
+    },
+    "Properties": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "type": "object"
+    },
+    "Question": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "options": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Options"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Question",
+      "type": "object"
+    },
+    "ServiceWarning": {
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "step": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ServiceWarning",
+      "type": "object"
+    },
+    "Shape": {
+      "properties": {
+        "depth": {
+          "default": 3,
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "main_topics": {
+          "$ref": "#/$defs/MainRange"
+        },
+        "children": {
+          "$ref": "#/$defs/ChildRange"
+        },
+        "extra_topics": {
+          "items": {
+            "$ref": "#/$defs/ExtraTopic"
+          },
+          "title": "Extra Topics",
+          "type": "array"
+        }
+      },
+      "title": "Shape",
+      "type": "object"
+    },
+    "StructureInfo": {
+      "properties": {
+        "order": {
+          "title": "Order",
+          "type": "string"
+        },
+        "levels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Levels",
+          "type": "array"
+        },
+        "source": {
+          "enum": [
+            "hint",
+            "detected",
+            "input"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "order",
+        "source"
+      ],
+      "title": "StructureInfo",
+      "type": "object"
+    },
+    "Unassigned": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "nodeId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodeid"
+        },
+        "reason": {
+          "$ref": "#/$defs/UnassignedReason"
+        }
+      },
+      "required": [
+        "id",
+        "reason"
+      ],
+      "title": "Unassigned",
+      "type": "object"
+    },
+    "UnassignedReason": {
+      "enum": [
+        "off_topic",
+        "low_confidence",
+        "no_matching_node",
+        "excluded"
+      ],
+      "title": "UnassignedReason",
+      "type": "string"
+    },
+    "Usage": {
+      "properties": {
+        "llm_calls": {
+          "default": 0,
+          "title": "Llm Calls",
+          "type": "integer"
+        },
+        "failed_calls": {
+          "default": 0,
+          "title": "Failed Calls",
+          "type": "integer"
+        },
+        "prompt_tokens": {
+          "default": 0,
+          "title": "Prompt Tokens",
+          "type": "integer"
+        },
+        "cached_tokens": {
+          "default": 0,
+          "title": "Cached Tokens",
+          "type": "integer"
+        },
+        "completion_tokens": {
+          "default": 0,
+          "title": "Completion Tokens",
+          "type": "integer"
+        },
+        "duration_ms": {
+          "default": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        }
+      },
+      "title": "Usage",
+      "type": "object"
+    },
+    "UseCase": {
+      "enum": [
+        "topic",
+        "document",
+        "folders",
+        "contents"
+      ],
+      "title": "UseCase",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "metadata": {
+      "$ref": "#/$defs/Metadata"
+    },
+    "collection": {
+      "items": {
+        "$ref": "#/$defs/NodeOut"
+      },
+      "title": "Collection",
+      "type": "array"
+    },
+    "unassigned": {
+      "items": {
+        "$ref": "#/$defs/Unassigned"
+      },
+      "title": "Unassigned",
+      "type": "array"
+    },
+    "changes": {
+      "items": {
+        "$ref": "#/$defs/ChangeRecord"
+      },
+      "title": "Changes",
+      "type": "array"
+    },
+    "questions": {
+      "items": {
+        "$ref": "#/$defs/Question"
+      },
+      "title": "Questions",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/$defs/ServiceWarning"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "metadata",
+    "collection"
+  ],
+  "title": "TopicTreeResponseV2",
+  "type": "object"
+}

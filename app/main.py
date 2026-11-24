@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.api.errors import install_error_handlers
 from app.api.health import router as health_router
+from app.api.v2 import router as v2_router
 from app.legacy.router import router as legacy_router
 from app.observability import metrics
 from app.observability.access_log import AccessLogMiddleware
@@ -41,6 +42,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         quiet_routes={"health"},
     )
     app.include_router(health_router)
+    app.include_router(v2_router)
     app.include_router(legacy_router)
     return app
 

@@ -7,7 +7,7 @@ client = TestClient(app)
 
 def test_openapi_lists_only_public_api_paths() -> None:
     paths = set(client.get("/openapi.json").json()["paths"])
-    assert paths == {"/generate-topic-tree", "/generate-collection-description"}
+    assert paths == {"/generate-topic-tree", "/generate-collection-description", "/v2/topic-tree"}
 
 
 def test_openapi_info_describes_the_service_for_end_users() -> None:

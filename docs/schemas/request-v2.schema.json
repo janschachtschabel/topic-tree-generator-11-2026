@@ -1,0 +1,933 @@
+{
+  "$defs": {
+    "Change": {
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/ChangeOp"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "keys": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keys"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "properties": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Properties"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "title": "Change",
+      "type": "object"
+    },
+    "ChangeOp": {
+      "enum": [
+        "add",
+        "remove",
+        "rename",
+        "edit",
+        "move",
+        "merge",
+        "split"
+      ],
+      "title": "ChangeOp",
+      "type": "string"
+    },
+    "ChildRange": {
+      "properties": {
+        "min": {
+          "default": 3,
+          "maximum": 20,
+          "minimum": 2,
+          "title": "Min",
+          "type": "integer"
+        },
+        "max": {
+          "default": 8,
+          "maximum": 20,
+          "minimum": 2,
+          "title": "Max",
+          "type": "integer"
+        }
+      },
+      "title": "ChildRange",
+      "type": "object"
+    },
+    "ContentRefIn": {
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,100}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "nodeId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodeid"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "ContentRefIn",
+      "type": "object"
+    },
+    "CurrentTree": {
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
+              "maxLength": 50,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "collection": {
+          "items": {
+            "$ref": "#/$defs/TreeNodeIn"
+          },
+          "title": "Collection",
+          "type": "array"
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GenerationIn"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "collection"
+      ],
+      "title": "CurrentTree",
+      "type": "object"
+    },
+    "ExtraTopic": {
+      "enum": [
+        "general",
+        "methodology"
+      ],
+      "title": "ExtraTopic",
+      "type": "string"
+    },
+    "Feedback": {
+      "properties": {
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 8000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/Change"
+          },
+          "maxItems": 200,
+          "title": "Changes",
+          "type": "array"
+        },
+        "locked": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 500,
+          "title": "Locked",
+          "type": "array"
+        }
+      },
+      "title": "Feedback",
+      "type": "object"
+    },
+    "FeedbackEntry": {
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        }
+      },
+      "title": "FeedbackEntry",
+      "type": "object"
+    },
+    "FolderNode": {
+      "properties": {
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "pattern": "^[A-Za-z0-9._:-]{1,100}$",
+            "type": "string"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "subcollections": {
+          "items": {
+            "$ref": "#/$defs/FolderNode"
+          },
+          "title": "Subcollections",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "title": "FolderNode",
+      "type": "object"
+    },
+    "Frame": {
+      "properties": {
+        "discipline_uri": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Discipline Uri",
+          "type": "array"
+        },
+        "educational_context_uri": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Educational Context Uri",
+          "type": "array"
+        },
+        "intended_end_user_role_uri": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Intended End User Role Uri",
+          "type": "array"
+        }
+      },
+      "title": "Frame",
+      "type": "object"
+    },
+    "Fulltext": {
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/FulltextFormat",
+          "default": "markdown"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 2000000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        }
+      },
+      "title": "Fulltext",
+      "type": "object"
+    },
+    "FulltextFormat": {
+      "enum": [
+        "markdown",
+        "text"
+      ],
+      "title": "FulltextFormat",
+      "type": "string"
+    },
+    "GenerationIn": {
+      "description": "`metadata.generation` of an earlier answer: defaults for anything the new request leaves out.",
+      "properties": {
+        "mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "use_case": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UseCase"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Topic"
+        },
+        "frame": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Frame"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Shape"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "hints": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Hints"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "options": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Options"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "structure": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structure"
+        },
+        "feedback": {
+          "items": {
+            "$ref": "#/$defs/FeedbackEntry"
+          },
+          "title": "Feedback",
+          "type": "array"
+        }
+      },
+      "title": "GenerationIn",
+      "type": "object"
+    },
+    "Hints": {
+      "properties": {
+        "context": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context"
+        },
+        "include": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Include",
+          "type": "array"
+        },
+        "exclude": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Exclude",
+          "type": "array"
+        },
+        "order": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Order"
+        },
+        "description_length": {
+          "default": 60,
+          "description": "Ziellänge der Beschreibungen in Wörtern",
+          "maximum": 200,
+          "minimum": 40,
+          "title": "Description Length",
+          "type": "integer"
+        },
+        "language": {
+          "default": "de",
+          "pattern": "^[a-z]{2}$",
+          "title": "Language",
+          "type": "string"
+        }
+      },
+      "title": "Hints",
+      "type": "object"
+    },
+    "Item": {
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z0-9._:-]{1,100}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "nodeId": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodeid"
+        },
+        "use": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ItemUse"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Use"
+        },
+        "properties": {
+          "$ref": "#/$defs/Properties"
+        },
+        "fulltext": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Fulltext"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "path": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Item",
+      "type": "object"
+    },
+    "ItemUse": {
+      "enum": [
+        "structure",
+        "content"
+      ],
+      "title": "ItemUse",
+      "type": "string"
+    },
+    "MainRange": {
+      "properties": {
+        "min": {
+          "default": 6,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Min",
+          "type": "integer"
+        },
+        "max": {
+          "default": 12,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max",
+          "type": "integer"
+        }
+      },
+      "title": "MainRange",
+      "type": "object"
+    },
+    "Mode": {
+      "enum": [
+        "create",
+        "refine"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "Options": {
+      "properties": {
+        "improve": {
+          "default": false,
+          "title": "Improve",
+          "type": "boolean"
+        },
+        "assign_contents": {
+          "default": true,
+          "title": "Assign Contents",
+          "type": "boolean"
+        },
+        "assign_only": {
+          "default": false,
+          "title": "Assign Only",
+          "type": "boolean"
+        },
+        "multi_assign": {
+          "default": true,
+          "title": "Multi Assign",
+          "type": "boolean"
+        },
+        "min_confidence": {
+          "default": 0.6,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Min Confidence",
+          "type": "number"
+        }
+      },
+      "title": "Options",
+      "type": "object"
+    },
+    "Properties": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "default": {},
+      "title": "Properties",
+      "type": "object"
+    },
+    "Shape": {
+      "properties": {
+        "depth": {
+          "default": 3,
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "main_topics": {
+          "$ref": "#/$defs/MainRange"
+        },
+        "children": {
+          "$ref": "#/$defs/ChildRange"
+        },
+        "extra_topics": {
+          "items": {
+            "$ref": "#/$defs/ExtraTopic"
+          },
+          "title": "Extra Topics",
+          "type": "array"
+        }
+      },
+      "title": "Shape",
+      "type": "object"
+    },
+    "TreeNodeIn": {
+      "description": "A node of an earlier answer (v2 or legacy format), possibly edited by hand.",
+      "properties": {
+        "key": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "shorttitle": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shorttitle"
+        },
+        "properties": {
+          "$ref": "#/$defs/Properties"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin"
+        },
+        "contents": {
+          "items": {
+            "$ref": "#/$defs/ContentRefIn"
+          },
+          "title": "Contents",
+          "type": "array"
+        },
+        "subcollections": {
+          "items": {
+            "$ref": "#/$defs/TreeNodeIn"
+          },
+          "title": "Subcollections",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "title": "TreeNodeIn",
+      "type": "object"
+    },
+    "UseCase": {
+      "enum": [
+        "topic",
+        "document",
+        "folders",
+        "contents"
+      ],
+      "title": "UseCase",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "mode": {
+      "$ref": "#/$defs/Mode"
+    },
+    "use_case": {
+      "$ref": "#/$defs/UseCase"
+    },
+    "topic": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Topic"
+    },
+    "folders": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/FolderNode"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Folders"
+    },
+    "items": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Items"
+    },
+    "items_ref": {
+      "anyOf": [
+        {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Items Ref"
+    },
+    "current_tree": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CurrentTree"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "feedback": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Feedback"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "frame": {
+      "$ref": "#/$defs/Frame"
+    },
+    "shape": {
+      "$ref": "#/$defs/Shape"
+    },
+    "hints": {
+      "$ref": "#/$defs/Hints"
+    },
+    "options": {
+      "$ref": "#/$defs/Options"
+    }
+  },
+  "required": [
+    "mode",
+    "use_case",
+    "frame"
+  ],
+  "title": "TopicTreeRequestV2",
+  "type": "object"
+}
