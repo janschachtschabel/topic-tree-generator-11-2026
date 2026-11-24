@@ -1,0 +1,80 @@
+"""Service configuration. Every setting comes from the environment (or `.env`) and has a default."""
+
+from functools import lru_cache
+from typing import Annotated, Literal
+
+from pydantic import AliasChoices, Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+_ROUTER_PATH = "/api/v1/llm/router"
+
+CommaList = Annotated[list[str], NoDecode]
+
+
+class Settings(BaseSettings):
+    """Runtime settings. See the configuration table in the design plan for the meaning of each value."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", populate_by_name=True)
+
+    service_id: str = "topic-tree"
+    service_mode: Literal["auto", "bapi", "standalone"] = "auto"
+    service_api_keys: CommaList = Field(default_factory=list)
+
+    b_api_base_url: str = "https://b-api.staging.openeduhub.net"
+    b_api_route: str = Field(
+        "topic-tree-generator",
+        validation_alias=AliasChoices("b_api_route", "B_API_ROUTE", "LLM_MODEL", "llm_model"),
+    )
+    b_api_delegation_header: str | None = None
+    b_api_dev_key: SecretStr | None = None
+
+    openai_base_url: str | None = None
+    openai_api_key: SecretStr | None = None
+    openai_model: str = "gpt-6-luna"
+
+    llm_param_family: Literal["common", "gpt5", "classic"] = "common"
+    llm_output_mode: Literal["json_schema", "json_object", "prompt"] = "json_schema"
+    llm_send_prompt_cache_key: Literal["auto", "true", "false"] = "auto"
+    llm_timeout_seconds: float = Field(120, gt=0)
+    llm_max_retries: int = Field(3, ge=0)
+    llm_max_concurrency: int = Field(8, ge=1)
+
+    # Retry count used by the frozen legacy endpoints (env name kept for backward compatibility).
+    legacy_max_retries: int = Field(4, ge=0, validation_alias=AliasChoices("legacy_max_retries", "MAX_RETRIES"))
+
+    request_timeout_seconds: float = Field(280, gt=0)
+    web_concurrency: int = Field(2, ge=1)
+    public_port: int = 8000
+    internal_port: int = 9000
+
+    ref_allowed_hosts: CommaList = Field(default_factory=list)
+    ref_max_bytes: int = Field(10 * 1024 * 1024, gt=0)
+    ref_timeout_seconds: float = Field(20, gt=0)
+    items_inline_max: int = Field(500, ge=1)
+
+    log_level: str = "INFO"
+    log_format: Literal["json", "text"] = "json"
+
+    @field_validator("service_api_keys", "ref_allowed_hosts", mode="before")
+    @classmethod
+    def _split_comma_list(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [part.strip() for part in value.split(",") if part.strip()]
+        return value
+
+    @field_validator("b_api_base_url")
+    @classmethod
+    def _strip_router_path(cls, value: str) -> str:
+        # Older deployments configured the full router URL; accept both forms.
+        value = value.rstrip("/")
+        value = value.removesuffix(_ROUTER_PATH)
+        return value
+
+    @property
+    def b_api_router_url(self) -> str:
+        return f"{self.b_api_base_url}{_ROUTER_PATH}/"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

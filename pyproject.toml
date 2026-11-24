@@ -11,13 +11,18 @@ dependencies = [
     "pydantic>=2.11.7",
     "pydantic-settings>=2.13.1",
     "rdflib>=7.1.4",
-    "ruff>=0.12.8",
     "certifi>=2026.10.19",
+    "gunicorn>=27.0.1",
+    "uvicorn-worker>=0.4.0",
+    "prometheus-client>=0.26.0",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
+    "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.6",
 ]
 
 [tool.ruff]
@@ -25,3 +30,5 @@ line-length = 120
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+asyncio_mode = "auto"
+markers = ["slow: starts real server processes"]
