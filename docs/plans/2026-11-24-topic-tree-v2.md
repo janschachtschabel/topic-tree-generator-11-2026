@@ -601,28 +601,35 @@ Schritt 0: `/better-coding-workflow` laden.
 
 Schritt 0: `/better-coding-workflow` laden.
 
-- [ ] **T4.1 Gliederung aus Markdown** [P]
+- [x] **T4.1 Gliederung aus Markdown** [P]
   Dateien: `app/pipeline/inputs/outline.py`, Tests mit Fixture `tests/fixtures/lehrplan_physik_auszug.md`.
   Tests: `#`–`######` → Abschnitte mit id `s<n>`, Ebene, Titel, Seite; alle vier Seitenmarkenformate aus E11; Text unter
   Überschrift als Auszug; Dokument ohne Überschriften → ein Abschnitt; Code-Blöcke ignoriert.
 
-- [ ] **T4.2 Referenzen laden** [P]
+- [x] **T4.2 Referenzen laden** [P]
   Dateien: `app/pipeline/inputs/refs.py`, Tests (httpx MockTransport).
   Tests: Host nicht in Allowlist → `REF_NOT_ALLOWED`; `http://` → abgelehnt; > `REF_MAX_BYTES` → abgebrochen; Timeout →
   `REF_FAILED`; Weiterleitung auf fremden Host → abgelehnt; `items_ref` liefert Liste von Items.
 
-- [ ] **T4.3 Strategie document**
+- [x] **T4.3 Strategie document**
   Dateien: `app/pipeline/strategies/document.py`, `app/pipeline/steps/map_outline.py`, `app/prompts/map_outline.md`, Tests.
   Tests: Gliederung geht kompakt (id, Ebene, Titel, Seite) ins LLM, nicht der Volltext; Ausgabe verweist nur auf vorhandene
   Abschnitts-ids (unbekannte verworfen + Warnung); `origin: {type: document, id, section, page}`; `hints.exclude:["Wahlpflicht"]`
   im Prompt; Beschreibungen mit Abschnittsauszug; Strukturdokument ohne `content` wird nicht zugeordnet, mit `content` schon;
   mehrere Strukturdokumente → zusammengeführte Gliederung mit Dokument-id je Abschnitt.
 
-- [ ] **T4.4 Strategie contents**
+- [x] **T4.4 Strategie contents**
   Dateien: `app/pipeline/strategies/contents.py`, `app/pipeline/steps/group_contents.py`, `app/prompts/group_contents.md`, Tests.
   Tests: nur `structure`-Items bilden Gruppen, `content`-only (Sammelmappe) wird nur zugeordnet; `topic` als Eingrenzung im Prompt;
   > 300 Items → Stichprobe 300 mit vollständigen Metadaten + Titelliste aller; Gruppen → Knoten mit `origin: cluster`;
   Zuordnung mit Konfidenz über T3.7; fachfremde Items → `off_topic`.
+
+**Abweichungen in Phase 4:**
+- Seitenmarken: zusätzlich `<!-- PageBreak -->` (Azure); Format bleibt im Team zu klären.
+- Allowlist-Regeln: exakter Host oder `.domain` für Subdomains; Weiterleitungen werden nie verfolgt.
+- Neue Codes: `REF_TOO_LARGE`, `REF_INVALID`, `SECTION_UNKNOWN`, `OUTLINE_TRUNCATED`, `ITEMS_SAMPLED`.
+- `items_ref` bis 5.000 Einträge; nach dem Laden erneute Prüfung ohne Inline-Grenze.
+- Gruppen in `contents` liefern Beschreibungen gleich mit (kein extra describe-Aufruf); Knotenumwandlung mit `expand_branch` geteilt.
 
 ## Phase 5 – Betrieb und Übergabe
 
