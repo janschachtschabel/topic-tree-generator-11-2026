@@ -147,3 +147,11 @@ def test_token_budget_scales_with_shape_and_respects_bounds() -> None:
     # 12 + 96 + 768 = 876 skeleton nodes must fit without truncating the JSON answer.
     assert medium >= 876 * 30
     assert huge == 32000
+
+
+async def test_from_inputs_is_ignored_without_supplementary_inputs() -> None:
+    data = answer(6, 3)
+    data["main_topics"][0]["from_inputs"] = True
+    llm = FakeLLM({"plan_structure": data})
+    result = await plan_structure(req(ex.TOPIC), rc(llm), context="CTX")
+    assert result.roots[0].status is None

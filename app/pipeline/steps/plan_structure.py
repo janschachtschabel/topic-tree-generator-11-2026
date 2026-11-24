@@ -138,12 +138,14 @@ async def plan_structure(
 
     mains = _limit_mains(plan.main_topics, req, rc)
     cut = Cut()
+    # `from_inputs` only means something when supplementary inputs were actually given.
+    has_inputs = bool(inputs_block.strip())
     roots = [
         _node(
             main.title,
             main.shorttitle,
             _convert_children(main.children, shape.depth - 1, shape.children.max, cut),
-            main.from_inputs,
+            main.from_inputs and has_inputs,
         )
         for main in mains
     ]

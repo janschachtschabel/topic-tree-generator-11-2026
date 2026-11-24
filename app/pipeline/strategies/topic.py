@@ -23,6 +23,7 @@ def _pop_extra(roots: list[Node], kind: ExtraTopic) -> Node | None:
         if extra_kind(node.title) == kind:
             found = roots.pop(i)
             found.title = EXTRA_TITLES[kind]
+            found.status = None  # requested by the caller, so never a "suggested" addition
             return found
     return None
 

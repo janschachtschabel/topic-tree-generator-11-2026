@@ -194,3 +194,26 @@ async def test_extra_topic_variants_are_recognised_and_renamed() -> None:
     assert len(result.roots) == 7
     assert [c.title for c in result.roots[-1].children] == ["Experimente planen", "Lernstand erheben"]
     assert not any(w.code == "SHAPE_WIDTH" for w in run.warnings)
+
+
+async def test_requested_extra_topic_is_never_marked_suggested() -> None:
+    payload = plan_answer(6, 2)
+    payload["main_topics"].insert(
+        0,
+        {
+            "title": "Allgemeines",
+            "shorttitle": "Allgemeines",
+            "from_inputs": True,
+            "children": [
+                {"title": "Begriffe", "shorttitle": "Begriffe", "children": []},
+                {"title": "Sicherheit", "shorttitle": "Sicherheit", "children": []},
+            ],
+        },
+    )
+    llm = FakeLLM({"plan_structure": payload, "describe_nodes": describe})
+    data = copy.deepcopy(ex.TOPIC)
+    data["shape"] = {"depth": 2, "extra_topics": ["general"]}
+    data["items"] = [{"id": "s1", "use": ["structure"], "properties": {"cm:title": ["Lehrplan Optik"]}}]
+    result = await build(TopicTreeRequestV2.model_validate(data), rc(llm))
+    assert result.roots[0].title == "Allgemeines"
+    assert result.roots[0].status is None
