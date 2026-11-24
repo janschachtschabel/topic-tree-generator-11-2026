@@ -70,15 +70,3 @@ def test_metrics_are_exposed_in_prometheus_format(serve) -> None:
 
 def test_unknown_internal_path_is_404(serve) -> None:
     assert get(serve(Settings(_env_file=None)) + "/nope")[0] == 404
-
-
-def test_not_ready_when_the_b_api_model_lacks_its_path(serve) -> None:
-    s = Settings(_env_file=None, b_api_dev_key="dev", b_api_model="gpt-6-luna")
-    status, body = get(serve(s) + "/ready")
-    assert status == 503
-    assert json.loads(body)["reason"] == "B_API_MODEL_PATH_MISSING"
-
-
-def test_openai_key_makes_an_incomplete_b_api_model_irrelevant(serve) -> None:
-    s = Settings(_env_file=None, openai_api_key="sk-x", b_api_model="gpt-6-luna")
-    assert get(serve(s) + "/ready")[0] == 200

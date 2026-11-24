@@ -27,22 +27,15 @@ def _cache_key_flag(kind: BackendKind, settings: Settings) -> bool:
 
 
 def _b_api_target(settings: Settings) -> tuple[str, str]:
-    """(endpoint, model): the route at the router when set, otherwise the single model at its endpoint."""
+    """(endpoint, model): the route at the router when set, otherwise the single model at its provider endpoint."""
     if settings.b_api_route:
         return settings.b_api_router_url, settings.b_api_route
-    if settings.b_api_model and settings.b_api_model_url:
+    if settings.b_api_model:
         return settings.b_api_model_url, settings.b_api_model
-    if settings.b_api_model_incomplete:
-        raise ApiError(
-            503,
-            "LLM_NOT_CONFIGURED",
-            f"B_API_MODEL={settings.b_api_model} ist gesetzt, aber B_API_MODEL_PATH (Pfad des b-api-Endpunkts für "
-            "einzelne Modelle) fehlt.",
-        )
     raise ApiError(
         503,
         "LLM_NOT_CONFIGURED",
-        "Für die b-api ist weder eine Route (B_API_ROUTE) noch ein Modell (B_API_MODEL mit B_API_MODEL_PATH) gesetzt.",
+        "Für die b-api ist weder eine Route (B_API_ROUTE) noch ein Modell (B_API_MODEL) gesetzt.",
     )
 
 

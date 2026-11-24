@@ -41,7 +41,7 @@ spec:
             - { name: B_API_BASE_URL, value: {{ .Values.config.bApiBaseUrl | quote }} }
             - { name: B_API_ROUTE, value: {{ .Values.config.bApiRoute | quote }} }
             - { name: B_API_MODEL, value: {{ .Values.config.bApiModel | quote }} }
-            - { name: B_API_MODEL_PATH, value: {{ .Values.config.bApiModelPath | quote }} }
+            - { name: B_API_MODEL_PROVIDER, value: {{ .Values.config.bApiModelProvider | quote }} }
             - { name: LLM_PARAM_FAMILY, value: {{ .Values.config.llmParamFamily | quote }} }
             - { name: LLM_REASONING_EFFORT, value: {{ .Values.config.llmReasoningEffort | quote }} }
             - { name: LLM_OUTPUT_MODE, value: {{ .Values.config.llmOutputMode | quote }} }

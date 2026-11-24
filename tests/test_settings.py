@@ -140,19 +140,14 @@ def test_public_and_internal_port_must_differ() -> None:
         Settings(_env_file=None, public_port=8010, internal_port=8010)
 
 
-def test_b_api_model_option_needs_its_path_which_is_normalized() -> None:
-    s = make(B_API_MODEL="gpt-6-luna", B_API_MODEL_PATH="api/v1/llm/openai")
+def test_b_api_model_uses_the_openai_provider_endpoint_by_default() -> None:
+    s = make(B_API_MODEL="gpt-6-luna")
     assert s.b_api_model_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
+    assert make(B_API_MODEL_PROVIDER="academiccloud").b_api_model_url.endswith("/api/v1/llm/academiccloud/")
     assert s.b_api_router_url.endswith("/api/v1/llm/router/")
-    # An incomplete model option must not stop the service from starting (crash loop in Docker); the request
-    # answers 503 with a hint instead (see tests/llm/test_backend.py).
-    assert make(B_API_MODEL="gpt-6-luna").b_api_model_url is None
-    # With a route the model is only the fallback, so its path is not needed yet.
-    assert make(B_API_ROUTE="topic-tree-generator", B_API_MODEL="gpt-6-luna").b_api_route == "topic-tree-generator"
-    assert make(B_API_MODEL="", B_API_MODEL_PATH="").b_api_model is None
+    assert make(B_API_MODEL="").b_api_model is None
 
 
-@pytest.mark.parametrize("bad", ["https://evil.example/x", "/a/../b", "/a b"])
-def test_b_api_model_path_rejects_urls_and_odd_paths(bad: str) -> None:
+def test_b_api_model_provider_is_restricted_to_the_gateway_providers() -> None:
     with pytest.raises(ValidationError):
-        make(B_API_MODEL="gpt-6-luna", B_API_MODEL_PATH=bad)
+        make(B_API_MODEL_PROVIDER="router")

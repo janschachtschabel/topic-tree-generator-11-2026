@@ -55,7 +55,7 @@ def test_api_key_is_hidden_from_repr() -> None:
     assert "bdt_xyz" not in repr(resolve_backend(BAPI, settings(b_api_route="r")))
 
 
-MODEL = {"b_api_model": "gpt-6-luna", "b_api_model_path": "/api/v1/llm/openai/"}
+MODEL = {"b_api_model": "gpt-6-luna"}
 
 
 @pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
@@ -81,8 +81,9 @@ def test_b_api_without_route_or_model_is_503_with_a_hint(ctx: CallerContext) -> 
 
 
 @pytest.mark.parametrize("ctx", [BAPI, STANDALONE])
-def test_model_without_path_is_503_naming_the_missing_path(ctx: CallerContext) -> None:
-    with pytest.raises(ApiError) as err:
-        resolve_backend(ctx, settings(b_api_dev_key="dev-key", b_api_model="gpt-6-luna"))
-    assert (err.value.status, err.value.code) == (503, "LLM_NOT_CONFIGURED")
-    assert "B_API_MODEL_PATH" in err.value.message
+def test_model_goes_to_its_provider_endpoint(ctx: CallerContext) -> None:
+    b = resolve_backend(
+        ctx, settings(b_api_dev_key="dev-key", b_api_model="qwen3-32b", b_api_model_provider="academiccloud")
+    )
+    assert b.base_url == "https://b-api.staging.openeduhub.net/api/v1/llm/academiccloud/"
+    assert b.model == "qwen3-32b"

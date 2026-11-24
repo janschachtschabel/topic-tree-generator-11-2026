@@ -13,7 +13,6 @@ _HOSTNAME = re.compile(
 )
 
 _LEGACY_ROUTE = "topic-tree-generator"
-_LLM_PATH = re.compile(r"^/(?:[A-Za-z0-9_-]+/)+$")
 
 CommaList = Annotated[list[str], NoDecode]
 
@@ -34,10 +33,10 @@ class Settings(BaseSettings):
         None,
         validation_alias=AliasChoices("b_api_route", "B_API_ROUTE", "LLM_MODEL", "llm_model"),
     )
-    # Option 2: one model (e.g. gpt-6-luna) at the b-api endpoint for single models; used when no route is set.
-    # The frozen legacy endpoints always use the router (legacy_route).
+    # Option 2: one model (e.g. gpt-6-luna) at its provider's endpoint /api/v1/llm/{provider}/; used when no route
+    # is set. Providers of the gateway: openai, academiccloud. The frozen legacy endpoints always use the router.
     b_api_model: str | None = None
-    b_api_model_path: str | None = None
+    b_api_model_provider: Literal["openai", "academiccloud"] = "openai"
     b_api_delegation_header: str | None = None
     b_api_dev_key: SecretStr | None = None
 
@@ -81,7 +80,6 @@ class Settings(BaseSettings):
         "b_api_delegation_header",
         "b_api_dev_key",
         "b_api_model",
-        "b_api_model_path",
         "openai_base_url",
         "openai_api_key",
         "domain",
@@ -126,21 +124,6 @@ class Settings(BaseSettings):
             raise ValueError(f"PUBLIC_PORT and INTERNAL_PORT must differ (both are {self.public_port})")
         return self
 
-    @field_validator("b_api_model_path")
-    @classmethod
-    def _normalize_model_path(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        path = "/" + value.strip().strip("/") + "/"
-        if not _LLM_PATH.match(path):
-            raise ValueError(f"B_API_MODEL_PATH must be a plain path such as /api/v1/llm/<endpoint>/, got {value!r}")
-        return path
-
-    @property
-    def b_api_model_incomplete(self) -> bool:
-        """Option 2 chosen (no route) but its endpoint path is missing; requests then answer 503 with a hint."""
-        return bool(self.b_api_model and not self.b_api_route and not self.b_api_model_path)
-
     @property
     def legacy_route(self) -> str:
         """Route of the frozen legacy endpoints: unchanged default when B_API_ROUTE is not set."""
@@ -152,9 +135,9 @@ class Settings(BaseSettings):
         return f"{self.b_api_base_url}{_ROUTER_PATH}/"
 
     @property
-    def b_api_model_url(self) -> str | None:
-        """b-api endpoint for a single model (B_API_MODEL_PATH), or None when only routes are used."""
-        return f"{self.b_api_base_url}{self.b_api_model_path}" if self.b_api_model_path else None
+    def b_api_model_url(self) -> str:
+        """Provider endpoint of the b-api for a single model (OpenAI-compatible, /chat/completions is appended)."""
+        return f"{self.b_api_base_url}/api/v1/llm/{self.b_api_model_provider}/"
 
 
 @lru_cache

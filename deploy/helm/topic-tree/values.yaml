@@ -18,7 +18,7 @@ replicaCount: 2
 ## @param config.bApiBaseUrl Base URL of the b-api
 ## @param config.bApiRoute Option 1: route name on the b-api LLM router (used first whenever set)
 ## @param config.bApiModel Option 2: single model, used only when bApiRoute is empty
-## @param config.bApiModelPath Path of the b-api endpoint for single models (required for option 2)
+## @param config.bApiModelProvider Provider of bApiModel at the b-api: openai | academiccloud
 ## @param config.llmParamFamily common | gpt5 | classic (must match the route's models)
 ## @param config.llmReasoningEffort Max reasoning effort: none | minimal | low (capped at low)
 ## @param config.llmOutputMode json_schema | json_object | prompt
@@ -39,7 +39,7 @@ config:
   bApiBaseUrl: https://b-api.staging.openeduhub.net
   bApiRoute: topic-tree-generator
   bApiModel: ""
-  bApiModelPath: ""
+  bApiModelProvider: openai
   llmParamFamily: common
   llmReasoningEffort: none
   llmOutputMode: json_schema

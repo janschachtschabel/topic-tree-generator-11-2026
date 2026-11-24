@@ -62,7 +62,7 @@ def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
     if error.status in _CONFIG_REJECTIONS:
         message = (
             f"Der LLM-Endpunkt hat die Anfrage abgelehnt (HTTP {error.status}). Wahrscheinlich passen Modell bzw. Route "
-            "und Endpunkt nicht zusammen: B_API_ROUTE (Route) bzw. B_API_MODEL/B_API_MODEL_PATH (einzelnes Modell) "
+            "und Endpunkt nicht zusammen: B_API_ROUTE (Route) bzw. B_API_MODEL/B_API_MODEL_PROVIDER (einzelnes Modell) "
             "an der b-api oder OPENAI_MODEL prüfen."
         )
     return ApiError(

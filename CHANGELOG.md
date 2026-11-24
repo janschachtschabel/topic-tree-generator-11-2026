@@ -25,12 +25,11 @@ Changed (operators)
   callers with their own b-api key use the b-api proxy, or `B_API_DEV_KEY` for local development.
 - Container command: `gunicorn -c gunicorn.conf.py app.main:app` (was `fastapi run main.py`). Ports 8000 and 9000.
 - `B_API_BASE_URL` may now be the plain base URL; the old full router URL still works.
-- b-api: a route at the router (`B_API_ROUTE`) is used first whenever it is set; otherwise v2 uses a single model
-  (`B_API_MODEL`, e.g. `gpt-6-luna`) at the b-api endpoint for single models (`B_API_MODEL_PATH`).
-  An incomplete option never stops the service from starting (requests answer 503 with a hint).
-  `B_API_ROUTE` no longer defaults to `topic-tree-generator` (that route does not exist yet); the frozen legacy
-  endpoints keep it as their fallback.
-  An upstream 400/404/422 now explains that route/model and endpoint probably do not match.
+- b-api: a route at the router (`B_API_ROUTE`) is used first whenever it is set; otherwise v2 sends a single model
+  (`B_API_MODEL`, e.g. `gpt-6-luna`) to its provider endpoint `/api/v1/llm/<B_API_MODEL_PROVIDER>/` (`openai` by
+  default, or `academiccloud`). The router also accepts `provider/model` as a route name. `B_API_ROUTE` no longer
+  defaults to `topic-tree-generator` (that route does not exist yet); the frozen legacy endpoints keep it as their
+  fallback. An upstream 400/404/422 now explains that route/model and endpoint probably do not match.
 - `PUBLIC_PORT` / `INTERNAL_PORT` now also drive both Compose files (host port mapping, Traefik service port,
   healthcheck), so a service can move to alternative ports with one change in `.env`. Both ports are validated
   (`1–65535`, must differ).
