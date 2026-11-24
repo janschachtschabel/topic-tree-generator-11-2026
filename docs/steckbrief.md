@@ -14,8 +14,8 @@ Status je Zeile: ✅ belegt · ⏳ zu messen/klären · ➖ entfällt
 | Abhängigkeiten | LLM-Route (oder OpenAI-kompatibel eigenständig); keine Datenbank, kein Repository-Zugriff | ✅ |
 | Clusterfähigkeit | zustandslos, beliebig viele Pods; gunicorn-Worker je Pod (`WEB_CONCURRENCY`) | ✅ |
 | Updates und CronJobs | keine; Vokabular-Snapshot mit Release aktualisieren (`scripts/build_vocab_snapshot.py`) | ✅ |
-| Ressourcen | RAM weitgehend fest (keine lokalen Modelle): 1 Worker Leerlauf **72 MiB**, warm **95 MiB**, Spitze unter Last (`c=3`) **97 MiB**. Bei `WEB_CONCURRENCY=2` + Master ≈ 235 MiB Spitze → Empfehlung: Request `100m CPU / 256Mi RAM`, Limit `512Mi RAM` (Reserve für große `items_ref`-Payloads) | ✅ (Windows-Prozess; Container-cgroup im ersten CI-Image gegenzuprüfen) |
-| Image-Größe | nach CI-Build eintragen; keine Modelle oder Daten im Image | ⏳ |
+| Ressourcen | RAM weitgehend fest (keine lokalen Modelle): Linux-Container (Docker cgroup, `WEB_CONCURRENCY=2` + Master) Leerlauf **125,7 MiB**; 1 Worker unter Last (`c=3`) Spitze **97 MiB** (≈ 235 MiB Spitze bei 2 Workern) → Empfehlung: Request `100m CPU / 256Mi RAM`, Limit `512Mi RAM` (Reserve für große `items_ref`-Payloads) | ✅ |
+| Image-Größe | **193 MB** (unkomprimiert, Multi-Stage `python:3.13-slim-bookworm`, `uid=10001`, `read_only: true`, keine Modelle oder Daten im Image) | ✅ |
 | Ansprechperson | Jan Schachtschabel, Vertretung: … | ⏳ |
 
 ## Abweichungen vom Leitfaden (mit Begründung)
