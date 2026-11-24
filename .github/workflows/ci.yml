@@ -1,0 +1,31 @@
+# Lint, tests and chart checks on every push and pull request. Image build and deployment run in GitLab CI.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+      - run: uv sync --frozen
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pytest -q
+      - name: Chart lint and schema validation
+        run: |
+          helm lint --strict deploy/helm/topic-tree
+          helm template t deploy/helm/topic-tree \
+            --set networkPolicy.enabled=true --set autoscaling.enabled=true --set ingress.enabled=true \
+            | docker run --rm -i ghcr.io/yannh/kubeconform:v0.6.7 -strict -summary -ignore-missing-schemas -
