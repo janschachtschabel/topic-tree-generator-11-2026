@@ -30,6 +30,11 @@ def _bearer(headers: Mapping[str, str]) -> str | None:
     return None
 
 
+def extract_bearer(headers: Mapping[str, str]) -> str | None:
+    """Return the token from an exact `Authorization: Bearer <token>` header (case-insensitive header name)."""
+    return _bearer({k.lower(): v for k, v in headers.items()})
+
+
 def _delegation_token(headers: Mapping[str, str], settings: Settings) -> str | None:
     if settings.b_api_delegation_header:
         raw = headers.get(settings.b_api_delegation_header.lower())

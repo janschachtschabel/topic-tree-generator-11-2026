@@ -3,7 +3,7 @@
 FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores.
 
 - **`POST /v2/topic-tree`** – current v2 API ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
-- **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – legacy v1 endpoints (unchanged)
+- **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2)
 - **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
 - **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [docs/measurements/2026-11-24-openai-gpt-6-luna.md](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
 
@@ -21,6 +21,18 @@ request → input & cap checks → resolve refs (allow-listed) → strategy per 
 - **`contents`**: Induces topic groups from a stratified sample of items (`origin.cluster`), eliminates duplicate group titles, and assigns every item with confidence.
 - **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree.
 - **Prompt caching**: All prompts live in `app/prompts/`; `system.md` is strictly static across every LLM call.
+
+## What changed from v1 to v2
+
+The original v1 service (archived on branch `backup_old`; response schemas preserved on `/generate-topic-tree` and `/generate-collection-description`) was tightly coupled to a single deployment path and generation cascade. Version 2 redesigns both the runtime architecture and the tree generation pipeline:
+
+| Dimension | Legacy v1 (`/generate-topic-tree`, `/generate-collection-description`) | Current v2 (`POST /v2/topic-tree`) |
+|---|---|---|
+| **Deployment & LLM routing** | Originally hardcoded to run strictly behind the b-api router (`/api/v1/llm/router/`, fixed route `topic-tree-generator`) with mandatory caller Bearer tokens. *(Note: v1 endpoints now also support standalone `OPENAI_API_KEY` / `SERVICE_API_KEYS` so `/docs` works without b-api, while keeping router compatibility behind the b-api.)* | Runs behind the b-api (`Bearer bdt_…`), standalone against OpenAI or any OpenAI-compatible API (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`), or in `auto` dual mode with optional `SERVICE_API_KEYS`. Behind the b-api, supports **both** router routes (`B_API_ROUTE`) and direct single-model provider calls (`B_API_MODEL` + `B_API_MODEL_PROVIDER`) without depending on a router route. |
+| **Use cases & workflows** | Single rigid workflow: 3-level topic cascade (`main → sub → curriculum`) from a theme string only. No iterative editing, no document parsing, no content sorting. | **4 combinable use cases** (`topic`, `document`, `folders`, `contents`) + iterative **`mode: refine`** (`feedback.changes`, free-text `feedback.text`, `feedback.locked` subtrees, `options.assign_only`) + content assignment (`items` with `nodeId` passthrough and confidence scores). |
+| **Duplicate prevention & speed** | Generated main topics, subtopics, and curriculum topics in isolated per-branch LLM calls without global sibling visibility—prone to duplicate titles across branches and slow multi-hop cascades. | **Skeleton-first**: plans the complete multi-level outline in one LLM call, runs deterministic duplicate elimination (`eliminate_generated_duplicates`), and generates descriptions/keywords in **parallel balanced 10-node batches** that all receive the full tree outline in the prompt-cache prefix. |
+| **Vocabulary & metadata** | Copied caller-supplied `discipline_uri` / `educational_context_uri` onto all nodes verbatim; no node-level classification, fixed teacher role. | Bundled offline **OEH SkoHub vocabulary snapshot** (`discipline`, `educationalContext`, `intendedEndUserRole`). With `options.auto_metadata=true`, classifies nodes onto exact German labels via strict JSON schema and maps them deterministically to URIs. |
+| **Response & error contract** | Frozen v1 response (`metadata` + `collection` with `cm_title` etc., or raw `str`) and FastAPI `{"detail": "…"}` errors so existing edu-sharing integrations stay drop-in compatible. | Rich `TopicTreeResponseV2` (`collection` with stable `key`/`status`/`origin`/`items`, `unassigned`, `changes`, `warnings`, `questions`, `usage`, `metadata.generation`) and uniform `{"error": {"code", "message", "trace_id"}}` error payloads without raw exception text. |
 
 ---
 

@@ -195,6 +195,11 @@ def test_legacy_endpoints_require_bearer_in_bapi_mode_even_with_openai_key(monke
 
     with patch.object(legacy, "AsyncOpenAI", FakeAsyncOpenAI):
         missing = client.post("/generate-collection-description", json={"text_context": "Geschichte"})
+        non_bdt = client.post(
+            "/generate-collection-description",
+            json={"text_context": "Geschichte"},
+            headers={"Authorization": "Bearer non-bdt-token"},
+        )
         ok = client.post(
             "/generate-collection-description",
             json={"text_context": "Geschichte"},
@@ -203,10 +208,48 @@ def test_legacy_endpoints_require_bearer_in_bapi_mode_even_with_openai_key(monke
 
     assert missing.status_code == 401
     assert missing.headers["www-authenticate"] == "Bearer"
+    assert non_bdt.status_code == 401
     assert ok.status_code == 200
     assert FakeAsyncOpenAI.api_keys == ["bdt_live_tok"]
     assert FakeAsyncOpenAI.base_urls == [cfg.b_api_router_url]
     assert FakeAsyncOpenAI.models == [cfg.legacy_route]
+
+
+def test_non_bdt_bearer_uses_standalone_openai_when_configured(monkeypatch) -> None:
+    cfg = Settings(
+        _env_file=None,
+        service_mode="auto",
+        openai_api_key="test-openai-key",
+        openai_base_url="https://llm.example/v1",
+        openai_model="gpt-6-luna",
+    )
+    monkeypatch.setattr(legacy, "settings", cfg)
+    _reset_fake()
+
+    with patch.object(legacy, "AsyncOpenAI", FakeAsyncOpenAI):
+        resp = client.post(
+            "/generate-collection-description",
+            json={"text_context": "Physik"},
+            headers={"Authorization": "Bearer leftover-swagger-token"},
+        )
+
+    assert resp.status_code == 200
+    assert FakeAsyncOpenAI.api_keys == ["test-openai-key"]
+    assert FakeAsyncOpenAI.base_urls == ["https://llm.example/v1"]
+    assert FakeAsyncOpenAI.models == ["gpt-6-luna"]
+
+
+def test_lowercase_bearer_scheme_is_rejected_like_v2(monkeypatch) -> None:
+    monkeypatch.setattr(legacy, "settings", Settings(_env_file=None))
+
+    resp = client.post(
+        "/generate-collection-description",
+        json={"text_context": "Mathematik"},
+        headers={"Authorization": "bearer caller-b-api-key"},
+    )
+
+    assert resp.status_code == 401
+    assert resp.headers["www-authenticate"] == "Bearer"
 
 
 def test_max_retries_uses_environment_override(monkeypatch) -> None:
