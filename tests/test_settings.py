@@ -58,3 +58,39 @@ def test_b_api_base_url_accepts_the_legacy_router_url(value: str) -> None:
 def test_invalid_service_mode_is_rejected() -> None:
     with pytest.raises(ValidationError):
         make(SERVICE_MODE="sometimes")
+
+
+def test_blank_optional_env_values_normalize_to_none() -> None:
+    s = make(
+        OPENAI_API_KEY="",
+        OPENAI_BASE_URL="   ",
+        B_API_DEV_KEY="",
+        B_API_DELEGATION_HEADER="",
+        DOMAIN="",
+    )
+    assert s.openai_api_key is None
+    assert s.openai_base_url is None
+    assert s.b_api_dev_key is None
+    assert s.b_api_delegation_header is None
+    assert s.domain is None
+
+
+@pytest.mark.parametrize("host", ["trees.example.de", "srv123456.example.cloud", "localhost"])
+def test_domain_accepts_bare_hostnames(host: str) -> None:
+    assert make(DOMAIN=host).domain == host
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "https://trees.example.de",
+        "http://trees.example.de",
+        "trees.example.de/api",
+        "trees.example.de:8000",
+        "bad host.example.de",
+        "-bad.example.de",
+    ],
+)
+def test_domain_rejects_schemes_paths_ports_and_invalid_hostnames(bad: str) -> None:
+    with pytest.raises(ValidationError, match="DOMAIN"):
+        make(DOMAIN=bad)

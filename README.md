@@ -32,7 +32,15 @@ cp .env.example .env          # set OPENAI_API_KEY (standalone) or call it throu
 uv run python -m app          # public API :8000 (docs at /docs, test UI at /ui/), internal :9000 (/health, /ready, /metrics)
 ```
 
-Production-like: `uv run gunicorn -c gunicorn.conf.py app.main:app` or `docker compose up --build`.
+Production-like: `uv run gunicorn -c gunicorn.conf.py app.main:app` or `docker compose -f docker-compose.build.yml up --build`.
+
+### Deploy behind Traefik (Compose from URL / VPS)
+
+`docker-compose.yml` in the repository root is ready for container panels with Traefik HTTPS routing:
+
+1. Deploy the stack from the repository URL without variables first (starts cleanly using `.env.example` defaults, no required variables, no external network).
+2. Edit `.env` to set `DOMAIN` (bare hostname without `https://`) and your LLM credentials (`OPENAI_API_KEY` or b-api settings, optionally `SERVICE_API_KEYS` and `UI_ENABLED=false`), then redeploy.
+3. Point the domain's DNS A record to the server; Traefik routes HTTPS traffic to container port `8000` while port `9000` stays internal.
 
 Shortest call (standalone with an OpenAI key):
 

@@ -57,7 +57,7 @@ Vollständiger Messbericht inkl. Token-Aufschlüsselung (ungecacht/gecacht/Outpu
 
 1. LLM-Route proben: `B_API_KEY=… uv run python -m scripts.probe_llm --base-url <router> --model topic-tree-generator`.
    Lehnt die Route `json_schema` oder `prompt_cache_key` ab: `LLM_OUTPUT_MODE=json_object` bzw. `LLM_SEND_PROMPT_CACHE_KEY=false`.
-2. Container starten (`docker compose up`), Leerlauf-RAM mit `docker stats` notieren.
+2. Container starten (`docker compose -f docker-compose.build.yml up --build`), Leerlauf-RAM mit `docker stats` notieren.
 3. Last: `uv run python -m scripts.loadtest --url … --payload docs/examples/topic_full.json -n 20 -c 5`, dabei RAM/CPU
    beobachten (Spitze). Für jeden Use Case wiederholen.
 4. Kosten aus den b-api-Nutzungsdaten des Testschlüssels ablesen; `metadata.generation.usage` zeigt Tokens und Cache-Anteil.

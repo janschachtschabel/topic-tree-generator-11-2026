@@ -1,5 +1,6 @@
 """Service configuration. Every setting comes from the environment (or `.env`) and has a default."""
 
+import re
 from functools import lru_cache
 from typing import Annotated, Literal
 
@@ -7,6 +8,9 @@ from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 _ROUTER_PATH = "/api/v1/llm/router"
+_HOSTNAME = re.compile(
+    r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$"
+)
 
 CommaList = Annotated[list[str], NoDecode]
 
@@ -19,6 +23,7 @@ class Settings(BaseSettings):
     service_id: str = "topic-tree"
     service_mode: Literal["auto", "bapi", "standalone"] = "auto"
     service_api_keys: CommaList = Field(default_factory=list)
+    domain: str | None = None
 
     b_api_base_url: str = "https://b-api.staging.openeduhub.net"
     b_api_route: str = Field(
@@ -55,6 +60,27 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: Literal["json", "text"] = "json"
     ui_enabled: bool = True
+
+    @field_validator(
+        "b_api_delegation_header", "b_api_dev_key", "openai_base_url", "openai_api_key", "domain", mode="before"
+    )
+    @classmethod
+    def _empty_to_none(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+    @field_validator("domain")
+    @classmethod
+    def _validate_domain(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        host = value.strip()
+        if len(host) > 253 or not _HOSTNAME.match(host):
+            raise ValueError(
+                f"DOMAIN must be a bare hostname without scheme, path, or port (e.g. 'trees.example.de'), got {value!r}"
+            )
+        return host
 
     @field_validator("service_api_keys", "ref_allowed_hosts", mode="before")
     @classmethod

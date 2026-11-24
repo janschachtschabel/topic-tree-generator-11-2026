@@ -1,0 +1,37 @@
+# Reverse-proxy / Compose-from-URL stack (pre-built image, Traefik HTTPS labels, zero required env vars).
+# First start works without any variables; set DOMAIN and credentials in .env afterwards and redeploy.
+# For local builds with direct host ports, use: docker compose -f docker-compose.build.yml up --build
+services:
+  topic-tree:
+    image: ${IMAGE:-ghcr.io/janschachtschabel/topic-tree-generator-11-2026:latest}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - DOMAIN=${DOMAIN:-}
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_grace_period: 90s
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:9000/health', timeout=2)
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-topic-tree-web}"
+      - "traefik.http.routers.topic-tree.rule=Host(`${DOMAIN:-}`)"
+      - "traefik.http.routers.topic-tree.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.topic-tree.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.services.topic-tree.loadbalancer.server.port=8000"
+
+networks:
+  default:
+    name: ${TRAEFIK_NETWORK:-topic-tree-web}

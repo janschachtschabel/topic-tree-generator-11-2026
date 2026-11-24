@@ -2,7 +2,7 @@
 
 Stand: 24.11.2026 · Status: **umgesetzt und geprüft (Phasen 1–6 abgeschlossen)** · Branch: `feature/topic-tree-v2`
 
-> **Fortschritt**: Phase 1 (Fundament) ✅ · Phase 2 (v2-Vertrag & Domäne) ✅ · Phase 3 (topic, folders, refine, Zuordnung) ✅ · Phase 4 (document, contents, Referenzen) ✅ · Phase 5 (Betrieb, Docker, Helm, CI, Doku) ✅ · Phase 6 (Review, Audit, Verify + Live-E2E) ✅ · Live-Vermessung gegen OpenAI nativ (`gpt-6-luna`) ✅ (`docs/steckbrief.md`, `docs/measurements/2026-11-24-openai-gpt-6-luna.md`) · Optionale Test-UI (`/ui/`, per `UI_ENABLED=false` abschaltbar) ✅ · SkoHub-Vokabulare (inkl. `hochschulfaechersystematik`), `metadata.vocab_labels` & automatische Knoten-Metadaten (`options.auto_metadata`) ✅ · Qualitäts-Härtung ohne ML/externe Wissens-APIs (`app/domain/quality.py`, `app/domain/text.py`, stratifiziertes `contents`-Sampling, geschärfter `expand_branch`-Prompt) ✅. Offen für Betrieb/T6: b-api-Proxy-Freischaltung, Image-Größe aus CI-Build und reale b-api-EUR-Abrechnung.
+> **Fortschritt**: Phase 1 (Fundament) ✅ · Phase 2 (v2-Vertrag & Domäne) ✅ · Phase 3 (topic, folders, refine, Zuordnung) ✅ · Phase 4 (document, contents, Referenzen) ✅ · Phase 5 (Betrieb, Docker, Helm, CI, Doku) ✅ · Phase 6 (Review, Audit, Verify + Live-E2E) ✅ · Live-Vermessung gegen OpenAI nativ (`gpt-6-luna`) ✅ (`docs/steckbrief.md`, `docs/measurements/2026-11-24-openai-gpt-6-luna.md`) · Optionale Test-UI (`/ui/`, per `UI_ENABLED=false` abschaltbar) ✅ · SkoHub-Vokabulare (inkl. `hochschulfaechersystematik`), `metadata.vocab_labels` & automatische Knoten-Metadaten (`options.auto_metadata`) ✅ · Qualitäts-Härtung ohne ML/externe Wissens-APIs (`app/domain/quality.py`, `app/domain/text.py`, stratifiziertes `contents`-Sampling, geschärfter `expand_branch`-Prompt) ✅ · Reverse-Proxy-/Compose-from-URL-kompatible `docker-compose.yml` + `docker-compose.build.yml` + GHCR-Publish ✅. Offen für Betrieb/T6: b-api-Proxy-Freischaltung, Image-Größe aus CI-Build und reale b-api-EUR-Abrechnung.
 
 ## Ziel
 
@@ -262,7 +262,7 @@ docs/
   schemas/request-v2.schema.json, response-v2.schema.json
   api.md                   Aufrufe vom kürzesten bis vollständigen, je Use Case
   steckbrief.md            Vorlage nach Leitfaden, mit Messanleitung
-gunicorn.conf.py  Dockerfile  compose.yml  main.py (Shim: from app.main import app)
+gunicorn.conf.py  Dockerfile  docker-compose.yml  docker-compose.build.yml  main.py (Shim: from app.main import app)
 tests/                     spiegelt app/; tests/fakes/llm.py (skriptbarer LLM), tests/stub_openai.py (HTTP-Stub)
 ```
 

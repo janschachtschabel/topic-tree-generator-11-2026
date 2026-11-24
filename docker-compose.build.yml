@@ -1,0 +1,17 @@
+# Local build and single-host setup with direct ports (no reverse proxy).
+# Start: cp .env.example .env && docker compose -f docker-compose.build.yml up --build
+services:
+  topic-tree:
+    build: .
+    image: topic-tree:local
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_grace_period: 90s
+    restart: unless-stopped
