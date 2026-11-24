@@ -1,0 +1,14 @@
+{
+ "scheme": "intendedEndUserRole",
+ "source": "https://raw.githubusercontent.com/openeduhub/oeh-metadata-vocabs/master/intendedEndUserRole.ttl",
+ "generated_at": "2026-11-24",
+ "labels": {
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/author": "Autor/in",
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/counsellor": "Berater/in",
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/learner": "Lerner/in",
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/manager": "Verwaltung",
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/other": "andere",
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/parent": "Eltern",
+  "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher": "Lehrer/in"
+ }
+}

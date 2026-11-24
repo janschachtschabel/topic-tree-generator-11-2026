@@ -1,0 +1,19 @@
+{
+ "scheme": "educationalContext",
+ "source": "https://raw.githubusercontent.com/openeduhub/oeh-metadata-vocabs/master/educationalContext.ttl",
+ "generated_at": "2026-11-24",
+ "labels": {
+  "http://w3id.org/openeduhub/vocabs/educationalContext/berufliche_bildung": "Berufliche Bildung",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/elementarbereich": "Elementarbereich",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/erwachsenenbildung": "Erwachsenenbildung",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/fernunterricht": "Fernunterricht",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/foerderschule": "Förderschule",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/fortbildung": "Fortbildung",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/grundschule": "Primarstufe",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/hochschule": "Hochschule",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/informelles_lernen": "Informelles Lernen",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/schule": "Schule",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1": "Sekundarstufe I",
+  "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2": "Sekundarstufe II"
+ }
+}
