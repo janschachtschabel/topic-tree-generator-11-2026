@@ -7,7 +7,7 @@ from app.domain.keys import assign_missing_keys
 from app.domain.tree import Node
 from app.pipeline import orchestrator
 from app.pipeline.run_context import RunContext
-from app.pipeline.steps.infer_metadata import infer_metadata
+from app.pipeline.steps.infer_metadata import _node_line, infer_metadata
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import ContentRef
 from app.settings import Settings
@@ -169,3 +169,11 @@ async def test_orchestrator_skips_infer_metadata_when_option_is_false() -> None:
     assert llm.prompts("infer_metadata") == []
     assert resp.metadata.vocab_labels[BIO] == "Biologie"
     assert resp.metadata.vocab_labels[POL] == "Politik"
+
+
+def test_node_line_cuts_description_at_a_word_boundary() -> None:
+    node = Node(key="k-a", title="A", description="Lichtbrechung " * 20)
+    line = _node_line(node, [node])
+    excerpt = line.split(" | ", 2)[2]
+    assert len(excerpt) <= 140
+    assert excerpt.endswith("Lichtbrechung")

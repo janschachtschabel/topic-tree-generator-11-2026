@@ -13,6 +13,7 @@ import asyncio
 from pydantic import BaseModel, Field
 
 from app.domain.keys import assign_missing_keys
+from app.domain.text import truncate_sentences
 from app.domain.tree import Node, path, walk
 from app.llm.client import LLMStepError
 from app.pipeline.run_context import RunContext
@@ -23,6 +24,7 @@ from app.vocab.labels import entries, is_known, label
 STEP = "infer_metadata"
 NODES_MARKER = "## Knoten"
 BATCH = 20
+DESCRIPTION_EXCERPT = 140
 _HOCHSCHULE = "http://w3id.org/openeduhub/vocabs/educationalContext/hochschule"
 _HS_PREFIX = "http://w3id.org/openeduhub/vocabs/hochschulfaechersystematik/"
 
@@ -119,6 +121,13 @@ def _needs_llm(node: Node, pools: dict[str, list[tuple[str, str]]]) -> bool:
     return False
 
 
+def _node_line(node: Node, roots: list[Node]) -> str:
+    line = f"- key: {node.key} | Pfad: {' > '.join(path(roots, node.key))}"
+    if node.description:
+        line += f" | {truncate_sentences(node.description, DESCRIPTION_EXCERPT)}"
+    return line
+
+
 async def _infer_batch(
     batch: list[Node],
     prefix: str,
@@ -126,11 +135,7 @@ async def _infer_batch(
     label_maps: dict[str, dict[str, str]],
     rc: RunContext,
 ) -> int:
-    lines = "\n".join(
-        f"- key: {n.key} | Pfad: {' > '.join(path(roots, n.key))}"
-        + (f" | {n.description[:140]}" if n.description else "")
-        for n in batch
-    )
+    lines = "\n".join(_node_line(n, roots) for n in batch)
     result = await rc.llm.complete_json(
         STEP, f"{prefix}{NODES_MARKER}\n{lines}", MetadataResult, max_tokens=600 + 80 * len(batch)
     )
