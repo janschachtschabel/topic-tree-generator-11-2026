@@ -478,56 +478,66 @@ Schritt 0: `/better-coding-workflow` laden.
 
 Schritt 0: `/better-coding-workflow` laden.
 
-- [ ] **T2.1 Enums und Properties** [P]
+- [x] **T2.1 Enums und Properties** [P]
   Dateien: `app/schemas/common.py`, `app/schemas/properties.py`, Tests.
   Tests: `Properties` nimmt `cm:title` und `cm_title` an; `dump_v2()` → Doppelpunkt, `dump_legacy()` → Unterstrich; zusätzliche
   Properties bleiben erhalten (`extra="allow"`); alle Werte Listen von Strings.
 
-- [ ] **T2.2 Anfrage v2**
+- [x] **T2.2 Anfrage v2**
   Dateien: `app/schemas/request_v2.py`, `tests/schemas/test_request_v2.py`, `tests/fixtures/spec_examples/*.json` (alle Anfrage-Beispiele aus der Spec).
   Tests: jedes Spec-Beispiel validiert (Platzhalter `…` durch Minimalwerte ersetzt); `refine` ohne `current_tree` → 422;
   Pflichteingabe je `use_case` fehlt → 422 mit Code `MISSING_INPUT`; `use`-Standard (contents → beides, sonst content);
   `shape.depth` 1–4, `main_topics.max` ≤ 20, `min ≤ max`; `items` > `ITEMS_INLINE_MAX` → 422; Item-ids eindeutig; Ordner-
   Verweise auf unbekannte ids → 422.
 
-- [ ] **T2.3 Antwort v2** [P]
+- [x] **T2.3 Antwort v2** [P]
   Dateien: `app/schemas/response_v2.py`, Tests.
   Tests: Spec-Antwortbeispiel validiert; `subcollections` immer vorhanden; Serialisierung mit Doppelpunkt-Schlüsseln;
   `generation` ohne große Daten (nur Zählungen).
 
-- [ ] **T2.4 Baum und Keys** [P]
+- [x] **T2.4 Baum und Keys** [P]
   Dateien: `app/domain/tree.py`, `app/domain/keys.py`, Tests.
   Tests: `make_key("Optik", taken)` → `k-optik`; Umlaute → `k-waerme`; Kollision → `k-optik-2`; `walk`, `find(key)`,
   `path(key)`, `parent(key)`; Baum aus `current_tree` → keys bleiben, fehlende werden vergeben.
 
-- [ ] **T2.5 Formregeln**
+- [x] **T2.5 Formregeln**
   Dateien: `app/domain/shape_rules.py`, Tests.
   Tests: Einzelkind → `SHAPE_SINGLE_CHILD`; Tiefe > `shape.depth` → `SHAPE_DEPTH`; Hauptebene außerhalb der Spanne → `SHAPE_WIDTH`;
   doppelte Geschwistertitel → `DUPLICATE_TITLE` und Zusammenlegen nur, wenn beide aus dem LLM stammen; Kurztitel > 20
   Zeichen → an Wortgrenze gekürzt, nur Buchstaben/Ziffern/Leerzeichen, eindeutig unter Geschwistern.
 
-- [ ] **T2.6 Änderungsoperationen**
+- [x] **T2.6 Änderungsoperationen**
   Dateien: `app/domain/ops.py`, Tests.
   Tests je `op`: add (Wurzel und Kind), remove (Inhalte → `unassigned` mit `no_matching_node`), rename, edit, move (Zyklus →
   abgelehnt), merge (Inhalte vereint, key des ersten bleibt), split (markiert für Schritt, keine Logik hier); unbekannter key →
   abgelehnt; locked oder Nachfahre eines locked → abgelehnt; Ergebnis listet `applied` mit `from`.
 
-- [ ] **T2.7 Status gegen Vorversion** [P]
+- [x] **T2.7 Status gegen Vorversion** [P]
   Dateien: `app/domain/diff.py`, Tests.
   Tests: neuer key → `new`; gleiche Felder → `unchanged`; Titel/Beschreibung geändert → `changed`; anderer Elternknoten → `moved`;
   gegen Ordner: Ordnerpfad gleich → `unchanged`, umbenannt → `changed`, verschoben → `moved`.
 
-- [ ] **T2.8 Abschluss und Metadaten**
+- [x] **T2.8 Abschluss und Metadaten**
   Dateien: `app/pipeline/finalize.py`, Tests.
   Tests: `frame` landet in jedem Knoten (`ccm:taxonid`, `ccm:educationalcontext`, `ccm:educationalintendedenduserrole`),
   außer der Knoten ist enger gefasst; `version` v1 bzw. `based_on`+1; Feedback-Verlauf angehängt; `generator_version` aus
   `pyproject.toml`; `model` aus dem Backend; `inputs`-Zählungen.
 
-- [ ] **T2.9 Endpunkt, Orchestrator-Gerüst, Schemata**
+- [x] **T2.9 Endpunkt, Orchestrator-Gerüst, Schemata**
   Dateien: `app/api/v2.py`, `app/pipeline/orchestrator.py`, `app/pipeline/run_context.py`, `scripts/export_schemas.py`,
   `docs/schemas/*.json`, Tests.
   Tests: Endpunkt mit Fake-Strategie liefert gültige Antwort; Frist abgelaufen → Teilergebnis + `DEADLINE_EXCEEDED`;
   Test prüft, dass `docs/schemas/*.json` aktuell sind (Export im Test vergleichen); OpenAPI-Beispiele je Use Case vom kürzesten bis vollständigen.
+
+**Abweichungen in Phase 2:**
+- Zusätzlicher Warncode `DESCRIPTION_MISSING` (Knoten ohne Beschreibung), getrennt von `DESCRIPTION_LENGTH`.
+- `ChildRange.min` ≥ 2 (nie genau ein Kind); `MainRange.min` ≥ 1.
+- Eingabeprüfungen liegen in `app/pipeline/input_checks.py` (brauchen Settings), nicht im Schema.
+- Strategien registrieren sich in `orchestrator.STRATEGIES`; fehlende Use Cases antworten bis Phase 4 mit 501.
+- `inputs.folders` zählt Ordner der obersten Ebene (wie im Spec-Beispiel).
+- Fund: Statusvergleich gegen Ordner hätte nach Umbenennen eines Ordners alle Unterordner als `moved` markiert;
+  Regressionstest und Korrektur (Vergleich mit dem Herkunftspfad des Elternknotens).
+- Schema-Export: `uv run python -m scripts.export_schemas`.
 
 ## Phase 3 – topic, folders, refine, Zuordnung
 
