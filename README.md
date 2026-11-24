@@ -1,73 +1,75 @@
-# topic-tree-generator / Themenbaum-Generator
+# topic-tree (Themenbaum-Dienst)
 
-This project is a fastAPI implementation of Jan Schachtschabel's "Themenbaum-Generator"-idea.
+FastAPI service that generates collection structures ("Themenbäume") for edu-sharing with an LLM:
+from a topic, from a structure document such as a curriculum, from uploaded folders and files, or from
+unstructured contents. Drafts can be refined with feedback, and content items are assigned to nodes.
 
-The following Jira issues and Confluence articles are relevant to this project:
+- `POST /v2/topic-tree` – current API (format in `docs/schemas/`, calls in `docs/api.md`)
+- `POST /generate-topic-tree`, `POST /generate-collection-description` – legacy v1, unchanged
+- Design and decisions: `docs/plans/2026-11-24-topic-tree-v2.md` · Operations: `docs/steckbrief.md`
 
-- https://edu-sharing.atlassian.net/browse/GEN-101
-- https://edu-sharing.atlassian.net/browse/GEN-102
-- [KI-Workflow - Themenbaumstruktur mit KI generieren](https://edu-sharing.atlassian.net/wiki/spaces/ESS/pages/971866113/KI-Workflow+-+Themenbaumstruktur+mit+KI+generieren)
+## How it works
 
-## Getting started
+```
+request → input checks → load refs (allow-listed) → strategy per use case → assign contents
+        → duplicates, short titles, keys, status, shape checks → answer with warnings/questions
+```
 
-This project requires **Python 3.13**.
+`topic` plans a skeleton in one call and expands each main topic in parallel (one call each). `document` turns the
+heading outline into the tree; `folders` keeps the folders (optionally improved); `contents` groups the items.
+`mode: refine` applies structured changes, then interpreted text feedback; locked nodes stay untouched.
+All prompts live in `app/prompts/`; `system.md` is static so providers can cache it.
 
-The dependencies of this project are managed by [uv](https://docs.astral.sh/uv/).
-Therefore, before trying to run this project,
-please make sure that
-you [have installed the most recent version of uv](https://docs.astral.sh/uv/getting-started/installation/).
+## Requirements
 
-### Setting up the local development environment in your IDE
+Python 3.13 and [uv](https://docs.astral.sh/uv/).
 
-To get started, you can run the following commands in your shell (after you have cloned this `git` repository)
-**from this project's root directory**:
+## Run locally
 
 ```shell
-# if necessary, install Python 3.13 first:
-uv python install 3.13
-
-# create the virtual environment:
-uv venv
-# you should now be able to see a .venv directory in your project's root directory.
-
-# install the project dependencies according to the "pyproject.toml"- / "uv.lock"-file:
 uv sync
+cp .env.example .env          # set OPENAI_API_KEY (standalone) or call it through the b-api
+uv run python -m app          # public API :8000 (docs at /docs), internal :9000 (/health, /ready, /metrics)
 ```
 
-#### additional hints
+Production-like: `uv run gunicorn -c gunicorn.conf.py app.main:app` or `docker compose up --build`.
 
-If your system OS does not provide an up-to-date Python version,
-you can use `uv`
-to [install specific Python versions ](https://docs.astral.sh/uv/guides/install-python/#installing-a-specific-version)
-before running the above commands.
-
-PyCharm supports `uv` for package and environment
-management [since PyCharm 2024.3.2](https://www.jetbrains.com/pycharm/whatsnew/#page__content-package-management).
-
-After opening the project in PyCharm,
-you should be able to see
-a [PyCharm fastAPI runConfiguration](https://www.jetbrains.com/help/pycharm/fastapi-project.html) for the `main.py` in
-the "run"-view.
-*(see also: [PyCharm Run/debug configurations](https://www.jetbrains.com/help/pycharm/fastapi-project.html))*
-
-### LLM model configuration
-
-The LLM used for all requests is selected server-side through the `LLM_MODEL`
-environment variable. The optional request `model` field is accepted only for
-backward compatibility and is ignored.
-
-## Contributing
-
-If you want to contribute to this project, your commits should pass the GitLab CI/CD pipelines.
-Merge Requests will automatically display the results of the pipeline run
-and give you an overview if the code quality has changed.
-
-Since this project uses [ruff](https://docs.astral.sh/ruff/) for linting and code formatting,
-you can run the following commands locally to make sure that your commits pass the pipelines:
+Shortest call (standalone with an OpenAI key):
 
 ```shell
-ruff check   # Lint all files in the current directory.
-ruff format  # Format all files in the current directory.
+curl -s localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @docs/examples/topic_minimal.json
 ```
 
-***
+## Modes
+
+| Incoming | `SERVICE_MODE=auto` (default) |
+|---|---|
+| `Authorization: Bearer bdt_…` (b-api delegation token) | LLM via the b-api router, token forwarded unchanged |
+| other bearer or none | standalone: `OPENAI_API_KEY`/`OPENAI_BASE_URL`; `SERVICE_API_KEYS` enforces auth if set |
+
+`bapi` accepts only delegation tokens; `standalone` never uses the b-api. All settings: `.env.example`.
+
+## Tests and checks
+
+```shell
+uv run pytest -q                       # includes a real gunicorn smoke test and helm checks if helm is installed
+uv run ruff check && uv run ruff format --check
+helm lint --strict deploy/helm/topic-tree
+uv run python -m scripts.export_schemas         # regenerate docs/schemas after model changes
+uv run python -m scripts.build_vocab_snapshot   # refresh vocabulary labels
+uv run python -m scripts.probe_llm --model <route> --base-url <router-url>   # which LLM features a route supports
+uv run python -m scripts.loadtest --url http://localhost:8000/v2/topic-tree --payload docs/examples/topic_full.json
+```
+
+## Layout
+
+```
+app/api        HTTP layer (v2 endpoint, errors, deps, OpenAPI examples)
+app/pipeline   orchestrator, strategies per use case, LLM steps, input loading, finalize
+app/domain     tree, keys, shape rules, change operations, status (no I/O, no LLM)
+app/schemas    request/response models
+app/llm        backend selection and the JSON client (no streaming, one repair, concurrency cap)
+app/context    tracing and caller/mode detection
+app/legacy     frozen v1 endpoints
+deploy/helm    Helm chart
+```
