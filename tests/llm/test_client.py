@@ -78,10 +78,10 @@ async def test_gpt5_family_caps_reasoning_effort_at_low() -> None:
 
 async def test_json_schema_mode_sends_strict_schema_named_after_step() -> None:
     fake = FakeOpenAI([GOOD])
-    await make_client(fake).complete_json("expand_branch", "USER", Answer)
+    await make_client(fake).complete_json("plan_structure", "USER", Answer)
     rf = fake.calls[0]["response_format"]
     assert rf["type"] == "json_schema"
-    assert rf["json_schema"]["name"] == "expand_branch"
+    assert rf["json_schema"]["name"] == "plan_structure"
     assert rf["json_schema"]["strict"] is True
     schema = rf["json_schema"]["schema"]
     assert schema["additionalProperties"] is False
@@ -168,7 +168,7 @@ async def test_usage_is_accumulated() -> None:
     fake = FakeOpenAI([GOOD])
     client = make_client(fake)
     await client.complete_json("plan", "U", Answer)
-    await client.complete_json("expand_branch", "U", Answer)
+    await client.complete_json("plan_structure", "U", Answer)
     u = client.usage.snapshot()
     assert (u["llm_calls"], u["prompt_tokens"], u["cached_tokens"], u["completion_tokens"]) == (2, 200, 0, 100)
 

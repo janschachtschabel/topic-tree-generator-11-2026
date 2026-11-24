@@ -3,7 +3,7 @@
 from pydantic import BaseModel, Field
 
 from app.pipeline.run_context import RunContext
-from app.pipeline.steps.expand_branch import BranchNode
+from app.pipeline.steps.node_conversion import BranchNode
 from app.prompts import render
 
 STEP = "group_contents"

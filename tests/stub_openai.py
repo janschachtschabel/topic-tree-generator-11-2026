@@ -63,23 +63,6 @@ def _step_payload(step: str, user_prompt: str) -> dict[str, Any]:
                 for i in range(1, 7)
             ],
         }
-    if step == "expand_branch":
-        sub_titles = re.findall(r"^- (.+)$", user_prompt.split("Vorgegebene Unterthemen:")[-1], flags=re.MULTILINE)
-        sub_titles = [t for t in sub_titles if t != "(keine)"] or ["Grundlagen", "Anwendungen", "Experimente"]
-        return {
-            "description": _D60,
-            "keywords": ["Optik", "Licht", "Experiment"],
-            "children": [
-                {
-                    "title": title,
-                    "shorttitle": title[:18],
-                    "description": _D60,
-                    "keywords": ["Physik", "Phänomen", "Modell"],
-                    "children": [],
-                }
-                for title in sub_titles
-            ],
-        }
     if step == "describe_nodes":
         keys = _extract_keys(user_prompt)
         return {"nodes": [{"key": k, "description": _D60, "keywords": ["Physik", "Optik", "Unterricht"]} for k in keys]}

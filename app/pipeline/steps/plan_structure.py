@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from app.domain.shape_rules import EXTRA_TITLES
 from app.domain.tree import Node
 from app.pipeline.run_context import RunContext
-from app.pipeline.steps.expand_branch import Cut
+from app.pipeline.steps.node_conversion import Cut
 from app.prompts import render
 from app.schemas.common import NodeStatus, OriginType
 from app.schemas.request_v2 import TopicTreeRequestV2

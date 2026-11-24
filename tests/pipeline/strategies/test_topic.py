@@ -61,7 +61,6 @@ async def test_eight_by_five_by_three_fits_in_one_parallel_worker_wave() -> None
     result = await build(request, rc(llm))
     # 1 skeleton + ceil(168 / 10) = 18 calls (all 17 describe batches run in 1 parallel wave under 20 workers).
     assert len(llm.calls) <= 20
-    assert llm.prompts("expand_branch") == []
     assert len(result.roots) == 8
     assert sum(1 for _ in walk(result.roots)) == 8 + 8 * 5 + 8 * 5 * 3
     assert all(node.description for node, _, _ in walk(result.roots))
@@ -104,7 +103,6 @@ async def test_cross_branch_duplicates_in_skeleton_are_eliminated_before_describ
 async def test_depth_one_uses_describe_instead_of_branches() -> None:
     llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
     result = await build(req(shape={"depth": 1}), rc(llm))
-    assert llm.prompts("expand_branch") == []
     assert len(llm.prompts("describe_nodes")) == 1
     assert all(r.description and r.children == [] for r in result.roots)
 

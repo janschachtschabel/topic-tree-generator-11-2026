@@ -8,8 +8,8 @@ from app.domain.shape_rules import eliminate_generated_duplicates
 from app.domain.text import truncate_sentences
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
-from app.pipeline.steps.expand_branch import Cut, to_nodes
 from app.pipeline.steps.group_contents import group_contents
+from app.pipeline.steps.node_conversion import Cut, to_nodes
 from app.schemas.common import ItemUse, OriginType
 from app.schemas.request_v2 import Item, TopicTreeRequestV2
 from app.schemas.response_v2 import StructureInfo

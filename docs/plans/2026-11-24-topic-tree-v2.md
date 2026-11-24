@@ -213,7 +213,7 @@ app/
   prompts/
     __init__.py            load(name), render(name, **fields)
     system.md              statisch (Cache-Präfix)
-    plan_structure.md  expand_branch.md  describe_nodes.md  assign_contents.md
+    plan_structure.md  describe_nodes.md  assign_contents.md  infer_metadata.md
     interpret_feedback.md  improve_folders.md  map_outline.md  group_contents.md
     collection_description.md   (alter Endpunkt)
   schemas/
@@ -231,8 +231,8 @@ app/
     orchestrator.py        run(request, ctx) → Response: Prüfen, Strategie, refine, assign, finalize
     run_context.py         RunContext: LLMClient, Frist, Warnungen, Vokabular-Labels, Usage
     steps/
-      plan_structure.py    Ordnungsprinzip + Skelett
-      expand_branch.py     Unterbaum + Beschreibungen je Hauptast
+      plan_structure.py    Ordnungsprinzip + vollständiges Titel-Grundgerüst über alle Ebenen
+      node_conversion.py   LLM-Baumantwort → Node, auf Shape gekürzt (geteilt von plan_structure und contents)
       describe_nodes.py    Beschreibungen/Keywords für Knoten ohne (Batch)
       assign_contents.py   Zuordnung in Batches mit Konfidenz
       interpret_feedback.py Text → Änderungen oder Rückfragen
@@ -292,7 +292,7 @@ anwenden (locked geschützt) → neue/geänderte Knoten beschreiben → bei `ass
 
 | Use Case | Struktur entsteht durch | LLM-Schritte |
 |---|---|---|
-| `topic` | plan_structure (Skelett) → expand_branch je Hauptast | 1 + N |
+| `topic` | plan_structure (vollständiges Titel-Grundgerüst) → Duplikatbereinigung (deterministisch) → describe_nodes in parallelen 10er-Batches | 1 + ⌈Knoten/10⌉ |
 | `document` | outline (deterministisch) → map_outline (Auswahl/Normalisierung nach hints) → describe_nodes mit Abschnittstext | 1 + ⌈Knoten/30⌉ |
 | `folders` | Ordner 1:1 übernehmen; `improve` → improve_folders (Änderungen als ops); describe_nodes aus Inhalts-Metadaten; Zuordnung aus Ordnern (Konfidenz 1.0) | 0–1 + ⌈Knoten/30⌉ |
 | `contents` | group_contents (Schema aus allen Titeln/Keywords, bei > 300 Einträgen aus einer Stichprobe plus Titelliste) → assign_contents in Batches à 40 | 1 + ⌈Items/40⌉ |
@@ -633,7 +633,7 @@ Schritt 0: `/better-coding-workflow` laden.
 - Allowlist-Regeln: exakter Host oder `.domain` für Subdomains; Weiterleitungen werden nie verfolgt.
 - Neue Codes: `REF_TOO_LARGE`, `REF_INVALID`, `SECTION_UNKNOWN`, `OUTLINE_TRUNCATED`, `ITEMS_SAMPLED`.
 - `items_ref` bis 5.000 Einträge; nach dem Laden erneute Prüfung ohne Inline-Grenze.
-- Gruppen in `contents` liefern Beschreibungen gleich mit (kein extra describe-Aufruf); Knotenumwandlung mit `expand_branch` geteilt.
+- Gruppen in `contents` liefern Beschreibungen gleich mit (kein extra describe-Aufruf); Knotenumwandlung mit `expand_branch` geteilt (seit der Skeleton-first-Umstellung in `steps/node_conversion.py`).
 
 ## Phase 5 – Betrieb und Übergabe
 
