@@ -543,20 +543,20 @@ Schritt 0: `/better-coding-workflow` laden.
 
 Schritt 0: `/better-coding-workflow` laden.
 
-- [ ] **T3.1 Schritt plan_structure**
+- [x] **T3.1 Schritt plan_structure**
   Dateien: `app/pipeline/steps/plan_structure.py`, `app/prompts/plan_structure.md`, Tests.
   Ausgabe-Modell: `{order, levels[], rationale, main_topics:[{title, shorttitle, children:[{title, shorttitle}]}]}`.
   Tests (Fake-LLM): Prompt enthält Labels aus `frame`, `hints.include/exclude/context`, `extra_topics`; mit `hints.order` →
   `source:"hint"` und Prompt nennt es als Vorgabe; Spanne aus `shape` im Prompt; Ergebnis mit zu vielen Hauptthemen → auf
   `max` gekürzt + Warnung.
 
-- [ ] **T3.2 Schritt expand_branch**
+- [x] **T3.2 Schritt expand_branch**
   Dateien: `app/pipeline/steps/expand_branch.py`, `app/prompts/expand_branch.md`, Tests.
   Tests: ein Aufruf je Hauptast, parallel; **Cache-Invariante**: alle Ast-Prompts identisch bis zum Ast-Block, System-Nachricht
   identisch; fehlschlagender Ast → Knoten bleibt ohne Kinder/Beschreibung, `BRANCH_FAILED` mit key; Tiefe 1 → kein Ast-Aufruf,
   stattdessen describe_nodes.
 
-- [ ] **T3.3 Strategie topic**
+- [x] **T3.3 Strategie topic**
   Dateien: `app/pipeline/strategies/topic.py`, Tests.
   Tests: `extra_topics: general` vorn, `methodology` hinten (deterministisch eingefügt, Beschreibung per Ast-Aufruf);
   `structure`-Items → Kontextblock, daraus entstandene Knoten `suggested` (Fake-LLM markiert Quelle); Ende-zu-Ende mit
@@ -564,29 +564,38 @@ Schritt 0: `/better-coding-workflow` laden.
 
 - [x] **T3.4 entfällt** (E7: alter Endpunkt bleibt beim alten Ablauf).
 
-- [ ] **T3.5 Schritt describe_nodes** [P]
+- [x] **T3.5 Schritt describe_nodes** [P]
   Dateien: `app/pipeline/steps/describe_nodes.py`, `app/prompts/describe_nodes.md`, Tests.
   Tests: Batches à 30 Knoten; Eingabe je Knoten: Pfad, Titel, optional Inhaltstitel/-keywords bzw. Abschnittsauszug (gekürzt
   auf 1.500 Zeichen); Antwort mit unbekanntem key ignoriert + Warnung; fehlende Beschreibung → Warnung statt Platzhaltertext.
 
-- [ ] **T3.6 Strategie folders**
+- [x] **T3.6 Strategie folders**
   Dateien: `app/pipeline/strategies/folders.py`, `app/pipeline/steps/improve_folders.py`, `app/prompts/improve_folders.md`, Tests.
   Tests: ohne `improve` 0 Strukturaufrufe, Baum gleich Ordnern, `origin.folder.path`, Inhalte aus Ordnern mit Konfidenz 1.0;
   Ordner „Neuer Ordner (2)“ mit `improve` → Fake-LLM liefert rename/move → als `changes` mit `from:"service"`; ohne `improve`
   bleiben Namen unverändert, auch generische.
 
-- [ ] **T3.7 Schritt assign_contents**
+- [x] **T3.7 Schritt assign_contents**
   Dateien: `app/pipeline/steps/assign_contents.py`, `app/prompts/assign_contents.md`, Tests.
   Tests: Batches à 40; Baum kompakt als `key: Pfad`; `min_confidence` → darunter `unassigned/low_confidence`; `multi_assign=false`
   → nur bester Knoten; `hints.exclude`-Treffer → `excluded`; unbekannter key → verworfen + `ASSIGN_FAILED`; Batch-Fehler →
   betroffene Items `unassigned/no_matching_node` + Warnung; `nodeId` unverändert durchgereicht.
 
-- [ ] **T3.8 refine**
+- [x] **T3.8 refine**
   Dateien: `app/pipeline/steps/interpret_feedback.py`, `app/prompts/interpret_feedback.md`, Ergänzung `orchestrator.py`, Tests.
   Tests: nur `changes` → 0 Interpretationsaufrufe; Text → Fake-LLM liefert ops → angewendet, `changes[].from:"feedback_text"`;
   Text und changes → changes zuerst, widersprechende Text-ops abgelehnt; unklarer Text → `questions`, Baum unverändert;
   locked-Knoten unverändert inkl. Kinder; unveränderte Knoten behalten keys und `status:"unchanged"`; `assign_only` → keine
   Strukturänderung, nur neue Zuordnungen; fehlende Vorgaben aus `current_tree.generation`; Version `v1` → `v2`, `based_on: v1`.
+
+**Abweichungen in Phase 3:**
+- Neu `app/pipeline/context_block.py`: Anfragekontext einmal je Anfrage im Orchestrator gebaut (`RunContext.context`),
+  unbekannte Vokabular-URIs → `VOCAB_UNKNOWN`.
+- `StrategyResult` in `app/pipeline/result.py`; refine ist eine eigene Strategie (`strategies/refine.py`), unabhängig vom Use Case.
+- Zuordnung läuft im Orchestrator nach jeder Strategie für noch nicht platzierte Inhalte.
+- Neue Warncodes: `DESCRIBE_FAILED`; Kürzungen der Äste getrennt als `SHAPE_DEPTH`/`SHAPE_WIDTH`.
+- `split` mit eigenem Schritt `steps/split_node.py` (2–4 Teile, Kinder und Inhalte deterministisch verteilt).
+- Neu `app/pipeline/effective.py`: nicht gesendete Vorgaben aus `current_tree.generation`.
 
 ## Phase 4 – document, contents, Referenzen
 
