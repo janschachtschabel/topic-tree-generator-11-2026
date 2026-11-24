@@ -66,8 +66,38 @@ async def test_nothing_to_describe_makes_no_call() -> None:
     assert llm.calls == []
 
 
-async def test_unknown_keys_from_llm_are_ignored_and_reported() -> None:
+async def test_surplus_entries_are_dropped_without_warning_when_the_batch_is_complete() -> None:
     roots = tree(2)
     context = rc(FakeLLM({"describe_nodes": echo}))
     await describe_nodes([roots[0]], roots, context, context="CTX")
-    assert "DESCRIBE_UNKNOWN_KEY" in [w.code for w in context.warnings]
+    assert roots[0].description
+    assert context.warnings == []
+
+
+async def test_slightly_misspelled_keys_are_still_matched() -> None:
+    roots = tree(2)
+    targets = roots[0].children
+
+    def sloppy(prompt: str) -> dict:
+        return {
+            "nodes": [
+                {"key": " K-Thema-0. ", "description": "eins", "keywords": []},
+                {"key": "thema-1", "description": "zwei", "keywords": []},
+            ]
+        }
+
+    context = rc(FakeLLM({"describe_nodes": sloppy}))
+    await describe_nodes(targets, roots, context, context="CTX")
+    assert [n.description for n in targets] == ["eins", "zwei"]
+    assert context.warnings == []
+
+
+async def test_unknown_keys_are_reported_when_batch_nodes_stay_undescribed() -> None:
+    roots = tree(2)
+    targets = roots[0].children
+    answer = {"nodes": [{"key": "k-voellig-anders", "description": "x", "keywords": []}]}
+    context = rc(FakeLLM({"describe_nodes": answer}))
+    await describe_nodes(targets, roots, context, context="CTX")
+    warning = next(w for w in context.warnings if w.code == "DESCRIBE_UNKNOWN_KEY")
+    assert "k-voellig-anders" in warning.message
+    assert all(n.description == "" for n in targets)

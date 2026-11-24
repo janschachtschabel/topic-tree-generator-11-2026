@@ -7,6 +7,7 @@ demarcation from its siblings and cousins).
 
 import asyncio
 
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from app.domain.text import truncate_sentences
@@ -41,6 +42,12 @@ def render_tree_outline(roots: list[Node], indent: int = 0) -> str:
     return "\n".join(lines)
 
 
+def _norm_key(key: str | None) -> str:
+    """Tolerate case, whitespace, trailing punctuation and a missing `k-` prefix in keys echoed by the model."""
+    text = (key or "").strip().casefold().rstrip(".,;:")
+    return text if text.startswith("k-") else f"k-{text}"
+
+
 def _line(node: Node, roots: list[Node], extra: dict[str, str]) -> str:
     line = f"- key: {node.key} | Pfad: {' > '.join(path(roots, node.key))}"
     info = extra.get(node.key)
@@ -55,19 +62,27 @@ async def _describe_batch(
     lines = "\n".join(_line(node, roots, extra) for node in batch)
     tokens = min(16000, 600 + len(batch) * (int(words * 1.8) + 80))
     result = await rc.llm.complete_json(STEP, f"{prefix}{NODES_MARKER}\n{lines}", DescribeResult, max_tokens=tokens)
-    by_key = {node.key: node for node in batch}
-    unknown = 0
+    by_key = {_norm_key(node.key): node for node in batch}
+    unknown: list[str] = []
     for item in result.nodes:
-        node = by_key.get(item.key)
+        node = by_key.get(_norm_key(item.key))
         if node is not None:
             node.description = item.description.strip()
             node.keywords = item.keywords
         else:
-            unknown += 1
-    if unknown:
+            unknown.append(item.key.strip())
+    missing = [node for node in batch if not node.description]
+    if unknown and missing:
         rc.warn(
-            "DESCRIBE_UNKNOWN_KEY", f"{unknown} unbekannte Knotenschlüssel bei Beschreibungen verworfen.", step=STEP
+            "DESCRIBE_UNKNOWN_KEY",
+            f"{len(unknown)} unbekannte Knotenschlüssel bei Beschreibungen verworfen "
+            f"(z. B. {', '.join(unknown[:3])}); {len(missing)} Knoten dieses Abschnitts bleiben ohne Beschreibung.",
+            missing[0].key,
+            STEP,
         )
+    elif unknown:
+        # Surplus entries (the model also described neighbours from the outline): nothing is missing, so no gap.
+        logger.bind(step=STEP, keys=unknown[:5]).debug("dropped surplus description entries")
 
 
 def _balanced_batches(targets: list[Node], max_size: int) -> list[list[Node]]:
