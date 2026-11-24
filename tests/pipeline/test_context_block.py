@@ -1,0 +1,39 @@
+import copy
+
+from app.pipeline.context_block import build_context_block
+from app.schemas.request_v2 import TopicTreeRequestV2
+from tests.fixtures import spec_examples as ex
+
+
+def req(data: dict) -> TopicTreeRequestV2:
+    return TopicTreeRequestV2.model_validate(copy.deepcopy(data))
+
+
+def test_block_lists_frame_labels_hints_and_shape() -> None:
+    block, unknown = build_context_block(req(ex.ALL_REQUESTS["full_options"]))
+    assert "Thema: Optik" in block
+    assert "Fach: Physik" in block
+    assert "Bildungsstufe: Sekundarstufe I" in block
+    assert "Zielgruppe: Lehrer/in" in block
+    assert "Wellenoptik" in block and "Farben" in block
+    assert "Ordnungsprinzip (Vorgabe): Themen" in block
+    assert "3 Ebenen" in block and "6 bis 12" in block and "3 bis 8" in block
+    assert "etwa 60 Wörter" in block
+    assert unknown == []
+
+
+def test_block_is_deterministic() -> None:
+    assert build_context_block(req(ex.TOPIC)) == build_context_block(req(ex.TOPIC))
+
+
+def test_unknown_vocab_uris_are_reported_and_shown_by_their_tail() -> None:
+    data = copy.deepcopy(ex.TOPIC)
+    data["frame"]["discipline_uri"] = ["http://w3id.org/openeduhub/vocabs/discipline/unbekannt99"]
+    block, unknown = build_context_block(req(data))
+    assert unknown == ["http://w3id.org/openeduhub/vocabs/discipline/unbekannt99"]
+    assert "Fach: unbekannt99" in block
+
+
+def test_without_order_hint_the_block_asks_for_detection() -> None:
+    block, _ = build_context_block(req(ex.TOPIC))
+    assert "Ordnungsprinzip: keine Vorgabe" in block
