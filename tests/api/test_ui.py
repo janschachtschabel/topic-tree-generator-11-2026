@@ -108,3 +108,13 @@ def test_ui_exposes_compact_preset_selector_and_all_manual_v2_inputs() -> None:
         "f-fb-changes",
     ):
         assert f'id="{field_id}"' in html, f"missing UI control #{field_id}"
+
+
+def test_ui_tree_defaults_to_titles_only_with_details_toggle() -> None:
+    client = _client(ui_enabled=True)
+    html = client.get("/ui/").text
+    css = client.get("/ui/assets/styles.css").text
+    assert 'id="opt-show-details"' in html
+    assert 'id="opt-show-details" type="checkbox" checked' not in html
+    assert 'id="tree-container" class="tree-root compact-tree"' in html
+    assert ".tree-root.compact-tree .node-body" in css

@@ -471,6 +471,7 @@
       onToggleLock,
       resp.metadata.vocab_labels || {},
     );
+    $("tree-container").classList.toggle("compact-tree", !$("opt-show-details").checked);
     $("tree-filter").value = "";
     renderRawJson();
   }
@@ -588,6 +589,9 @@
       const preset = state.presets.find((p) => p.id === e.target.value);
       if (preset) applyPreset(preset);
       else resetForm();
+    });
+    $("opt-show-details").addEventListener("change", (e) => {
+      $("tree-container").classList.toggle("compact-tree", !e.target.checked);
     });
     $("btn-expand-all").addEventListener("click", () => window.TopicTreeView.setAllExpanded($("tree-container"), true));
     $("btn-collapse-all").addEventListener("click", () => window.TopicTreeView.setAllExpanded($("tree-container"), false));

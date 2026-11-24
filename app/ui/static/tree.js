@@ -71,7 +71,15 @@
     head.appendChild(toggle);
 
     head.appendChild(el("span", "level-tag", `E${depth}`));
-    head.appendChild(el("span", "node-title", node.title));
+    const titleEl = el("span", `node-title${hasChildren ? " expandable" : ""}`, node.title);
+    head.appendChild(titleEl);
+    if (hasChildren) {
+      head.appendChild(el("span", "node-count", `(${children.length})`));
+    }
+    if ((node.contents || []).length) {
+      const count = node.contents.length;
+      head.appendChild(el("span", "node-count", `· ${count} ${count === 1 ? "Inhalt" : "Inhalte"}`));
+    }
     if (node.shorttitle && node.shorttitle !== node.title) {
       head.appendChild(el("span", "node-short", node.shorttitle));
     }
@@ -144,12 +152,14 @@
       for (const child of children) {
         childBox.appendChild(renderNode(child, depth + 1, lockedSet, onToggleLock, vocabLabels));
       }
-      toggle.addEventListener("click", () => {
+      const toggleBranch = () => {
         const open = !childBox.hidden;
         childBox.hidden = open;
         toggle.textContent = open ? "▸" : "▾";
         item.setAttribute("aria-expanded", String(!open));
-      });
+      };
+      toggle.addEventListener("click", toggleBranch);
+      titleEl.addEventListener("click", toggleBranch);
     } else {
       childBox.hidden = true;
     }

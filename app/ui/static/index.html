@@ -296,13 +296,14 @@
               <p id="tree-structure" class="tree-meta-line"></p>
             </div>
             <div class="tree-controls">
+              <label class="check tree-detail-toggle"><input id="opt-show-details" type="checkbox"> Details anzeigen (Beschreibungen, Schlagworte &amp; Metadaten)</label>
               <label for="tree-filter" class="sr-only">Knoten filtern</label>
               <input id="tree-filter" type="search" placeholder="Knoten filtern …">
               <button type="button" id="btn-expand-all" class="btn-outline">Alle aufklappen</button>
               <button type="button" id="btn-collapse-all" class="btn-outline">Alle zuklappen</button>
             </div>
           </div>
-          <div id="tree-container" class="tree-root" role="tree" aria-label="Generierter Themenbaum"></div>
+          <div id="tree-container" class="tree-root compact-tree" role="tree" aria-label="Generierter Themenbaum"></div>
         </section>
 
         <section id="raw-json-panel" class="card" hidden>
