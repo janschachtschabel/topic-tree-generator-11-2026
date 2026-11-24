@@ -102,3 +102,54 @@ def test_legacy_prompt_uses_german_vocab_labels_from_snapshot() -> None:
         )
     assert "Fachbereich: ['Physik']" in seen[0]
     assert "Zielgruppe / Bildungsstufe: ['Sekundarstufe I']" in seen[0]
+
+
+class RecordingAsyncOpenAI(ScriptedAsyncOpenAI):
+    """Records where the legacy endpoints send their calls (base URL, key, model)."""
+
+    seen: list[dict] = []
+
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__()
+        self.kwargs = kwargs
+
+    async def _create(self, *, messages: list[dict], **kwargs: object) -> SimpleNamespace:
+        RecordingAsyncOpenAI.seen.append({**self.kwargs, "model": kwargs.get("model")})
+        if "NUR der reine Text" in messages[0]["content"]:
+            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="Eine Beschreibung."))])
+        return await super()._create(messages=messages)
+
+
+def _legacy_calls(monkeypatch, env: dict[str, str]) -> list[dict]:
+    from app.settings import Settings
+
+    monkeypatch.setattr(legacy, "settings", Settings(_env_file=None, **env))
+    RecordingAsyncOpenAI.seen = []
+    with patch.object(legacy, "AsyncOpenAI", RecordingAsyncOpenAI):
+        client = TestClient(app)
+        tree = client.post(
+            "/generate-topic-tree",
+            json={"theme": "Physik", "num_main_topics": 1, "num_subtopics": 1, "num_curriculum_topics": 1},
+            headers={"Authorization": "Bearer caller-key"},
+        )
+        description = client.post(
+            "/generate-collection-description",
+            json={"text_context": "Physik Sek I", "max_description_length": 60},
+            headers={"Authorization": "Bearer caller-key"},
+        )
+    assert tree.status_code == 200 and description.status_code == 200
+    assert description.json() == "Eine Beschreibung."
+    return RecordingAsyncOpenAI.seen
+
+
+def test_legacy_endpoints_keep_the_router_and_their_default_route(monkeypatch) -> None:
+    # v2 options for a single model must not change the frozen endpoints.
+    calls = _legacy_calls(monkeypatch, {"b_api_model": "gpt-6-luna"})
+    assert {c["base_url"] for c in calls} == {"https://b-api.staging.openeduhub.net/api/v1/llm/router/"}
+    assert {c["model"] for c in calls} == {"topic-tree-generator"}
+    assert {c["api_key"] for c in calls} == {"caller-key"}
+
+
+def test_legacy_endpoints_follow_a_configured_route(monkeypatch) -> None:
+    calls = _legacy_calls(monkeypatch, {"b_api_route": "openai/gpt-6-luna"})
+    assert {c["model"] for c in calls} == {"openai/gpt-6-luna"}
