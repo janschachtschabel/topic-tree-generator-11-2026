@@ -169,3 +169,28 @@ async def test_assignment_can_be_switched_off() -> None:
     context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
     await orchestrator.run(req(items=[ex.content_item("c1", "Linse")], options={"assign_contents": False}), context)
     assert llm.prompts("assign_contents") == []
+
+
+async def test_extra_topic_variants_are_recognised_and_renamed() -> None:
+    payload = plan_answer(6, 2)
+    payload["main_topics"].append(
+        {
+            "title": "Methodik & Didaktik",
+            "shorttitle": "Methodik",
+            "from_inputs": False,
+            "children": [
+                {"title": "Experimente planen", "shorttitle": "Experimente", "children": []},
+                {"title": "Lernstand erheben", "shorttitle": "Lernstand", "children": []},
+            ],
+        }
+    )
+    llm = FakeLLM({"plan_structure": payload, "describe_nodes": describe})
+    shape = {"depth": 2, "main_topics": {"min": 3, "max": 6}, "extra_topics": ["methodology"]}
+    run = rc(llm)
+    result = await build(req(shape=shape), run)
+    titles = [r.title for r in result.roots]
+    assert titles.count("Methodik und Didaktik") == 1 and titles[-1] == "Methodik und Didaktik"
+    assert "Methodik & Didaktik" not in titles
+    assert len(result.roots) == 7
+    assert [c.title for c in result.roots[-1].children] == ["Experimente planen", "Lernstand erheben"]
+    assert not any(w.code == "SHAPE_WIDTH" for w in run.warnings)

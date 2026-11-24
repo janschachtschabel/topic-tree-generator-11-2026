@@ -1,11 +1,12 @@
 """The request context block: identical in every prompt of one request, placed right after the static system
 prompt so the provider's prefix cache covers both (plan E2). Must be deterministic."""
 
+from app.domain.shape_rules import EXTRA_TITLES
 from app.schemas.common import ExtraTopic
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.vocab.labels import label
 
-_EXTRA = {ExtraTopic.general: "„Allgemeines“ (vorn)", ExtraTopic.methodology: "„Methodik und Didaktik“ (hinten)"}
+_EXTRA_POSITION = {ExtraTopic.general: "vorn", ExtraTopic.methodology: "hinten"}
 
 
 def _labels(uris: list[str], unknown: list[str]) -> str:
@@ -45,7 +46,7 @@ def build_context_block(req: TopicTreeRequestV2, topic: str | None = None) -> tu
         f"je Knoten {shape.children.min} bis {shape.children.max} Kinder"
     )
     if shape.extra_topics:
-        extras = ", ".join(_EXTRA[e] for e in shape.extra_topics)
+        extras = ", ".join(f"„{EXTRA_TITLES[e]}“ ({_EXTRA_POSITION[e]})" for e in shape.extra_topics)
         lines.append(f"Zusatzthemen (zusätzlich zu den regulären Hauptthemen samt Unterthemen aufnehmen): {extras}")
     words = hints.description_length
     lo, hi = max(20, int(words * 0.75)), int(words * 1.2)

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
 
-from app.domain.shape_rules import EXTRA_TITLES
+from app.domain.shape_rules import extra_kind
 from app.domain.tree import Node
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.node_conversion import Cut
@@ -100,12 +100,12 @@ def _convert_children(items: list[PlannedChild], levels_left: int, width: int, c
 
 
 def _limit_mains(mains: list[PlannedMain], req: TopicTreeRequestV2, rc: RunContext) -> list[PlannedMain]:
-    extra_titles = {EXTRA_TITLES[k].casefold() for k in req.shape.extra_topics}
+    extras = set(req.shape.extra_topics)
     max_regular = req.shape.main_topics.max
     kept: list[PlannedMain] = []
     regular_count = 0
     for item in mains:
-        if item.title.strip().casefold() in extra_titles:
+        if extra_kind(item.title) in extras:
             kept.append(item)
         else:
             regular_count += 1

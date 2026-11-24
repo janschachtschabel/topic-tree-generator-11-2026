@@ -4,10 +4,11 @@ from app.domain.shape_rules import (
     check_shape,
     dedup_titles,
     eliminate_generated_duplicates,
+    extra_kind,
     normalize_shorttitles,
 )
 from app.domain.tree import Node
-from app.schemas.common import NodeStatus, OriginType
+from app.schemas.common import ExtraTopic, NodeStatus, OriginType
 from app.schemas.request_v2 import Shape
 from app.schemas.response_v2 import Origin
 
@@ -160,3 +161,10 @@ def test_eliminate_generated_duplicates_prefers_higher_level_and_preserves_calle
     assert roots[0].children[0].children[0].title == "Farben (Schatten)"
     # Caller-owned folder node is never renamed or dropped.
     assert roots[2].title == "Farben"
+
+
+def test_extra_kind_tolerates_ampersand_and_word_order() -> None:
+    assert extra_kind("Methodik  &  Didaktik") == ExtraTopic.methodology
+    assert extra_kind("Didaktik und Methodik") == ExtraTopic.methodology
+    assert extra_kind(" allgemeines ") == ExtraTopic.general
+    assert extra_kind("Didaktik") is None

@@ -1,7 +1,7 @@
 """Use case `topic`: full title-only skeleton first, deterministic dedup, then parallel node descriptions."""
 
 from app.domain.keys import assign_missing_keys
-from app.domain.shape_rules import EXTRA_TITLES, eliminate_generated_duplicates
+from app.domain.shape_rules import EXTRA_TITLES, eliminate_generated_duplicates, extra_kind
 from app.domain.tree import Node, walk
 from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
@@ -17,11 +17,13 @@ def _extra(kind: ExtraTopic) -> Node:
     return Node(key=None, title=EXTRA_TITLES[kind], origin=Origin(type=OriginType.topic))
 
 
-def _pop_by_title(roots: list[Node], title: str) -> Node | None:
-    needle = title.casefold()
+def _pop_extra(roots: list[Node], kind: ExtraTopic) -> Node | None:
+    """Remove the planned node for `kind` (any accepted spelling) and give it the canonical title."""
     for i, node in enumerate(roots):
-        if node.title.strip().casefold() == needle:
-            return roots.pop(i)
+        if extra_kind(node.title) == kind:
+            found = roots.pop(i)
+            found.title = EXTRA_TITLES[kind]
+            return found
     return None
 
 
@@ -31,9 +33,9 @@ def add_extra_topics(roots: list[Node], req: TopicTreeRequestV2) -> list[Node]:
     front: list[Node] = []
     back: list[Node] = []
     if ExtraTopic.general in req.shape.extra_topics:
-        front.append(_pop_by_title(remaining, EXTRA_TITLES[ExtraTopic.general]) or _extra(ExtraTopic.general))
+        front.append(_pop_extra(remaining, ExtraTopic.general) or _extra(ExtraTopic.general))
     if ExtraTopic.methodology in req.shape.extra_topics:
-        back.append(_pop_by_title(remaining, EXTRA_TITLES[ExtraTopic.methodology]) or _extra(ExtraTopic.methodology))
+        back.append(_pop_extra(remaining, ExtraTopic.methodology) or _extra(ExtraTopic.methodology))
     return [*front, *remaining, *back]
 
 

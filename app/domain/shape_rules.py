@@ -15,9 +15,25 @@ from app.schemas.response_v2 import ServiceWarning
 
 SHORTTITLE_MAX = 20
 EXTRA_TITLES = {ExtraTopic.general: "Allgemeines", ExtraTopic.methodology: "Methodik und Didaktik"}
+# Spellings an LLM plausibly uses for the extra topics (after `_extra_norm`).
+_EXTRA_ALIASES = {
+    ExtraTopic.general: frozenset({"allgemeines", "allgemein"}),
+    ExtraTopic.methodology: frozenset({"methodik und didaktik", "didaktik und methodik"}),
+}
+_AMPERSAND = re.compile(r"\s*[&+]\s*")
 _NOT_WORD = re.compile(r"[^\w ]|_")
 _SPACES = re.compile(r"\s+")
 _GENERATED = {OriginType.topic, OriginType.cluster}
+
+
+def _extra_norm(title: str) -> str:
+    return _SPACES.sub(" ", _AMPERSAND.sub(" und ", title)).strip().casefold()
+
+
+def extra_kind(title: str) -> ExtraTopic | None:
+    """The extra topic a title stands for (tolerating "&" and swapped word order), else None."""
+    norm = _extra_norm(title)
+    return next((kind for kind, aliases in _EXTRA_ALIASES.items() if norm in aliases), None)
 
 
 @dataclass(frozen=True)
