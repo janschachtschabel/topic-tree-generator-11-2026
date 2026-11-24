@@ -1,0 +1,157 @@
+import copy
+
+import pytest
+from pydantic import ValidationError
+
+from app.errors import ApiError
+from app.pipeline.input_checks import check_request
+from app.schemas.common import ItemUse
+from app.schemas.request_v2 import Change, Feedback, TopicTreeRequestV2
+from app.settings import Settings
+from tests.fixtures import spec_examples as ex
+
+SETTINGS = Settings(_env_file=None)
+
+
+def parse(data: dict) -> TopicTreeRequestV2:
+    return TopicTreeRequestV2.model_validate(copy.deepcopy(data))
+
+
+@pytest.mark.parametrize("name", sorted(ex.ALL_REQUESTS))
+def test_every_spec_example_validates_and_passes_checks(name: str) -> None:
+    req = parse(ex.ALL_REQUESTS[name])
+    check_request(req, SETTINGS)
+
+
+def test_defaults_follow_the_spec() -> None:
+    req = parse({"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}})
+    assert req.shape.depth == 3
+    assert (req.shape.main_topics.min, req.shape.main_topics.max) == (6, 12)
+    assert (req.shape.children.min, req.shape.children.max) == (3, 8)
+    assert req.hints.description_length == 60
+    assert req.options.min_confidence == 0.6
+    assert req.options.multi_assign is True
+
+
+def test_node_id_uses_camel_case_alias() -> None:
+    item = parse(ex.DOCUMENT).items[0]
+    assert item.node_id == "9a41c3d0-0000"
+    assert item.model_dump(by_alias=True)["nodeId"] == "9a41c3d0-0000"
+
+
+def test_item_use_defaults_depend_on_use_case() -> None:
+    contents = parse(ex.CONTENTS)
+    assert contents.effective_use(contents.items[0]) == {ItemUse.structure, ItemUse.content}
+    assert contents.effective_use(contents.items[1]) == {ItemUse.content}
+    topic = parse({**ex.TOPIC, "items": [ex.content_item("x", "X") | {"use": None}]})
+    assert topic.effective_use(topic.items[0]) == {ItemUse.content}
+
+
+@pytest.mark.parametrize(
+    ("data", "code"),
+    [
+        ({"mode": "refine", "use_case": "topic", "topic": "Optik", "frame": {}}, "MISSING_INPUT"),
+        ({"mode": "create", "use_case": "topic", "frame": {}}, "MISSING_INPUT"),
+        ({"mode": "create", "use_case": "folders", "frame": {}}, "MISSING_INPUT"),
+        ({"mode": "create", "use_case": "contents", "frame": {}}, "MISSING_INPUT"),
+        ({"mode": "create", "use_case": "document", "items": [ex.ITEM_CONTENT], "frame": {}}, "MISSING_INPUT"),
+        (
+            {"mode": "create", "use_case": "document", "frame": {}, "items": [{**ex.ITEM_DOC, "fulltext": None}]},
+            "MISSING_INPUT",
+        ),
+        ({**ex.TOPIC, "options": {"assign_only": True}}, "INVALID_OPTION"),
+        ({**ex.CONTENTS, "items": [ex.content_item("a", "A"), ex.content_item("a", "B")]}, "DUPLICATE_ID"),
+        (
+            {
+                "mode": "create",
+                "use_case": "folders",
+                "frame": {},
+                "items": ex.FOLDER_ITEMS,
+                "folders": [{"title": "X", "items": ["nope"]}],
+            },
+            "UNKNOWN_ITEM",
+        ),
+    ],
+)
+def test_input_checks_reject_incomplete_requests(data: dict, code: str) -> None:
+    with pytest.raises(ApiError) as err:
+        check_request(parse(data), SETTINGS)
+    assert (err.value.status, err.value.code) == (422, code)
+
+
+def test_too_many_inline_items_are_rejected() -> None:
+    items = [ex.content_item(f"c{i}", f"T{i}") for i in range(4)]
+    with pytest.raises(ApiError) as err:
+        check_request(parse({**ex.CONTENTS, "items": items}), Settings(_env_file=None, items_inline_max=3))
+    assert err.value.code == "ITEMS_TOO_LARGE"
+
+
+def test_items_ref_satisfies_the_contents_requirement() -> None:
+    check_request(parse({**ex.CONTENTS, "items": None, "items_ref": "https://files.example.org/items.json"}), SETTINGS)
+
+
+@pytest.mark.parametrize(
+    "shape",
+    [
+        {"depth": 0},
+        {"depth": 5},
+        {"main_topics": {"min": 8, "max": 4}},
+        {"main_topics": {"min": 1, "max": 21}},
+        {"children": {"min": 0, "max": 3}},
+    ],
+)
+def test_shape_limits(shape: dict) -> None:
+    with pytest.raises(ValidationError):
+        parse({**ex.TOPIC, "shape": shape})
+
+
+def test_fulltext_needs_exactly_one_of_text_or_ref() -> None:
+    with pytest.raises(ValidationError):
+        parse({**ex.DOCUMENT, "items": [{**ex.ITEM_DOC, "fulltext": {"format": "markdown"}}]})
+    with pytest.raises(ValidationError):
+        parse({**ex.DOCUMENT, "items": [{**ex.ITEM_DOC, "fulltext": {"text": "a", "ref": "https://x.org/a.md"}}]})
+
+
+def test_refs_must_be_https() -> None:
+    with pytest.raises(ValidationError):
+        parse({**ex.CONTENTS, "items": None, "items_ref": "http://files.example.org/items.json"})
+
+
+def test_feedback_changes_from_the_spec_validate() -> None:
+    fb = Feedback.model_validate(ex.FEEDBACK_WITH_CHANGES)
+    assert [c.op for c in fb.changes] == ["move", "add"]
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"op": "remove"},
+        {"op": "rename", "key": "k"},
+        {"op": "move", "key": "k"},
+        {"op": "merge", "keys": ["k"], "title": "X"},
+        {"op": "split", "key": "k"},
+        {"op": "edit", "key": "k"},
+        {"op": "add"},
+    ],
+)
+def test_change_ops_require_their_fields(change: dict) -> None:
+    with pytest.raises(ValidationError):
+        Change.model_validate(change)
+
+
+def test_current_tree_in_legacy_format_is_accepted() -> None:
+    legacy_tree = {
+        "collection": [{"title": "Mechanik", "shorttitle": "Mech", "properties": {"cm_title": ["Mechanik"]}}]
+    }
+    req = parse({"mode": "refine", "use_case": "topic", "frame": {}, "current_tree": legacy_tree})
+    node = req.current_tree.collection[0]
+    assert node.key is None
+    assert node.subcollections == []
+    assert node.properties.first("cm:title") == "Mechanik"
+
+
+def test_text_fields_are_length_limited() -> None:
+    with pytest.raises(ValidationError):
+        parse({**ex.TOPIC, "topic": "x" * 2001})
+    with pytest.raises(ValidationError):
+        parse({**ex.TOPIC, "feedback": {"text": "x" * 8001}})
