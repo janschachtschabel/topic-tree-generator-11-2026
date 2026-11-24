@@ -7,6 +7,8 @@
   const state = {
     presets: [],
     activePresetId: null,
+    multiDisciplineUris: null,
+    vocabIndex: {},
     lastRequest: null,
     lastResponse: null,
     activeRawTab: "response",
@@ -36,12 +38,18 @@
     }
   }
 
-  function populateSelect(selectEl, options) {
+  function populateSelect(selectEl, options, groupLabel) {
+    const target = groupLabel ? document.createElement("optgroup") : selectEl;
+    if (groupLabel) {
+      target.label = groupLabel;
+      selectEl.appendChild(target);
+    }
     for (const opt of options || []) {
       const o = document.createElement("option");
       o.value = opt.uri;
       o.textContent = opt.label;
-      selectEl.appendChild(o);
+      target.appendChild(o);
+      state.vocabIndex[opt.uri] = opt.label.replace(/^—\s+/, "");
     }
   }
 
@@ -71,7 +79,18 @@
     $("f-topic").value = p.topic || "";
 
     const frame = p.frame || {};
-    setSelectValue($("f-discipline"), (frame.discipline_uri || [])[0] || "");
+    const discUris = frame.discipline_uri || [];
+    if (discUris.length > 1) {
+      state.multiDisciplineUris = discUris;
+      setSelectValue($("f-discipline"), "");
+      const names = discUris.map((u) => state.vocabIndex[u] || u.split("/").pop()).join(", ");
+      $("multi-discipline-note").textContent = `Mehrfach-Fächer aus Szenario aktiv: ${names}`;
+      $("multi-discipline-note").hidden = false;
+    } else {
+      state.multiDisciplineUris = null;
+      $("multi-discipline-note").hidden = true;
+      setSelectValue($("f-discipline"), discUris[0] || "");
+    }
     setSelectValue($("f-context"), (frame.educational_context_uri || [])[0] || "");
     setSelectValue($("f-role"), (frame.intended_end_user_role_uri || [])[0] || "");
 
@@ -93,6 +112,7 @@
     $("f-desc-len").value = hints.description_length ?? 60;
 
     const opts = p.options || {};
+    $("f-opt-auto-meta").checked = Boolean(opts.auto_metadata);
     $("f-opt-improve").checked = Boolean(opts.improve);
     $("f-opt-assign").checked = opts.assign_contents ?? true;
     $("f-opt-assign-only").checked = Boolean(opts.assign_only);
@@ -113,6 +133,7 @@
     $("acc-folders").open = Boolean(p.folders && p.folders.length);
     $("acc-refine").open = p.mode === "refine";
     $("acc-hints").open = Boolean(hints.context || hints.order || (hints.include || []).length || (hints.exclude || []).length);
+    $("acc-options").open = Boolean(opts.auto_metadata || opts.improve || opts.assign_only);
     syncModeLabels();
     showFormError("");
     $("status-message").textContent = `Musterszenario „${preset.title}“ geladen – bereit zum Ausführen.`;
@@ -131,7 +152,7 @@
       mode,
       use_case: useCase,
       frame: {
-        discipline_uri: $("f-discipline").value ? [$("f-discipline").value] : [],
+        discipline_uri: $("f-discipline").value ? [$("f-discipline").value] : (state.multiDisciplineUris || []),
         educational_context_uri: $("f-context").value ? [$("f-context").value] : [],
         intended_end_user_role_uri: $("f-role").value ? [$("f-role").value] : [],
       },
@@ -149,6 +170,7 @@
         language: "de",
       },
       options: {
+        auto_metadata: $("f-opt-auto-meta").checked,
         improve: $("f-opt-improve").checked,
         assign_contents: $("f-opt-assign").checked,
         assign_only: $("f-opt-assign-only").checked,
@@ -325,7 +347,13 @@
       ? `Ordnungsprinzip (${st.source}): ${st.order}${st.levels?.length ? ` · Ebenen: ${st.levels.join(" → ")}` : ""}`
       : "";
 
-    window.TopicTreeView.renderTree($("tree-container"), resp.collection, state.lockedKeys, onToggleLock);
+    window.TopicTreeView.renderTree(
+      $("tree-container"),
+      resp.collection,
+      state.lockedKeys,
+      onToggleLock,
+      resp.metadata.vocab_labels || {},
+    );
     $("tree-filter").value = "";
     renderRawJson();
   }
@@ -432,6 +460,10 @@
     $("btn-retry").addEventListener("click", () => submitForm());
     $("f-mode").addEventListener("change", syncModeLabels);
     $("f-use-case").addEventListener("change", syncModeLabels);
+    $("f-discipline").addEventListener("change", () => {
+      state.multiDisciplineUris = null;
+      $("multi-discipline-note").hidden = true;
+    });
     $("btn-expand-all").addEventListener("click", () => window.TopicTreeView.setAllExpanded($("tree-container"), true));
     $("btn-collapse-all").addEventListener("click", () => window.TopicTreeView.setAllExpanded($("tree-container"), false));
     $("tree-filter").addEventListener("input", (e) => window.TopicTreeView.filterTree($("tree-container"), e.target.value));
@@ -476,7 +508,8 @@
       const res = await fetch("/ui/presets");
       const data = await res.json();
       $("service-version").textContent = `v${data.version}`;
-      populateSelect($("f-discipline"), data.vocabs.discipline);
+      populateSelect($("f-discipline"), data.vocabs.discipline, "Schulfächer (discipline)");
+      populateSelect($("f-discipline"), data.vocabs.hochschulfaechersystematik, "Hochschulfächer (hochschulfaechersystematik)");
       populateSelect($("f-context"), data.vocabs.educationalContext);
       populateSelect($("f-role"), data.vocabs.intendedEndUserRole);
       state.presets = data.presets;

@@ -3,6 +3,10 @@
 from typing import Any
 
 _DISC_PHYS = "http://w3id.org/openeduhub/vocabs/discipline/460"
+_DISC_BIO = "http://w3id.org/openeduhub/vocabs/discipline/080"
+_DISC_CHEM = "http://w3id.org/openeduhub/vocabs/discipline/100"
+_DISC_GEO = "http://w3id.org/openeduhub/vocabs/discipline/220"
+_DISC_POL = "http://w3id.org/openeduhub/vocabs/discipline/480"
 _DISC_TECH = "http://w3id.org/openeduhub/vocabs/discipline/500"
 _CTX_SEK1 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
 _CTX_BERUF = "http://w3id.org/openeduhub/vocabs/educationalContext/berufliche_bildung"
@@ -98,6 +102,34 @@ PRESETS: list[dict[str, Any]] = [
                 "description_length": 60,
                 "language": "de",
             },
+        },
+    },
+    {
+        "id": "topic_bne_auto_meta",
+        "title": "Thema: BNE / Klima (auto_metadata)",
+        "badge": "auto_meta",
+        "summary": "Fächerübergreifender Baum (Bio, Chemie, Geo, Politik): setzt Fach-URIs je Knoten automatisch.",
+        "payload": {
+            "mode": "create",
+            "use_case": "topic",
+            "topic": "Klimawandel und nachhaltige Entwicklung (BNE)",
+            "frame": {
+                "discipline_uri": [_DISC_BIO, _DISC_CHEM, _DISC_GEO, _DISC_POL],
+                "educational_context_uri": [_CTX_SEK1],
+                "intended_end_user_role_uri": [_ROLE_TEACHER],
+            },
+            "shape": {
+                "depth": 2,
+                "main_topics": {"min": 4, "max": 8},
+                "children": {"min": 3, "max": 5},
+                "extra_topics": [],
+            },
+            "hints": {
+                "context": "Fächerübergreifendes Projekt Sekundarstufe I",
+                "description_length": 60,
+                "language": "de",
+            },
+            "options": {"auto_metadata": True},
         },
     },
     {

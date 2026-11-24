@@ -71,5 +71,6 @@ def test_ui_presets_cover_all_use_cases_and_validate_against_v2_schema() -> None
 
     vocabs = data["vocabs"]
     assert any(v["label"] == "Physik" for v in vocabs["discipline"])
+    assert any("Physik" in v["label"] for v in vocabs["hochschulfaechersystematik"])
     assert any("Sekundarstufe I" in v["label"] for v in vocabs["educationalContext"])
     assert any(v["uri"].endswith("/teacher") for v in vocabs["intendedEndUserRole"])

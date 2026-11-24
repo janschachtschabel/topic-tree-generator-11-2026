@@ -53,10 +53,11 @@
         <fieldset class="fieldset">
           <legend class="section-label">Rahmen (OEH-Vokabulare)</legend>
           <div class="field">
-            <label for="f-discipline">Fach (<code>discipline_uri</code>)</label>
+            <label for="f-discipline">Fach (<code>discipline_uri</code> – Schul- &amp; Hochschulfach)</label>
             <select id="f-discipline" name="discipline_uri">
-              <option value="">– beliebig –</option>
+              <option value="">– beliebig / automatisch –</option>
             </select>
+            <p id="multi-discipline-note" class="help-text" hidden></p>
           </div>
           <div class="field">
             <label for="f-context">Bildungsstufe (<code>educational_context_uri</code>)</label>
@@ -136,6 +137,7 @@
           <summary>Optionen (Zuordnung, Improve, Konfidenz)</summary>
           <div class="accordion-body">
             <div class="check-col">
+              <label class="check"><input id="f-opt-auto-meta" type="checkbox"> Metadaten automatisch je Knoten (<code>auto_metadata</code>)</label>
               <label class="check"><input id="f-opt-improve" type="checkbox"> Ordner verbessern (<code>improve</code>)</label>
               <label class="check"><input id="f-opt-assign" type="checkbox" checked> Inhalte zuordnen (<code>assign_contents</code>)</label>
               <label class="check"><input id="f-opt-assign-only" type="checkbox"> Nur einsortieren (<code>assign_only</code>, nur bei refine)</label>

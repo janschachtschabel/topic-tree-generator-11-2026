@@ -56,7 +56,7 @@
     };
   }
 
-  function renderNode(node, depth, lockedSet, onToggleLock) {
+  function renderNode(node, depth, lockedSet, onToggleLock, vocabLabels) {
     const children = node.subcollections || [];
     const hasChildren = children.length > 0;
     const item = el("div", "tree-node");
@@ -100,6 +100,22 @@
     if (originText) body.appendChild(el("div", "node-origin", originText));
 
     const props = node.properties || {};
+    const metaUris = [
+      ...(props["ccm:taxonid"] || []),
+      ...(props["ccm:educationalcontext"] || []),
+      ...(props["ccm:educationalintendedenduserrole"] || []),
+    ];
+    if (metaUris.length) {
+      const mRow = el("div", "pill-row");
+      for (const uri of metaUris) {
+        const lbl = (vocabLabels && vocabLabels[uri]) || uri.split("/").pop();
+        const pill = el("span", "meta-pill", lbl);
+        pill.title = uri;
+        mRow.appendChild(pill);
+      }
+      body.appendChild(mRow);
+    }
+
     const desc = (props["cm:description"] && props["cm:description"][0]) || "";
     body.appendChild(el("p", desc ? "node-desc" : "node-desc missing", desc || "keine Beschreibung"));
 
@@ -126,7 +142,7 @@
     if (hasChildren) {
       childBox.setAttribute("role", "group");
       for (const child of children) {
-        childBox.appendChild(renderNode(child, depth + 1, lockedSet, onToggleLock));
+        childBox.appendChild(renderNode(child, depth + 1, lockedSet, onToggleLock, vocabLabels));
       }
       toggle.addEventListener("click", () => {
         const open = !childBox.hidden;
@@ -144,10 +160,10 @@
     return item;
   }
 
-  function renderTree(container, nodes, lockedSet, onToggleLock) {
+  function renderTree(container, nodes, lockedSet, onToggleLock, vocabLabels) {
     container.replaceChildren();
     for (const root of nodes || []) {
-      container.appendChild(renderNode(root, 1, lockedSet, onToggleLock));
+      container.appendChild(renderNode(root, 1, lockedSet, onToggleLock, vocabLabels || {}));
     }
   }
 

@@ -212,6 +212,7 @@ textarea.code-area { font-family: var(--mono); font-size: 12px; line-height: 1.4
 .node-desc.missing { color: var(--warn-text); font-style: italic; font-size: 12px; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .kw-pill { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--chip-bg); color: var(--chip-text); }
+.meta-pill { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--info-bg); color: var(--info-text); font-weight: 500; }
 .content-pill { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font-family: var(--mono); }
 .node-children { margin-inline-start: 18px; }
 .node-children[hidden] { display: none; }

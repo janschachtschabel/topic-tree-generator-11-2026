@@ -45,6 +45,7 @@ async def ui_presets() -> JSONResponse:
             "presets": PRESETS,
             "vocabs": {
                 "discipline": scheme_options("discipline"),
+                "hochschulfaechersystematik": scheme_options("hochschulfaechersystematik", max_depth=2),
                 "educationalContext": scheme_options("educationalContext"),
                 "intendedEndUserRole": scheme_options("intendedEndUserRole"),
             },
