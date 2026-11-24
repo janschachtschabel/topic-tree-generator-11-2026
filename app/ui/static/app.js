@@ -665,8 +665,13 @@
 
     $("btn-copy-json").addEventListener("click", async () => {
       if (!state.lastResponse) return;
-      await navigator.clipboard.writeText(JSON.stringify(state.lastResponse, null, 2));
-      setStatus("status.copied");
+      // The Clipboard API exists only in secure contexts (HTTPS/localhost); plain-HTTP deployments reject it.
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(state.lastResponse, null, 2));
+        setStatus("status.copied");
+      } catch {
+        setStatus("status.copyFailed");
+      }
     });
 
     $("btn-download-json").addEventListener("click", () => {
@@ -676,7 +681,8 @@
       a.href = URL.createObjectURL(blob);
       a.download = `topic-tree-${state.lastResponse.metadata.version || "v2"}.json`;
       a.click();
-      URL.revokeObjectURL(a.href);
+      // Revoking synchronously can cancel the download in some browsers (e.g. Firefox).
+      setTimeout(() => URL.revokeObjectURL(a.href), 0);
     });
 
     $("btn-toggle-json").addEventListener("click", () => {
