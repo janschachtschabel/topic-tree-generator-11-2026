@@ -359,7 +359,7 @@ class CallerContext:
 
 ## Nicht-funktional
 
-- **Leistung**: Thema 8×5×3 mit ≤ 10 LLM-Aufrufen; Parallelität begrenzt; Ziel P50 < 60 s auf `gpt-6-luna`
+- **Leistung**: Thema 8×5×3 mit ≤ 20 LLM-Aufrufen (seit Skeleton-first: 1 + ⌈168/10⌉ = 18, eine parallele Welle); Parallelität begrenzt; Ziel P50 < 60 s auf `gpt-6-luna`
   (Messung durch T4). Kein Streaming.
 - **Sicherheit**: Token nur im Speicher der Anfrage, nie geloggt; Dienst-Schlüssel in konstanter Zeit
   verglichen; SSRF-Schutz für `ref`; Trace-Header nach Länge/Zeichensatz geprüft; Fehler ohne interne Details;
@@ -697,7 +697,7 @@ Schritt 0: `/better-coding-workflow` laden.
 | Altes Format unverändert | `tests/api/test_legacy_contract.py` |
 | Vier Use Cases + refine nach Spec | Spec-Beispiele als Fixtures, je Use Case Ende-zu-Ende-Test mit Fake-LLM |
 | Keine stillen Lücken | Tests mit fehlschlagendem Ast/Batch/Frist → `warnings` |
-| Weniger Aufrufe | Aufrufzähler im Test 8×5×3 ≤ 10 |
+| Weniger Aufrufe | Aufrufzähler im Test 8×5×3 ≤ 20 (`tests/pipeline/strategies/test_topic.py`) |
 | Prompt-Caching | Invarianten-Tests System-Nachricht und Ast-Präfix; Usage-Feld `cached_tokens` |
 | Modus-Erkennung, Auth | Tabellentest E3 |
 | Token nie geloggt | Test fängt Logs ab und sucht nach `bdt_` |

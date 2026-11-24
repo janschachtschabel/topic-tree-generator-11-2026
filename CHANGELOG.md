@@ -8,8 +8,10 @@ New
   silent gaps, `metadata.generation` for reuse. Format: `docs/schemas/`, examples: `docs/examples/`, `docs/api.md`.
 - Runs behind the b-api (delegation token forwarded unchanged) or standalone (OpenAI-compatible endpoint, optional
   service keys); detected per request (`SERVICE_MODE=auto`).
-- Faster and cheaper generation: skeleton first, one call per main topic (8×5×3: 9 instead of 49 calls), static
-  system prompt and shared prompt prefixes for provider caching, per-process concurrency cap.
+- Faster and cheaper generation: the full title skeleton in one call, deterministic duplicate removal, then node
+  descriptions in parallel batches of 10 (8×5×3: 18 instead of 49 calls, run in one parallel wave), static system
+  prompt and shared prompt prefixes for provider caching, per-process concurrency cap.
+- `current_tree` accepts optional `title` and `description` so `refine` keeps the tree's title and description.
 - Optional built-in test UI under `/ui/` with ready-to-run sample scenarios for all use cases, interactive tree
   viewer, token/cache/timing metrics and diagnostics (`UI_ENABLED=false` disables it completely; off by default in Helm).
 - Operations (Leitfaden): gunicorn with several workers, internal port with `/health`, `/ready`, `/metrics`,
