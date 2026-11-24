@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-6-luna"
 
     llm_param_family: Literal["common", "gpt5", "classic"] = "common"
+    llm_reasoning_effort: Literal["none", "minimal", "low"] = "none"
     llm_output_mode: Literal["json_schema", "json_object", "prompt"] = "json_schema"
     llm_send_prompt_cache_key: Literal["auto", "true", "false"] = "auto"
     llm_timeout_seconds: float = Field(120, gt=0)

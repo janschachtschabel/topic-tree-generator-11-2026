@@ -57,6 +57,25 @@ async def test_classic_family_sends_max_tokens() -> None:
     assert "reasoning_effort" not in fake.calls[0]
 
 
+async def test_common_family_allows_low_reasoning_effort() -> None:
+    fake = FakeOpenAI([GOOD])
+    await make_client(fake, llm_param_family="common", llm_reasoning_effort="low").complete_json("plan", "U", Answer)
+    assert fake.calls[0]["reasoning_effort"] == "low"
+
+
+async def test_gpt5_family_caps_reasoning_effort_at_low() -> None:
+    fake = FakeOpenAI([GOOD])
+    await make_client(fake, llm_param_family="gpt5").complete_json("plan", "U", Answer, max_tokens=700)
+    assert fake.calls[0]["max_completion_tokens"] == 700
+    assert fake.calls[0]["reasoning_effort"] == "low"
+
+    fake_min = FakeOpenAI([GOOD])
+    await make_client(fake_min, llm_param_family="gpt5", llm_reasoning_effort="minimal").complete_json(
+        "plan", "U", Answer
+    )
+    assert fake_min.calls[0]["reasoning_effort"] == "minimal"
+
+
 async def test_json_schema_mode_sends_strict_schema_named_after_step() -> None:
     fake = FakeOpenAI([GOOD])
     await make_client(fake).complete_json("expand_branch", "USER", Answer)

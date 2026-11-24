@@ -132,7 +132,11 @@ class LLMClient:
         else:
             body["max_completion_tokens"] = max_tokens
         if family == "common":
-            body["reasoning_effort"] = "none"
+            body["reasoning_effort"] = self.settings.llm_reasoning_effort
+        elif family == "gpt5":
+            # Models in the gpt5 family reject "none" and default to "medium"; cap at "low" (or "minimal").
+            effort = self.settings.llm_reasoning_effort
+            body["reasoning_effort"] = "low" if effort == "none" else effort
         mode = self.settings.llm_output_mode
         if mode == "json_schema":
             body["response_format"] = {

@@ -94,3 +94,14 @@ def test_domain_accepts_bare_hostnames(host: str) -> None:
 def test_domain_rejects_schemes_paths_ports_and_invalid_hostnames(bad: str) -> None:
     with pytest.raises(ValidationError, match="DOMAIN"):
         make(DOMAIN=bad)
+
+
+@pytest.mark.parametrize("effort", ["none", "minimal", "low"])
+def test_reasoning_effort_accepts_up_to_low(effort: str) -> None:
+    assert make(LLM_REASONING_EFFORT=effort).llm_reasoning_effort == effort
+
+
+@pytest.mark.parametrize("effort", ["medium", "high", "xhigh"])
+def test_reasoning_effort_rejects_anything_above_low(effort: str) -> None:
+    with pytest.raises(ValidationError):
+        make(LLM_REASONING_EFFORT=effort)
