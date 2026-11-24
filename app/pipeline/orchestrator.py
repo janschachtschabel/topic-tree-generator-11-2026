@@ -14,12 +14,13 @@ from app.domain.tree import from_tree_in, walk
 from app.errors import ApiError
 from app.llm.client import LLMStepError
 from app.pipeline.context_block import build_context_block
+from app.pipeline.effective import effective_request
 from app.pipeline.finalize import FinalizeInput, finalize
 from app.pipeline.input_checks import check_request
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
-from app.pipeline.strategies import folders, topic
+from app.pipeline.strategies import folders, refine, topic
 from app.schemas.common import ItemUse, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import TopicTreeResponseV2
@@ -84,7 +85,11 @@ async def run(
 ) -> TopicTreeResponseV2:
     started = time.perf_counter()
     check_request(req, rc.settings)
-    strategy = (strategies if strategies is not None else STRATEGIES).get(req.use_case)
+    req = effective_request(req)
+    if req.mode == Mode.refine:
+        strategy: Strategy | None = refine.build
+    else:
+        strategy = (strategies if strategies is not None else STRATEGIES).get(req.use_case)
     if strategy is None:
         raise ApiError(501, "NOT_IMPLEMENTED", f"use_case '{req.use_case}' ist noch nicht umgesetzt.")
     rc.context, unknown = build_context_block(req)

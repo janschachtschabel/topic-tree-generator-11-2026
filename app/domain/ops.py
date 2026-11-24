@@ -27,7 +27,7 @@ class _Rejected(Exception):
     pass
 
 
-def _protected_keys(roots: list[Node], locked: set[str]) -> set[str]:
+def protected_keys(roots: list[Node], locked: set[str]) -> set[str]:
     protected: set[str] = set()
     for node, parent, _ in walk(roots):
         if node.key in locked or (parent is not None and parent.key in protected):
@@ -58,7 +58,7 @@ class _Applier:
         found = index(self.roots).get(key or "")
         if found is None:
             raise _Rejected(f"unbekannter Schlüssel {key}")
-        if editable and key in _protected_keys(self.roots, self.locked):
+        if editable and key in protected_keys(self.roots, self.locked):
             raise _Rejected(f"{key} ist gesperrt")
         return found
 
