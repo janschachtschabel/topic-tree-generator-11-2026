@@ -76,7 +76,8 @@ async def test_llm_sees_the_compact_outline_not_the_full_text() -> None:
     llm = FakeLLM({"map_outline": MAPPING, "describe_nodes": describe})
     await build(req([doc()]), rc(llm))
     prompt = llm.prompts("map_outline")[0]
-    assert "d1:s4 | Ebene 2 | Seite 14 | Themenfeld 2: Optische Phänomene an Grenzflächen" in prompt
+    # The lone title heading (d1:s1) is dropped, so the Themenfelder are level 1.
+    assert "d1:s4 | Ebene 1 | Seite 14 | Themenfeld 2: Optische Phänomene an Grenzflächen" in prompt
     assert "Reflexion, Brechung, Absorption." not in prompt
 
 
@@ -112,7 +113,7 @@ async def test_several_documents_are_merged_into_one_outline() -> None:
     llm = FakeLLM({"map_outline": MAPPING, "describe_nodes": describe})
     await build(req([doc("d1"), doc("d2", "# Zusatz\n## Farben\nSpektrum")]), rc(llm))
     prompt = llm.prompts("map_outline")[0]
-    assert "d2:s2 | Ebene 2 | Farben" in prompt and "d1:s1" in prompt
+    assert "d2:s2 | Ebene 1 | Farben" in prompt and "d1:s2" in prompt
 
 
 async def test_document_without_headings_sends_an_excerpt() -> None:
@@ -162,3 +163,68 @@ async def test_trimming_to_the_shape_is_reported() -> None:
     result = await build(req([doc()]), context)
     assert len(result.roots) == 6
     assert {"SHAPE_DEPTH", "SHAPE_WIDTH"} <= {w.code for w in context.warnings}
+
+
+TITLED = """# Lehrplan Physik (Auszug)
+
+## Themenfeld 1: Licht
+Text eins.
+
+### Lichtquellen
+Quellen.
+
+### Schatten
+Schatten.
+
+## Themenfeld 2: Grenzflächen
+
+### Reflexion
+Spiegel.
+
+### Brechung
+Glas.
+
+## Wahlpflicht: Wellenoptik
+Beugung.
+"""
+
+
+async def test_lone_document_title_heading_is_not_offered_as_a_level() -> None:
+    llm = FakeLLM({"map_outline": MAPPING, "describe_nodes": describe})
+    await build(req([doc(text=TITLED)]), rc(llm))
+    outline = llm.prompts("map_outline")[0]
+    assert "Lehrplan Physik (Auszug)" not in outline
+    assert "d1:s2 | Ebene 1 | Themenfeld 1: Licht" in outline
+    assert "d1:s3 | Ebene 2 | Lichtquellen" in outline
+
+
+async def test_collapsed_llm_mapping_falls_back_to_the_document_outline() -> None:
+    chain = {
+        "order": "Themenfelder",
+        "levels": ["Ebene 1", "Ebene 2"],
+        "description": "Baum",
+        "nodes": [
+            {
+                "title": "Licht",
+                "shorttitle": "Licht",
+                "section_ids": ["d1:s2"],
+                "children": [
+                    {
+                        "title": "Lichtquellen",
+                        "shorttitle": "Quellen",
+                        "section_ids": ["d1:s3"],
+                        "children": [{"title": "Schatten", "shorttitle": "Schatten", "children": []}],
+                    }
+                ],
+            }
+        ],
+    }
+    llm = FakeLLM({"map_outline": chain, "describe_nodes": describe})
+    run = rc(llm)
+    result = await build(req([doc(text=TITLED)], hints={"exclude": ["Wahlpflicht"]}), run)
+    assert [r.title for r in result.roots] == ["Themenfeld 1: Licht", "Themenfeld 2: Grenzflächen"]
+    assert [c.title for c in result.roots[1].children] == ["Reflexion", "Brechung"]
+    assert result.roots[0].origin.section == "Themenfeld 1: Licht"
+    assert all(n.description for n, _, _ in walk(result.roots))
+    codes = [w.code for w in run.warnings]
+    assert "OUTLINE_FALLBACK" in codes and "SHAPE_DEPTH" not in codes

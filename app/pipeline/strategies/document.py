@@ -6,6 +6,7 @@ from app.domain.keys import assign_missing_keys
 from app.domain.text import truncate_sentences
 from app.domain.tree import Node, walk
 from app.pipeline.inputs.outline import Section, parse_outline
+from app.pipeline.inputs.outline_tree import drop_title_heading, outline_mapping
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.describe_nodes import describe_nodes
@@ -36,7 +37,7 @@ def structure_documents(req: TopicTreeRequestV2) -> list[Item]:
 def _sections(doc: Item) -> list[DocSection]:
     title = doc.properties.first("cm:title") or doc.id
     text = doc.fulltext.text if doc.fulltext.format == FulltextFormat.markdown else ""
-    sections = parse_outline(text, fallback_title=title) if text else []
+    sections = drop_title_heading(parse_outline(text, fallback_title=title)) if text else []
     return [DocSection(doc.id, s) for s in sections]
 
 
@@ -94,13 +95,30 @@ class _Converter:
         return node
 
 
+def _checked_mapping(
+    nodes: list[MappedNode], sections: list[DocSection], req: TopicTreeRequestV2, rc: RunContext
+) -> list[MappedNode]:
+    """The LLM mapping, or the document's own headings when the mapping collapsed the outline."""
+    outline = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
+    if len(nodes) >= min(req.shape.main_topics.min, len(outline)):
+        return nodes
+    rc.warn(
+        "OUTLINE_FALLBACK",
+        f"Die Zuordnung ergab nur {len(nodes)} Hauptknoten; der Baum folgt deshalb direkt der Gliederung "
+        f"des Dokuments ({len(outline)} Hauptabschnitte).",
+        step="map_outline",
+    )
+    return outline
+
+
 async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     docs = structure_documents(req)
     sections = [s for doc in docs for s in _sections(doc)]
     mapping = await map_outline(_outline_text(sections, docs, rc), rc)
+    mapped = _checked_mapping(mapping.nodes, sections, req, rc)
 
     converter = _Converter({s.ref: s for s in sections}, docs[0].id, req)
-    roots = converter.nodes(mapping.nodes, req.shape.depth, req.shape.main_topics.max)
+    roots = converter.nodes(mapped, req.shape.depth, req.shape.main_topics.max)
     if converter.too_deep:
         rc.warn("SHAPE_DEPTH", "Der abgeleitete Baum war zu tief und wurde gekürzt.", step="map_outline")
     if converter.too_wide:

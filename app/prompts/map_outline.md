@@ -12,5 +12,6 @@ Leite den Themenbaum aus der Gliederung ab. Die Gliederung gibt die Struktur vor
 2. Formuliere Titel nach den Benennungsregeln, aber so, dass sie im Dokument wiedererkennbar bleiben.
 3. Nenne in `section_ids` die Abschnitte, auf denen ein Knoten beruht (nur ids aus der Gliederung).
    Bei einem Dokument ohne Gliederung bleibt `section_ids` leer.
-4. Halte die Form aus dem Anfragekontext ein (Ebenen, Zahl der Knoten je Ebene).
+4. Halte die Form aus dem Anfragekontext ein (Ebenen, Zahl der Knoten je Ebene). Die Hauptknoten entsprechen in der
+   Regel den Abschnitten der Ebene 1; verschachtle Abschnitte derselben Ebene nicht ineinander.
 5. `order` und `levels`: das Ordnungsprinzip des Dokuments, `description`: Beschreibung des ganzen Baums.

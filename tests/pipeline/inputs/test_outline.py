@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from app.pipeline.inputs.outline import parse_outline
+from app.pipeline.inputs.outline_tree import drop_title_heading, outline_mapping
 
 FIXTURE = (Path(__file__).parents[2] / "fixtures" / "lehrplan_physik_auszug.md").read_text(encoding="utf-8")
 
@@ -52,3 +53,18 @@ def test_document_without_headings_is_one_section() -> None:
 def test_trailing_hashes_and_emphasis_are_stripped_from_titles() -> None:
     (section,) = parse_outline("## **Themenfeld 3** ##\n")
     assert section.title == "Themenfeld 3"
+
+
+def test_drop_title_heading_only_removes_a_lone_top_heading() -> None:
+    kept = drop_title_heading(parse_outline("# A\n# B\n## C"))
+    assert [(s.title, s.level) for s in kept] == [("A", 1), ("B", 1), ("C", 2)]
+    dropped = drop_title_heading(parse_outline("# Titel\n## A\n### B"))
+    assert [(s.id, s.title, s.level) for s in dropped] == [("s2", "A", 1), ("s3", "B", 2)]
+    assert [s.title for s in drop_title_heading(parse_outline("# Nur Titel"))] == ["Nur Titel"]
+
+
+def test_outline_mapping_follows_headings_and_skips_excluded_branches() -> None:
+    sections = parse_outline("## 1. Licht\n### Quellen\n## Wahlpflicht\n### Beugung\n## 2. Farben")
+    nodes = outline_mapping([(f"d:{s.id}", s) for s in sections], ["wahlpflicht"])
+    assert [(n.title, [c.title for c in n.children]) for n in nodes] == [("Licht", ["Quellen"]), ("Farben", [])]
+    assert nodes[0].section_ids == ["d:s1"]
