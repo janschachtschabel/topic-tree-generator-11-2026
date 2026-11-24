@@ -1,28 +1,23 @@
-# see: https://docs.astral.sh/uv/guides/integration/docker/
-# and: https://github.com/astral-sh/uv-docker-example
-
-# Use a Python Image that comes with uv pre-installed:
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm
-
-# Copy the project into the image
-ADD . /app
-
-# Sync the project into a new environment, using the frozen lockfile
+# syntax=docker/dockerfile:1
+# Build stage: resolve the locked runtime dependencies into /app/.venv (no dev tools, no compilers in the result).
+# Base images should be pinned by digest in production (Leitfaden Kap. 4); the CI resolves and updates them.
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS build
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
 WORKDIR /app
-RUN uv sync --frozen
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project
+COPY main.py gunicorn.conf.py ./
+COPY app ./app
 
-# use the virtual environment
-ENV PATH="/app/.venv/bin:$PATH"
-
-EXPOSE 80
-
-ENTRYPOINT []
-
-# Run the FastAPI application by default
-# Uses `fastapi dev` to enable hot-reloading when the `watch` sync occurs
-# Uses `--host 0.0.0.0` to allow access from outside the container
-#CMD ["fastapi", "dev", "--host", "0.0.0.0", "app/main.py"]
-
-# see: https://fastapi.tiangolo.com/deployment/docker/#dockerfile
-# Run the FastAPI application without hot-reloading:
-CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0" ,"--port", "80"]
+# Runtime stage: slim Python, non-root user, read-only root filesystem friendly (only /tmp is written).
+FROM python:3.13-slim-bookworm
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin app
+WORKDIR /app
+COPY --from=build /app /app
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus
+USER 10001
+EXPOSE 8000 9000
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app.main:app"]

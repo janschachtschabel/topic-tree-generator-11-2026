@@ -1,27 +1,15 @@
-# see: https://github.com/astral-sh/uv-docker-example
-
+# Reference setup for a single host (Leitfaden Kap. 4). Same image as in Kubernetes.
+# Start: cp .env.example .env && docker compose up --build
 services:
-  web:
-    # Build the image from the Dockerfile in the current directory
+  topic-tree:
     build: .
-
-    # Host the FastAPI application on port 8000
+    image: topic-tree:local
+    env_file: .env
     ports:
-      - "8000:80"
-
-    develop:
-      # Create a `watch` configuration to update the app
-      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
-      watch:
-        # Sync the working directory with the `/app` directory in the container
-        - action: sync
-          path: .
-          target: /app
-          # Exclude the project virtual environment — it could be for a
-          # different platform in the container
-          ignore:
-            - .venv/
-
-        # Rebuild the image if dependencies change by checking uv.lock
-        - action: rebuild
-          path: ./uv.lock
+      - "8000:8000"   # public API
+      - "9000:9000"   # internal: /health, /ready, /metrics (do not expose beyond the host)
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_grace_period: 90s
+    restart: unless-stopped
