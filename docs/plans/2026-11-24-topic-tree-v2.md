@@ -665,10 +665,22 @@ Schritt 0: `/better-coding-workflow` laden.
 
 ## Phase 6 – Prüfen
 
-- [ ] **T6.1 Review** (`/better-coding-review`): Stufe 1 gegen dieses Dokument und die Spec, Stufe 2 Codequalität.
-- [ ] **T6.2 Audit** (`/better-coding-audit`): Auth/Token-Fluss, SSRF, Logging von Geheimnissen, Eingabegrenzen.
-- [ ] **T6.3 Verify** (`/better-coding-verify`): volle Suite, Ende-zu-Ende gegen `tests/stub_openai.py` mit gunicorn, Anforderungs-Checkliste
-  Zeile für Zeile, Bericht.
+- [x] **T6.1 Review** (`/better-coding-review`): Stufe 1 gegen dieses Dokument und die Spec, Stufe 2 Codequalität.
+- [x] **T6.2 Audit** (`/better-coding-audit`): Auth/Token-Fluss, SSRF, Logging von Geheimnissen, Eingabegrenzen. Bericht: `docs/audits/2026-11-24-audit.md`.
+- [x] **T6.3 Verify** (`/better-coding-verify`): volle Suite, Ende-zu-Ende gegen `tests/stub_openai.py` (gunicorn auf POSIX, `python -m app` auf Windows), Anforderungs-Checkliste Zeile für Zeile, Bericht.
+
+**Funde und Korrekturen in Phase 6:**
+- `app/domain/ops.py`: doppelte Schlüssel in `merge` hätten den Knoten gelöscht; doppelte `contents` beim Zusammenlegen bereinigt.
+- `app/domain/tree.py`: `confidence: 0.0` blieb durch `or 1.0` nicht erhalten.
+- `app/pipeline/inputs/refs.py`: ungültiger `Content-Length`-Header abgefangen, `MAX_FULLTEXT_CHARS`-Grenze als `REF_TOO_LARGE` statt 500, parallele Abrufe über Semaphor (`MAX_CONCURRENT_REFS=8`) und geteilten `httpx.AsyncClient` begrenzt.
+- `app/pipeline/input_checks.py`: doppelte IDs in O(n) via `Counter`; leerer `fulltext.text` bei `document`, fehlende `structure`-Items bei `contents` sowie gleichzeitige `items` + `items_ref` mit 422 abgewiesen.
+- `app/pipeline/strategies/refine.py` / `orchestrator.py`: gesperrte Knoten ohne Beschreibung nicht mehr an `describe_nodes` übergeben; freigegebene Inhalte entfernter Knoten nicht erneut in `_assign` dupliziert; b-api-Antworten 401/403 im b-api-Modus als 401/403 statt 502 weitergereicht.
+- `app/pipeline/steps/describe_nodes.py`: unbekannte Schlüssel aus dem LLM erzeugen `DESCRIBE_UNKNOWN_KEY`.
+- `app/pipeline/finalize.py`: Zielgruppen-Labels für alle OEH-Rollen aus `app/vocab/labels.py`.
+- `app/pipeline/strategies/folders.py`: ergänzende `structure`-Items fließen bei `options.improve` in `improve_folders` ein.
+- `app/__main__.py`: legt `PROMETHEUS_MULTIPROC_DIR` an, falls gesetzt.
+- `.gitlab-ci.yml`: Image-Name an Dienst-ID `topic-tree` angeglichen; `chart release`-Job für OCI-Veröffentlichung bei Tags `vX.Y.Z`.
+- Tests: `tests/conftest.py` isoliert Host-Env-Variablen; `tests/stub_openai.py` + `tests/test_e2e_server.py` prüfen den laufenden Server Ende-zu-Ende.
 
 # Verifikationsplan
 
