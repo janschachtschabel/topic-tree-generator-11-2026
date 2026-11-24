@@ -398,42 +398,42 @@ der Umsetzung (bei dieser Größe ersetzt die genaue Schnittstellen- und Testang
 
 Schritt 0: `/better-coding-workflow` laden.
 
-- [ ] **T1.1 Paketgerüst und Settings**
+- [x] **T1.1 Paketgerüst und Settings**
   Dateien: `app/__init__.py`, `app/settings.py`, `tests/test_settings.py`; `pyproject.toml` (Abhängigkeiten, ruff nach dev).
   Tests: Vorgaben aus der Tabelle; `LLM_MODEL=x` ohne `B_API_ROUTE` → `b_api_route == "x"`; `SERVICE_API_KEYS="a, b"` → `["a","b"]`;
   `REF_ALLOWED_HOSTS` als Liste; ungültiger `SERVICE_MODE` → ValidationError.
   Verifikation: `uv run pytest tests/test_settings.py -q`.
 
-- [ ] **T1.2 Tracing** [P]
+- [x] **T1.2 Tracing** [P]
   Dateien: `app/context/tracing.py`, `tests/context/test_tracing.py`.
   Schnittstelle: `TraceContext(trace_id, span_id, parent_span_id, sampled, client_trace_id)`; `from_headers(h) -> TraceContext`;
   `outgoing_headers(tc) -> dict`; contextvar `current_trace`.
   Tests: gültige `X-B3-TraceId` (16/32 hex) übernommen; ungültige (Länge, Zeichen) → neue ID; `b3`-Einzelheader;
   `x-client-trace-id` durchgereicht, aber nie erzeugt; ausgehend neue `span_id`, gleiche `trace_id`.
 
-- [ ] **T1.3 Logging und Zugriffszeile** [P]
+- [x] **T1.3 Logging und Zugriffszeile** [P]
   Dateien: `app/observability/logging.py`, `app/observability/access_log.py`, Tests.
   Tests: JSON-Zeile hat `timestamp, level, service, trace_id, span_id, message`; `LOG_FORMAT=text` → Klartext;
   Zugriffszeile nutzt Routenklasse (`v2.topic_tree`), nicht den Pfad; Header-Werte tauchen nie auf (Test mit Token im Header).
 
-- [ ] **T1.4 Fehlerformat**
+- [x] **T1.4 Fehlerformat**
   Dateien: `app/api/errors.py`, Tests.
   Tests: `ApiError(422,"INVALID_INPUT",...)` → `{"error":{code,message,trace_id}}`; RequestValidationError → 422 mit `details`
   (Feldpfade, ohne Eingabewerte); unbehandelte Exception → 500 `INTERNAL`, Meldung ohne Exception-Text.
 
-- [ ] **T1.5 Modus-Erkennung und Dienst-Auth**
+- [x] **T1.5 Modus-Erkennung und Dienst-Auth**
   Dateien: `app/context/caller.py`, `tests/context/test_caller.py`.
   Tests: gesamte Tabelle aus E3 (9 Fälle); `B_API_DELEGATION_HEADER` gesetzt → Token von dort; `bearer` klein → als fehlend
   behandelt; falscher Dienst-Schlüssel → 401 mit `WWW-Authenticate: Bearer`; Vergleich über `hmac.compare_digest`.
 
-- [ ] **T1.6 LLM-Backend**
+- [x] **T1.6 LLM-Backend**
   Dateien: `app/llm/backend.py`, Tests.
   Schnittstelle: `resolve_backend(ctx, settings) -> LLMBackend(base_url, api_key, model, kind, send_cache_key)`.
   Tests: bapi → `base_url` endet auf `/api/v1/llm/router/`, `api_key` = Token, `model` = Route; standalone mit OpenAI-Key →
   `kind="openai"`; standalone ohne Key, mit `B_API_DEV_KEY` → `kind="dev"`; ohne beides → `ApiError(503,"LLM_NOT_CONFIGURED")`;
   `send_cache_key` gemäß `auto`.
 
-- [ ] **T1.7 LLM-Client**
+- [x] **T1.7 LLM-Client**
   Dateien: `app/llm/client.py`, `app/llm/usage.py`, `tests/fakes/llm.py`, `tests/llm/test_client.py`.
   Tests (mit gefälschtem `AsyncOpenAI`): Familie `common` sendet `max_completion_tokens` + `reasoning_effort:"none"`, kein
   `temperature`; `classic` sendet `max_tokens`; `json_schema`-Modus setzt `response_format` mit Schema aus dem Modell;
@@ -441,23 +441,23 @@ Schritt 0: `/better-coding-workflow` laden.
   `stream`; nie `X-API-KEY`-Header (`default_headers` geprüft); Semaphor begrenzt gleichzeitige Aufrufe (Test mit 20
   Tasks, max. beobachtet = Limit); Usage summiert `prompt/cached/completion`; Timeout aus der Frist (`min(LLM_TIMEOUT, remaining)`).
 
-- [ ] **T1.8 Prompt-Lader und System-Prompt**
+- [x] **T1.8 Prompt-Lader und System-Prompt**
   Dateien: `app/prompts/__init__.py`, `app/prompts/system.md`, `tests/prompts/test_prompts.py`.
   Tests: `render` ersetzt nur `{{name}}`-Platzhalter (keine `str.format`-Kollision mit JSON-Klammern); fehlender
   Platzhalter → `KeyError`; `system.md` enthält keine Platzhalter; Länge ≥ 4.500 Zeichen (≈ 1.024 Tokens, Cache-Schwelle).
 
-- [ ] **T1.9 Vokabular-Labels**
+- [x] **T1.9 Vokabular-Labels**
   Dateien: `scripts/build_vocab_snapshot.py`, `app/vocab/labels.py`, `app/vocab/data/*.json`, Tests.
   Tests: `label(".../discipline/460") == "Physik"`; `label(".../educationalContext/sekundarstufe_1")` deutsch; unbekannte URI → `None`;
   kein Netzwerkzugriff beim Import (Test patcht Socket); Snapshot enthält `generated_at`.
 
-- [ ] **T1.10 Metriken und interner Server**
+- [x] **T1.10 Metriken und interner Server**
   Dateien: `app/observability/metrics.py`, `app/internal_server.py`, `gunicorn.conf.py`, `app/__main__.py`, Tests.
   Tests: `GET /health` 200 `{"status":"ok","vocab_snapshot": "<datum>"}`; `/ready` 200 bei gültiger Konfiguration, 503 bei
   fehlendem LLM in jedem Modus; `/metrics` liefert Prometheus-Text; Smoke-Test startet `gunicorn -c gunicorn.conf.py` mit
   2 Workern und prüft beide Ports (markiert `@pytest.mark.slow`).
 
-- [ ] **T1.11 App-Fabrik und alte Endpunkte umgezogen**
+- [x] **T1.11 App-Fabrik und alte Endpunkte umgezogen**
   Dateien: `app/main.py`, `app/api/deps.py`, `app/api/health.py`, `app/api/legacy.py`, `app/legacy/*` (Logik aus `main.py`/`src/`
   unverändert), `main.py` (Shim), Tests; `src/` löschen, `.idea/` aus dem Repo.
   Tests: `/openapi.json` enthält nur `/generate-topic-tree`, `/generate-collection-description`, `/v2/topic-tree` (Letzteres ab
@@ -465,6 +465,14 @@ Schritt 0: `/better-coding-workflow` laden.
   **Vertragstest** `tests/api/test_legacy_contract.py`: Antwortstruktur des alten Endpunkts mit Fake-LLM eingefroren
   (Schlüssel `metadata{title,description,target_audience,created_at,version,author}`, `collection[].{title,shorttitle,properties{cm_title,...},subcollections?}`).
   Alte Tests unter `tests/` an neue Pfade angepasst und grün.
+
+**Abweichungen in Phase 1** (bewusst, YAGNI bzw. Schichtung):
+- `ApiError` liegt in `app/errors.py` (nicht in `api/`), damit `context/` nicht aus `api/` importiert.
+- `LLMClient.complete_text` entfällt: kein Abnehmer, die alten Endpunkte behalten ihren eigenen Aufruf.
+- Alter Router liegt in `app/legacy/router.py` (statt `app/api/legacy.py`), Logik eingefroren; ruff-Ausnahmen nur für `app/legacy/**`.
+- `app/api/deps.py` kommt mit T2.9 (erster Abnehmer). `.idea/` bleibt im Repo (PyCharm-Startkonfiguration zeigt weiter auf `main.py`).
+- Neu: `app/version.py`, `app/llm/json_schema.py` (strict-Schema), Dev-Abhängigkeit `pytest-asyncio`.
+- Fund beim Testen: `httpx` loggte ausgehende URLs auf INFO; jetzt auf WARNING gedeckelt.
 
 ## Phase 2 – v2-Vertrag und Domäne
 
