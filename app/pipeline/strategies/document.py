@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from app.domain.keys import assign_missing_keys
+from app.domain.text import truncate_sentences
 from app.domain.tree import Node, walk
 from app.pipeline.inputs.outline import Section, parse_outline
 from app.pipeline.result import StrategyResult
@@ -42,7 +43,7 @@ def _sections(doc: Item) -> list[DocSection]:
 def _outline_text(sections: list[DocSection], docs: list[Item], rc: RunContext) -> str:
     if len(sections) <= len(docs):
         # No usable headings: hand over a text excerpt instead of an outline.
-        return "\n\n".join(f"Dokument {d.id}:\n{d.fulltext.text[:EXCERPT_CHARS]}" for d in docs)
+        return "\n\n".join(f"Dokument {d.id}:\n{truncate_sentences(d.fulltext.text, EXCERPT_CHARS)}" for d in docs)
     if len(sections) > MAX_SECTIONS:
         rc.warn("OUTLINE_TRUNCATED", f"Gliederung auf {MAX_SECTIONS} Abschnitte gekürzt.", step="document")
         sections = sections[:MAX_SECTIONS]
@@ -87,7 +88,7 @@ class _Converter:
             origin=origin,
             children=self.nodes(item.children, levels_left - 1, self.req.shape.children.max),
         )
-        excerpt = "\n".join(s.section.text for s in known)[:SECTION_EXCERPT]
+        excerpt = truncate_sentences("\n".join(s.section.text for s in known), SECTION_EXCERPT)
         if excerpt:
             self.excerpts[id(node)] = excerpt
         return node

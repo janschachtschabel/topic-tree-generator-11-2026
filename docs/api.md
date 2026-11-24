@@ -38,8 +38,9 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 
 ## Antwort lesen
 
-- `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist (z. B. `BRANCH_FAILED`, `DEADLINE_EXCEEDED`,
-  `SHAPE_SINGLE_CHILD`, `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+- `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `BRANCH_FAILED`,
+  `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `DUPLICATE_TITLE`, `GENERIC_TITLE`, `FACET_AS_NODE`, `TOPIC_REPEAT`,
+  `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 

@@ -1,6 +1,10 @@
 """Use case `contents`: groups are induced from the items themselves; assignment with confidence follows."""
 
+import re
+
 from app.domain.keys import assign_missing_keys
+from app.domain.quality import PLATFORM_STOPWORDS
+from app.domain.text import truncate_sentences
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.expand_branch import Cut, to_nodes
@@ -8,27 +12,81 @@ from app.pipeline.steps.group_contents import group_contents
 from app.schemas.common import ItemUse, OriginType
 from app.schemas.request_v2 import Item, TopicTreeRequestV2
 from app.schemas.response_v2 import StructureInfo
+from app.vocab.labels import label
 
 SAMPLE_SIZE = 300
 MAX_TITLES = 2000
 _TEXT = 200
+_WORD = re.compile(r"[^\W\d_]{4,}")
 
 
 def _detail(item: Item) -> str:
     p = item.properties
     parts = [f"- id: {item.id}", p.first("cm:title") or "(ohne Titel)"]
+    disciplines = list(dict.fromkeys(lbl for uri in p.values("ccm:taxonid") if (lbl := label(uri))))
+    if disciplines:
+        parts.append("Fach: " + ", ".join(disciplines[:3]))
     if description := p.first("cm:description"):
-        parts.append(description[:_TEXT])
+        parts.append(truncate_sentences(description, _TEXT))
     if keywords := p.values("cclom:general_keyword"):
         parts.append("Schlagworte: " + ", ".join(keywords[:8]))
     return " | ".join(parts)
 
 
+def _stratum(item: Item) -> str:
+    p = item.properties
+    discipline = (p.first("ccm:taxonid") or "").strip()
+    if discipline:
+        canonical = label(discipline) or discipline.rstrip("/").replace("https://", "http://", 1)
+        return f"d:{canonical.casefold()}"
+    for kw in p.values("cclom:general_keyword"):
+        low = kw.strip().casefold()
+        if low and low not in PLATFORM_STOPWORDS:
+            return f"k:{low}"
+    title = p.first("cm:title") or ""
+    for match in _WORD.finditer(title):
+        low = match.group(0).casefold()
+        if low not in PLATFORM_STOPWORDS:
+            return f"t:{low}"
+    return "_other"
+
+
+def _even_pick(indices: list[int], count: int) -> list[int]:
+    if count <= 0:
+        return []
+    if count >= len(indices):
+        return indices
+    step = len(indices) / count
+    return [indices[int(i * step)] for i in range(count)]
+
+
 def _sample(items: list[Item]) -> list[Item]:
     if len(items) <= SAMPLE_SIZE:
         return items
-    step = len(items) / SAMPLE_SIZE
-    return [items[int(i * step)] for i in range(SAMPLE_SIZE)]
+    strata: dict[str, list[int]] = {}
+    for idx, item in enumerate(items):
+        strata.setdefault(_stratum(item), []).append(idx)
+    if len(strata) == 1:
+        return [items[i] for i in _even_pick(list(range(len(items))), SAMPLE_SIZE)]
+
+    quotas = {key: 0 for key in strata}
+    remaining = SAMPLE_SIZE
+    # Prioritize larger strata when > SAMPLE_SIZE distinct strata exist; ties keep insertion order.
+    active = sorted(strata.keys(), key=lambda key: -len(strata[key]))
+    while remaining > 0 and active:
+        next_active: list[str] = []
+        for key in active:
+            if remaining == 0:
+                break
+            if quotas[key] < len(strata[key]):
+                quotas[key] += 1
+                remaining -= 1
+                if quotas[key] < len(strata[key]):
+                    next_active.append(key)
+        active = next_active
+
+    chosen = sorted(idx for key, count in quotas.items() if count > 0 for idx in _even_pick(strata[key], count))
+    return [items[i] for i in chosen]
 
 
 def items_block(items: list[Item], rc: RunContext) -> str:

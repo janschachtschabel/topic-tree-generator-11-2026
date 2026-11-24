@@ -7,6 +7,7 @@ import asyncio
 
 from pydantic import BaseModel, Field
 
+from app.domain.text import truncate_sentences
 from app.domain.tree import Node, path
 from app.llm.client import LLMStepError
 from app.pipeline.run_context import RunContext
@@ -32,7 +33,7 @@ def _line(node: Node, roots: list[Node], extra: dict[str, str]) -> str:
     line = f"- key: {node.key} | Pfad: {' > '.join(path(roots, node.key))}"
     info = extra.get(node.key)
     if info:
-        line += f"\n  {info[:EXTRA_LIMIT]}"
+        line += f"\n  {truncate_sentences(info, EXTRA_LIMIT)}"
     return line
 
 

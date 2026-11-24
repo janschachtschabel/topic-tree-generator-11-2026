@@ -139,3 +139,10 @@ async def test_empty_answer_keeps_skeleton_children() -> None:
     await expand_branches(roots, req(), rc(llm), context="CTX", levels=[])
     assert roots[0].description == "D"
     assert len(roots[0].children) == 3
+
+
+async def test_branch_prompt_instructs_against_cross_branch_duplicates() -> None:
+    llm = FakeLLM({"expand_branch": branch_answer})
+    await expand_branches(skeleton(2), req(), rc(llm), context="CTX", levels=["Thema"])
+    prompt = llm.prompts("expand_branch")[0]
+    assert "keinen gleichnamigen Knoten" in prompt

@@ -8,6 +8,7 @@ import asyncio
 
 from pydantic import BaseModel, Field
 
+from app.domain.text import truncate_sentences
 from app.domain.tree import Node, index, path, walk
 from app.llm.client import LLMStepError
 from app.pipeline.run_context import RunContext
@@ -46,7 +47,7 @@ def _item_line(item: Item) -> str:
     props = item.properties
     parts = [f"- id: {item.id}", props.first("cm:title") or "(ohne Titel)"]
     if description := props.first("cm:description"):
-        parts.append(description[:_TEXT_LIMIT])
+        parts.append(truncate_sentences(description, _TEXT_LIMIT))
     if keywords := props.values("cclom:general_keyword"):
         parts.append("Schlagworte: " + ", ".join(keywords[:10]))
     return " | ".join(parts)

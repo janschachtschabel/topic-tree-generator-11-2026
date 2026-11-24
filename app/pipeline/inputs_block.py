@@ -1,6 +1,7 @@
 """Compact prompt block for supplementary structure inputs (items with `use: structure` outside their own use
 case). Only inline full texts are used here; referenced texts are loaded before (see inputs/refs.py)."""
 
+from app.domain.text import truncate_sentences
 from app.schemas.common import ItemUse
 from app.schemas.request_v2 import TopicTreeRequestV2
 
@@ -18,5 +19,5 @@ def structure_inputs_block(req: TopicTreeRequestV2) -> str:
         description = item.properties.first("cm:description")
         lines.append(f"- {title}" + (f": {description}" if description else ""))
         if item.fulltext and item.fulltext.text:
-            lines.append(f"  Auszug: {item.fulltext.text[:EXCERPT]}")
+            lines.append(f"  Auszug: {truncate_sentences(item.fulltext.text, EXCERPT)}")
     return "\n".join(lines) + "\n"

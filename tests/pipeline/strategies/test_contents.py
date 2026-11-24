@@ -116,3 +116,101 @@ async def test_end_to_end_assigns_with_confidence_and_reports_off_topic() -> Non
     assert [(u.id, u.reason) for u in resp.unassigned] == [("c1", "off_topic")]
     assert resp.collection[1].subcollections[1].contents[0].confidence == 0.7
     assert "Thema: Optik" in llm.prompts("group_contents")[0]
+
+
+async def test_stratified_sampling_preserves_minority_disciplines_and_includes_labels() -> None:
+    physics_uri = "http://w3id.org/openeduhub/vocabs/discipline/460"
+    biology_uri = "http://w3id.org/openeduhub/vocabs/discipline/080"
+    chemistry_uri = "http://w3id.org/openeduhub/vocabs/discipline/100"
+    mixed = [
+        *[
+            {"id": f"p{i}", "properties": {"cm:title": [f"Physik {i}"], "ccm:taxonid": [physics_uri]}}
+            for i in range(420)
+        ],
+        *[
+            {"id": f"b{i}", "properties": {"cm:title": [f"Biologie {i}"], "ccm:taxonid": [biology_uri]}}
+            for i in range(15)
+        ],
+        *[
+            {"id": f"c{i}", "properties": {"cm:title": [f"Chemie {i}"], "ccm:taxonid": [chemistry_uri]}}
+            for i in range(15)
+        ],
+    ]
+    llm = FakeLLM({"group_contents": grouping()})
+    await build(
+        req(mixed),
+        RunContext(
+            llm=llm,
+            settings=Settings(_env_file=None, items_inline_max=1000),
+            deadline=time.monotonic() + 60,
+            context="CTX",
+        ),
+    )
+    prompt = llm.prompts("group_contents")[0]
+    detailed = [line for line in prompt.splitlines() if line.startswith("- id: ")]
+    assert len(detailed) == SAMPLE_SIZE
+    bio_in_sample = [line for line in detailed if line.startswith("- id: b")]
+    chem_in_sample = [line for line in detailed if line.startswith("- id: c")]
+    assert len(bio_in_sample) == 15
+    assert len(chem_in_sample) == 15
+    assert any("Fach: Biologie" in line for line in bio_in_sample)
+    assert any("Fach: Physik" in line for line in detailed)
+
+
+async def test_stratified_sampling_uses_keywords_when_no_discipline_is_set() -> None:
+    mixed = [
+        *[
+            {
+                "id": f"m{i}",
+                "properties": {"cm:title": [f"Mechanik {i}"], "cclom:general_keyword": ["Arbeitsblatt", "Mechanik"]},
+            }
+            for i in range(430)
+        ],
+        *[
+            {
+                "id": f"q{i}",
+                "properties": {"cm:title": [f"Quanten {i}"], "cclom:general_keyword": ["Unterricht", "Quantenphysik"]},
+            }
+            for i in range(20)
+        ],
+    ]
+    llm = FakeLLM({"group_contents": grouping()})
+    await build(
+        req(mixed),
+        RunContext(
+            llm=llm,
+            settings=Settings(_env_file=None, items_inline_max=1000),
+            deadline=time.monotonic() + 60,
+            context="CTX",
+        ),
+    )
+    prompt = llm.prompts("group_contents")[0]
+    detailed = [line for line in prompt.splitlines() if line.startswith("- id: ")]
+    assert len(detailed) == SAMPLE_SIZE
+    quant_in_sample = [line for line in detailed if line.startswith("- id: q")]
+    assert len(quant_in_sample) == 20
+
+
+async def test_stratified_sampling_handles_more_than_sample_size_strata_and_keeps_dominant() -> None:
+    unique_items = [
+        {"id": f"u{i}", "properties": {"cm:title": [f"Einzelthema{i} Titel"], "cclom:general_keyword": [f"kw{i}"]}}
+        for i in range(320)
+    ]
+    dominant_items = [
+        {"id": f"dom{i}", "properties": {"cm:title": [f"Wellenoptik {i}"], "cclom:general_keyword": ["Wellenoptik"]}}
+        for i in range(50)
+    ]
+    llm = FakeLLM({"group_contents": grouping()})
+    await build(
+        req([*unique_items, *dominant_items]),
+        RunContext(
+            llm=llm,
+            settings=Settings(_env_file=None, items_inline_max=1000),
+            deadline=time.monotonic() + 60,
+            context="CTX",
+        ),
+    )
+    prompt = llm.prompts("group_contents")[0]
+    detailed = [line for line in prompt.splitlines() if line.startswith("- id: ")]
+    assert len(detailed) == SAMPLE_SIZE
+    assert any(line.startswith("- id: dom") for line in detailed)

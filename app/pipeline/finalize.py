@@ -59,6 +59,8 @@ def node_properties(node: Node, frame: Frame) -> Properties:
         props.set("cm:description", [node.description])
     if node.keywords:
         props.set("cclom:general_keyword", node.keywords)
+    else:
+        props.root.pop("cclom:general_keyword", None)
     # Frame values apply to every node unless the node is already scoped more narrowly.
     for key, values in (
         ("ccm:taxonid", frame.discipline_uri),

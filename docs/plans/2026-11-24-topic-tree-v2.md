@@ -2,7 +2,7 @@
 
 Stand: 24.11.2026 · Status: **umgesetzt und geprüft (Phasen 1–6 abgeschlossen)** · Branch: `feature/topic-tree-v2`
 
-> **Fortschritt**: Phase 1 (Fundament) ✅ · Phase 2 (v2-Vertrag & Domäne) ✅ · Phase 3 (topic, folders, refine, Zuordnung) ✅ · Phase 4 (document, contents, Referenzen) ✅ · Phase 5 (Betrieb, Docker, Helm, CI, Doku) ✅ · Phase 6 (Review, Audit, Verify + Live-E2E) ✅ · Live-Vermessung gegen OpenAI nativ (`gpt-6-luna`) ✅ (`docs/steckbrief.md`, `docs/measurements/2026-11-24-openai-gpt-6-luna.md`) · Optionale Test-UI (`/ui/`, per `UI_ENABLED=false` abschaltbar) ✅ · SkoHub-Vokabulare (inkl. `hochschulfaechersystematik`), `metadata.vocab_labels` & automatische Knoten-Metadaten (`options.auto_metadata`) ✅. Offen für Betrieb/T6: b-api-Proxy-Freischaltung, Image-Größe aus CI-Build und reale b-api-EUR-Abrechnung.
+> **Fortschritt**: Phase 1 (Fundament) ✅ · Phase 2 (v2-Vertrag & Domäne) ✅ · Phase 3 (topic, folders, refine, Zuordnung) ✅ · Phase 4 (document, contents, Referenzen) ✅ · Phase 5 (Betrieb, Docker, Helm, CI, Doku) ✅ · Phase 6 (Review, Audit, Verify + Live-E2E) ✅ · Live-Vermessung gegen OpenAI nativ (`gpt-6-luna`) ✅ (`docs/steckbrief.md`, `docs/measurements/2026-11-24-openai-gpt-6-luna.md`) · Optionale Test-UI (`/ui/`, per `UI_ENABLED=false` abschaltbar) ✅ · SkoHub-Vokabulare (inkl. `hochschulfaechersystematik`), `metadata.vocab_labels` & automatische Knoten-Metadaten (`options.auto_metadata`) ✅ · Qualitäts-Härtung ohne ML/externe Wissens-APIs (`app/domain/quality.py`, `app/domain/text.py`, stratifiziertes `contents`-Sampling, geschärfter `expand_branch`-Prompt) ✅. Offen für Betrieb/T6: b-api-Proxy-Freischaltung, Image-Größe aus CI-Build und reale b-api-EUR-Abrechnung.
 
 ## Ziel
 
@@ -160,7 +160,8 @@ Alles zusätzlich, nichts ersetzt:
 - `metadata.generation.usage`: `{ "llm_calls", "prompt_tokens", "cached_tokens", "completion_tokens", "duration_ms" }`
 - `warnings[]`: `{ "code", "message", "key"?, "step"? }` – Codes: `BRANCH_FAILED`, `DEADLINE_EXCEEDED`,
   `SHAPE_SINGLE_CHILD`, `SHAPE_DEPTH`, `SHAPE_WIDTH`, `DUPLICATE_TITLE`, `DESCRIPTION_LENGTH`,
-  `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`.
+  `DESCRIPTION_MISSING`, `GENERIC_TITLE`, `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`,
+  `VOCAB_UNKNOWN`.
 - `questions[]`: `{ "text", "key"?, "options"? }`
 - Fehlerantwort: `{ "error": { "code", "message", "trace_id", "details"? } }`, 422 für ungültige Anfragen,
   401/403 Auth, 503 `LLM_NOT_CONFIGURED` bzw. Abhängigkeit vorübergehend (mit `Retry-After`).

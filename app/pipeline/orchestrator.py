@@ -9,8 +9,10 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from app.domain.diff import mark_status_against_folders, mark_status_against_previous
 from app.domain.keys import assign_missing_keys
+from app.domain.ops import protected_keys
+from app.domain.quality import check_quality, clean_keywords, is_history_context
 from app.domain.shape_rules import ShapePlan, check_descriptions, check_shape, dedup_titles, normalize_shorttitles
-from app.domain.tree import from_tree_in, walk
+from app.domain.tree import Node, from_tree_in, index, walk
 from app.errors import ApiError
 from app.llm.client import LLMStepError
 from app.pipeline.context_block import build_context_block
@@ -23,9 +25,10 @@ from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
 from app.pipeline.steps.infer_metadata import infer_metadata
 from app.pipeline.strategies import contents, document, folders, refine, topic
-from app.schemas.common import ItemUse, Mode, UseCase
+from app.schemas.common import ChangeOp, ItemUse, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import TopicTreeResponseV2
+from app.vocab.labels import label
 
 __all__ = ["STRATEGIES", "Strategy", "StrategyResult", "run"]
 
@@ -78,6 +81,20 @@ async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         result.unassigned.extend(await assign_contents(result.roots, pending, rc, req.options))
 
 
+def _protected_keyword_keys(req: TopicTreeRequestV2, result: StrategyResult, previous: list[Node] | None) -> set[str]:
+    protected = protected_keys(result.roots, set(req.feedback.locked)) if req.feedback else set()
+    if previous is None:
+        return protected
+    old_by_key = index(previous)
+    # In refine mode, leave carried-over untouched keywords and explicit user `edit`s intact.
+    for node, _, _ in walk(result.roots):
+        old = old_by_key.get(node.key or "")
+        if old is not None and old.keywords == node.keywords:
+            protected.add(node.key)
+    protected.update(record.key for record in result.changes if record.op == ChangeOp.edit and record.key)
+    return protected
+
+
 def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
     for warning in dedup_titles(result.roots):
         rc.warn(warning.code, warning.message, warning.key, warning.step)
@@ -86,6 +103,8 @@ def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
     if previous is not None:
         assign_missing_keys(previous)
     assign_missing_keys(result.roots)
+    if not req.options.assign_only:
+        clean_keywords(result.roots, protected=_protected_keyword_keys(req, result, previous))
     if req.mode == Mode.refine:
         mark_status_against_previous(result.roots, previous)
     elif req.use_case == UseCase.folders:
@@ -96,6 +115,12 @@ def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         plan = ShapePlan.from_shape(req.shape)
         for warning in check_shape(result.roots, plan, extra=len(req.shape.extra_topics)):
             rc.warn(warning.code, warning.message, warning.key, warning.step)
+    allowed_extra = {topic.EXTRA_TITLES[kind].casefold() for kind in req.shape.extra_topics}
+    history = is_history_context(
+        req.topic, (label(uri) or "" for uri in req.frame.discipline_uri), order=req.hints.order
+    )
+    for warning in check_quality(result.roots, topic=req.topic, allowed_extra=allowed_extra, is_history=history):
+        rc.warn(warning.code, warning.message, warning.key, warning.step)
     for warning in check_descriptions(result.roots, req.hints.description_length):
         rc.warn(warning.code, warning.message, warning.key, warning.step)
 
