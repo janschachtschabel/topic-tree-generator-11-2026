@@ -9,8 +9,8 @@ Status je Zeile: ✅ belegt · ⏳ zu messen/klären · ➖ entfällt
 | Funktionen | `POST /v2/topic-tree`; alt: `/generate-topic-tree`, `/generate-collection-description` | ✅ |
 | Laufzeit je Funktion (P50/P90) | Gemessen am 24.11.2026 (OpenAI nativ, `gpt-6-luna`): nach Umstellung auf Titel-Grundgerüst + parallele 10er-Batches (`LLM_MAX_CONCURRENCY=20`): `topic` 3 Ebenen (100 Knoten) **31,1 s** (0 Duplikate, 0 Warnungen, 65 % Cache), `topic` 2 Ebenen + `auto_metadata` **31,1 s**, `topic` Berufsbildung **22,4 s**; Basismessung unter Last (`n=6, c=3`, `LLM_MAX_CONCURRENCY=8`): P50 63,5 s / P90 112,1 s (0 % Fehler); `document` 7,4 s; `folders` + `improve` 5,6 s; `contents` (12 Items) 19,7 s; `refine` 4,2 s | ✅ (OpenAI nativ; b-api-Route optional gegenzuprüfen) |
 | Kosten je Aufruf | Tokens gemessen auf `gpt-6-luna` (s. Tabelle unten, 75 % Prompt-Cache-Quote bei Last); reale EUR-Buchung nach Testlauf aus den b-api-Nutzungsdaten ablesen | ⏳ b-api-Abrechnung |
-| b-api | Proxy-Eintrag `topic-tree`, `forwardDelegation: true`, Scopes `llm`; Route `topic-tree-generator`; `responseTimeout` ≥ 310 000 ms | ⏳ mit b-api-Admin |
-| Ruft selbst die b-api? | ja, nur `/api/v1/llm/router/chat/completions`; keine verifizierte Person nötig | ✅ |
+| b-api | Proxy-Eintrag `topic-tree`, `forwardDelegation: true`, Scopes `llm`; Ziel wahlweise per Route (`B_API_ROUTE=topic-tree-generator` am Router, hat Vorrang) oder Einzelmodell (`B_API_MODEL` + `B_API_MODEL_PROVIDER` unter `/api/v1/llm/{provider}/`); `responseTimeout` ≥ 310 000 ms | ⏳ mit b-api-Admin |
+| Ruft selbst die b-api? | ja, nur `/api/v1/llm/router/chat/completions` bzw. `/api/v1/llm/{provider}/chat/completions`; keine verifizierte Person nötig | ✅ |
 | Abhängigkeiten | LLM-Route (oder OpenAI-kompatibel eigenständig); keine Datenbank, kein Repository-Zugriff | ✅ |
 | Clusterfähigkeit | zustandslos, beliebig viele Pods; gunicorn-Worker je Pod (`WEB_CONCURRENCY`) | ✅ |
 | Updates und CronJobs | keine; Vokabular-Snapshot mit Release aktualisieren (`scripts/build_vocab_snapshot.py`) | ✅ |

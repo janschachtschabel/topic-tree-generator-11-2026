@@ -349,6 +349,52 @@ curl -s http://localhost:8000/v2/topic-tree \
   }'
 ```
 
+### 7. Combining Use Cases (e.g. Topic + Items)
+
+Tree generation and content assignment are decoupled and controlled per item via `"use"` (`"content"`, `"structure"`, or both):
+
+| Combination Goal | Request Setup | Behaviour |
+|---|---|---|
+| **Topic + sort items into it** *(top-down)* | `use_case: "topic"` + `topic` + `items` *(no `use` or `["content"]`)* | Plans the tree systematically from `topic`, then assigns `items` with confidence. |
+| **Topic + items also inspire branches** *(hybrid)* | `use_case: "topic"` + `topic` + `items` with `"use": ["structure", "content"]` | Feeds up to 50 items (titles, keywords, descriptions + up to 5 fulltext excerpts) as supplementary inputs into `plan_structure` (marking extra input-driven main topics `status: "suggested"`), then assigns all content items. |
+| **Cluster items within a topic** *(bottom-up)* | `use_case: "contents"` + `topic` + `items` | Induces clusters from `items` scoped to `topic`; off-topic items land in `unassigned` (`off_topic`). Items marked `"use": ["content"]` only are sorted in without skewing clusters. |
+| **Curriculum document + topic + items** | `use_case: "document"` + optional `topic` + Markdown `"structure"` item(s) + `"content"` items | Derives the tree from curriculum headings (`origin.document`), uses `topic` as focus/title, and assigns content items. |
+| **Folders + topic + loose items + curriculum** | `use_case: "folders"` + `folders` + `items` (folder items + loose `"content"` items + optional `"structure"` doc) + `options.improve: true` | Keeps folder assignments (`confidence: 1.0`), improves folder structure using `topic` and supplementary docs, and sorts remaining loose items into matching folders. |
+| **Refine + feedback + new items** | `mode: "refine"` + `current_tree` + `feedback` + new `items` | Applies structural changes (honoring `locked`), describes new/renamed nodes, and assigns the new `items` into the updated tree in the same call. |
+
+Hybrid `topic` + `items` example:
+
+```shell
+curl -s http://localhost:8000/v2/topic-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "create",
+    "use_case": "topic",
+    "topic": "Optik in der Sekundarstufe I",
+    "items": [
+      {
+        "id": "m1",
+        "nodeId": "n-m1",
+        "use": ["structure", "content"],
+        "properties": {
+          "cm:title": ["Schülerexperiment: Lochkamera bauen"],
+          "cclom:general_keyword": ["Lochkamera", "Lichtausbreitung"]
+        }
+      },
+      {
+        "id": "m2",
+        "nodeId": "n-m2",
+        "use": ["content"],
+        "properties": {"cm:title": ["Arbeitsblatt Reflexionsgesetz"]}
+      }
+    ],
+    "frame": {
+      "discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"],
+      "educational_context_uri": ["http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"]
+    }
+  }'
+```
+
 ---
 
 ## Tests and checks

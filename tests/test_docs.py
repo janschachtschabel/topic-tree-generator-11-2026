@@ -47,7 +47,7 @@ def test_readme_inline_curl_examples_validate_against_v2_schema() -> None:
     settings = Settings(_env_file=None)
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     blocks = re.findall(r"-d '(\{.*?\})'", readme, flags=re.DOTALL)
-    assert len(blocks) == 6
+    assert len(blocks) == 7
     for raw in blocks:
         req = TopicTreeRequestV2.model_validate(json.loads(raw))
         check_request(req, settings)

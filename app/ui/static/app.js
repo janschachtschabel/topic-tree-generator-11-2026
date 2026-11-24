@@ -335,8 +335,15 @@
     if (parsedItems !== null && !Array.isArray(parsedItems)) throw new Error(t("err.itemsArray"));
     const items = parsedItems ? [...parsedItems] : [];
     if (docMd) {
+      const takenIds = new Set(items.map((item) => item && item.id).filter(Boolean));
+      let docId = "doc-manual";
+      let seq = 2;
+      while (takenIds.has(docId)) {
+        docId = `doc-manual-${seq}`;
+        seq += 1;
+      }
       items.unshift({
-        id: "doc-manual",
+        id: docId,
         use: ["structure"],
         properties: { "cm:title": [topic || "Strukturdokument"] },
         fulltext: { format: "markdown", text: docMd },

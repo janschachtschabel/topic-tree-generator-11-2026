@@ -163,6 +163,8 @@ def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
     assert "is-duplicate" in tree_js
     assert "tree.badge.duplicate" in tree_js
     assert '"Duplikat"' in i18n_js and '"Duplicate"' in i18n_js
+    app_js = client.get("/ui/assets/app.js").text
+    assert "doc-manual-" in app_js
 
 
 def test_refine_presets_start_from_a_fully_described_tree() -> None:

@@ -31,6 +31,17 @@ Standard `20`) können per Anfrage nicht überschritten werden (`422 SHAPE_LIMIT
 | `refine_feedback.json` | refine | Rückmeldung als Text; `locked` schützt Äste |
 | `assign_only.json` | refine | Nur neue Inhalte einsortieren, Struktur bleibt |
 
+## Use Cases kombinieren (z. B. Themenvorgabe + Inhalte)
+
+Strukturerzeugung und Inhaltszuordnung sind entkoppelt und lassen sich über das Feld `"use"` je Eintrag in `items` frei kombinieren:
+
+- **`use_case: "topic"` + `items` ohne `use` (oder `"use": ["content"]`)**: Baut den Baum systematisch aus `topic` und sortiert alle `items` anschließend mit Konfidenz ein.
+- **`use_case: "topic"` + `items` mit `"use": ["structure", "content"]`**: Übergibt bis zu 50 Materialien (Titel, Schlagworte, Kurzbeschreibung sowie bis zu 5 Volltext-Auszüge; darüber `INPUTS_TRUNCATED`) als ergänzende Anregung an `plan_structure` (zusätzliche Hauptthemen erhalten `status: "suggested"`) und sortiert alle Inhalte in den Baum ein.
+- **`use_case: "contents"` + `topic` + `items`**: Bildet Cluster primär aus den Materialien im Rahmen von `topic` (fachfremde Einträge landen mit `off_topic` in `unassigned`; reine `"use": ["content"]`-Einträge werden nur zugeordnet, ohne die Gruppenbildung zu verzerren).
+- **`use_case: "document"` + optional `topic` + Strukturdokument (`"structure"`) + Materialien (`"content"`)**: Leitet den Baum aus der Dokumentgliederung ab (`origin.document`) und ordnet die Materialien den Abschnitten zu.
+- **`use_case: "folders"` + `folders` + lose Zusatz-`items` (+ optionales Strukturdokument bei `options.improve: true`)**: Übernimmt bestehende Ordnerzuordnungen (`confidence: 1.0`), verbessert auf Wunsch die Ordnerstruktur und sortiert lose Materialien nach.
+- **`mode: "refine"` + `feedback` + neue `items`**: Setzt Strukturänderungen unter Schutz von `locked` um, beschreibt neue/umbenannte Knoten und sortiert neue Materialien im selben Aufruf in den aktualisierten Baum ein.
+
 ## Automatische Knoten-Metadaten (`options.auto_metadata`)
 
 Ist `options.auto_metadata: true` gesetzt und ein Feld im `frame` leer oder mehrwertig (z. B. fächerübergreifendes
@@ -53,9 +64,9 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 ## Antwort lesen
 
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `DESCRIBE_FAILED`,
-  `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`,
-  `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`, `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`,
-  `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+  `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`, `OUTLINE_FALLBACK`,
+  `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`, `FACET_AS_NODE`,
+  `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 

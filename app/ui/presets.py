@@ -134,6 +134,54 @@ PRESETS: list[dict[str, Any]] = [
         },
     },
     {
+        "id": "topic_with_contents",
+        "title": "Kombi: Thema + Materialien",
+        "badge": "topic+items",
+        "summary": "Kombiniert Themenvorgabe mit Materialien, die sowohl den Baum anregen als auch einsortiert werden.",
+        "payload": {
+            "mode": "create",
+            "use_case": "topic",
+            "topic": "Optik in der Sekundarstufe I",
+            "items": [
+                {
+                    "id": "m1",
+                    "nodeId": "n-m1",
+                    "use": ["structure", "content"],
+                    "properties": {
+                        "cm:title": ["Schülerexperiment: Lochkamera bauen"],
+                        "cclom:general_keyword": ["Lochkamera", "Lichtausbreitung"],
+                    },
+                },
+                {
+                    "id": "m2",
+                    "nodeId": "n-m2",
+                    "use": ["structure", "content"],
+                    "properties": {
+                        "cm:title": ["Optische Täuschungen und Wahrnehmung"],
+                        "cclom:general_keyword": ["Auge", "Optische Täuschung"],
+                    },
+                },
+                {
+                    "id": "m3",
+                    "nodeId": "n-m3",
+                    "use": ["content"],
+                    "properties": {
+                        "cm:title": ["Arbeitsblatt Reflexionsgesetz am ebenen Spiegel"],
+                        "cclom:general_keyword": ["Reflexion", "Spiegel"],
+                    },
+                },
+            ],
+            "frame": _FRAME_PHYS_SEK1,
+            "shape": {
+                "depth": 2,
+                "main_topics": {"min": 4, "max": 7},
+                "children": {"min": 2, "max": 5},
+                "extra_topics": [],
+            },
+            "options": {"assign_contents": True, "multi_assign": True, "min_confidence": 0.6},
+        },
+    },
+    {
         "id": "document_lehrplan",
         "title": "Dokument: Lehrplan Physik (Markdown)",
         "badge": "document",
