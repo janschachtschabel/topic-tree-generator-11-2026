@@ -1,8 +1,9 @@
 """The single way the pipeline talks to an LLM.
 
 Guarantees: no streaming; one parameter family per deployment; structured output validated against a Pydantic
-model with exactly one repair attempt (a larger budget when the reply was cut at the token limit); per-process concurrency cap; per-call timeout bounded by the request
-deadline; transport retries (with Retry-After) delegated to the OpenAI SDK; no prompt content in logs.
+model with exactly one repair attempt (a larger budget when the reply was cut at the token limit); per-process
+concurrency cap; every call bounded by the request deadline; transport retries (with Retry-After) delegated to the
+OpenAI SDK; no prompt content in logs.
 """
 
 import asyncio
