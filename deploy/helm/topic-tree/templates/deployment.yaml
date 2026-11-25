@@ -42,6 +42,7 @@ spec:
             - { name: B_API_ROUTE, value: {{ .Values.config.bApiRoute | quote }} }
             - { name: B_API_MODEL, value: {{ .Values.config.bApiModel | quote }} }
             - { name: B_API_MODEL_PROVIDER, value: {{ .Values.config.bApiModelProvider | quote }} }
+            - { name: B_API_DELEGATION_HEADER, value: {{ .Values.config.bApiDelegationHeader | quote }} }
             - { name: LLM_PARAM_FAMILY, value: {{ .Values.config.llmParamFamily | quote }} }
             - { name: LLM_REASONING_EFFORT, value: {{ .Values.config.llmReasoningEffort | quote }} }
             - { name: LLM_OUTPUT_MODE, value: {{ .Values.config.llmOutputMode | quote }} }
@@ -51,9 +52,13 @@ spec:
             - { name: LLM_MAX_CONCURRENCY, value: {{ .Values.config.llmMaxConcurrency | quote }} }
             - { name: MAX_TREE_DEPTH, value: {{ .Values.config.maxTreeDepth | quote }} }
             - { name: MAX_NODES_PER_LEVEL, value: {{ .Values.config.maxNodesPerLevel | quote }} }
+            - { name: LEGACY_MAX_RETRIES, value: {{ .Values.config.legacyMaxRetries | quote }} }
             - { name: REQUEST_TIMEOUT_SECONDS, value: {{ .Values.config.requestTimeoutSeconds | quote }} }
             - { name: WEB_CONCURRENCY, value: {{ .Values.config.webConcurrency | quote }} }
             - { name: REF_ALLOWED_HOSTS, value: {{ .Values.config.refAllowedHosts | quote }} }
+            - { name: REF_MAX_BYTES, value: {{ .Values.config.refMaxBytes | quote }} }
+            - { name: REF_TIMEOUT_SECONDS, value: {{ .Values.config.refTimeoutSeconds | quote }} }
+            - { name: ITEMS_INLINE_MAX, value: {{ .Values.config.itemsInlineMax | quote }} }
             - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
             - { name: LOG_FORMAT, value: "json" }
             - { name: UI_ENABLED, value: {{ .Values.config.uiEnabled | quote }} }

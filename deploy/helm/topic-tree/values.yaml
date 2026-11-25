@@ -19,6 +19,7 @@ replicaCount: 2
 ## @param config.bApiRoute Option 1: route name on the b-api LLM router (used first whenever set)
 ## @param config.bApiModel Option 2: single model, used only when bApiRoute is empty
 ## @param config.bApiModelProvider Provider of bApiModel at the b-api: openai | academiccloud
+## @param config.bApiDelegationHeader Custom header name for raw delegation token (empty: Authorization Bearer)
 ## @param config.llmParamFamily common | gpt5 | classic (must match the route's models)
 ## @param config.llmReasoningEffort Max reasoning effort: none | minimal | low (capped at low)
 ## @param config.llmOutputMode json_schema | json_object | prompt
@@ -28,18 +29,23 @@ replicaCount: 2
 ## @param config.llmMaxConcurrency Parallel LLM calls per worker process
 ## @param config.maxTreeDepth Hard upper limit on requested tree depth (cost control)
 ## @param config.maxNodesPerLevel Hard upper limit on requested nodes per level (cost control)
+## @param config.legacyMaxRetries Transport retries for the frozen v1 endpoints
 ## @param config.requestTimeoutSeconds Deadline per request; the b-api proxy timeout must be larger
 ## @param config.webConcurrency gunicorn workers per pod
 ## @param config.refAllowedHosts Comma-separated hosts allowed for items_ref/fulltext.ref (empty: none)
+## @param config.refMaxBytes Maximum download size per referenced resource in bytes
+## @param config.refTimeoutSeconds Timeout in seconds per referenced URL download
+## @param config.itemsInlineMax Maximum number of inline items per request
 ## @param config.logLevel Log level
 ## @param config.uiEnabled Serve the built-in test UI under /ui/ (keep false in production)
 ## @param config.extraEnv Additional environment variables (name: value)
 config:
-  serviceMode: auto
+  serviceMode: bapi
   bApiBaseUrl: https://b-api.staging.openeduhub.net
   bApiRoute: topic-tree-generator
   bApiModel: ""
   bApiModelProvider: openai
+  bApiDelegationHeader: ""
   llmParamFamily: common
   llmReasoningEffort: none
   llmOutputMode: json_schema
@@ -49,9 +55,13 @@ config:
   llmMaxConcurrency: 20
   maxTreeDepth: 3
   maxNodesPerLevel: 20
+  legacyMaxRetries: 4
   requestTimeoutSeconds: 280
   webConcurrency: 2
   refAllowedHosts: ""
+  refMaxBytes: 10485760
+  refTimeoutSeconds: 20
+  itemsInlineMax: 500
   logLevel: INFO
   uiEnabled: false
   extraEnv: {}
@@ -76,8 +86,8 @@ resources:
   limits:
     memory: 512Mi
 
-## @param terminationGracePeriodSeconds Lets running requests finish (gunicorn graceful timeout is 70 s)
-terminationGracePeriodSeconds: 90
+## @param terminationGracePeriodSeconds Lets running requests finish (above requestTimeoutSeconds + 10 s)
+terminationGracePeriodSeconds: 300
 
 ## @section Ingress (normally not needed: the b-api reaches the Service directly)
 ## @param ingress.enabled Create an Ingress for the public port

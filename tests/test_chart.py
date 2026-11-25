@@ -80,9 +80,9 @@ def test_default_render_has_two_ports_probes_and_restricted_security() -> None:
     assert pod["securityContext"]["seccompProfile"]["type"] == "RuntimeDefault"
     assert {"name": "tmp", "mountPath": "/tmp"} in container["volumeMounts"]
     env = {e["name"]: e.get("value") for e in container["env"]}
-    assert env["SERVICE_ID"] == "topic-tree" and env["SERVICE_MODE"] == "auto"
+    assert env["SERVICE_ID"] == "topic-tree" and env["SERVICE_MODE"] == "bapi"
     assert env["UI_ENABLED"] == "false"
-    assert docs["Deployment"]["spec"]["template"]["spec"]["terminationGracePeriodSeconds"] >= 80
+    assert docs["Deployment"]["spec"]["template"]["spec"]["terminationGracePeriodSeconds"] >= 290
     ports = {p["name"]: p["port"] for p in docs["Service"]["spec"]["ports"]}
     assert ports == {"http": 8000, "internal": 9000}
 

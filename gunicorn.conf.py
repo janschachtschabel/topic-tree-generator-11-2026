@@ -21,7 +21,7 @@ workers = _settings.web_concurrency
 worker_class = "uvicorn_worker.UvicornWorker"
 # Requests run synchronously up to REQUEST_TIMEOUT_SECONDS; the worker timeout must be longer.
 timeout = int(_settings.request_timeout_seconds) + 30
-graceful_timeout = 70
+graceful_timeout = max(70, int(_settings.request_timeout_seconds) + 10)
 keepalive = 5
 accesslog = None
 
