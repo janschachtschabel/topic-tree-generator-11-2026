@@ -145,6 +145,7 @@ def test_b_api_model_uses_the_openai_provider_endpoint_by_default() -> None:
     assert s.b_api_model_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
     assert make(B_API_MODEL_PROVIDER="academiccloud").b_api_model_url.endswith("/api/v1/llm/academiccloud/")
     assert make(B_API_PROVIDER="academiccloud").b_api_model_url.endswith("/api/v1/llm/academiccloud/")
+    assert make(B_API_PROVIDER="router").b_api_model_provider == "openai"
     assert s.b_api_router_url.endswith("/api/v1/llm/router/")
     assert make(B_API_MODEL="").b_api_model is None
 
@@ -152,3 +153,5 @@ def test_b_api_model_uses_the_openai_provider_endpoint_by_default() -> None:
 def test_b_api_model_provider_is_restricted_to_the_gateway_providers() -> None:
     with pytest.raises(ValidationError):
         make(B_API_MODEL_PROVIDER="router")
+    with pytest.raises(ValidationError):
+        make(B_API_PROVIDER="unknown-gateway")

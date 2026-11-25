@@ -36,15 +36,7 @@ class Settings(BaseSettings):
     # Option 2: one model (e.g. gpt-6-luna) at its provider's endpoint /api/v1/llm/{provider}/; used when no route
     # is set. Providers of the gateway: openai, academiccloud (alias B_API_PROVIDER also accepts "router").
     b_api_model: str | None = None
-    b_api_model_provider: Literal["openai", "academiccloud"] = Field(
-        "openai",
-        validation_alias=AliasChoices(
-            "b_api_model_provider",
-            "B_API_MODEL_PROVIDER",
-            "b_api_provider",
-            "B_API_PROVIDER",
-        ),
-    )
+    b_api_model_provider: Literal["openai", "academiccloud"] = "openai"
     b_api_delegation_header: str | None = None
     b_api_dev_key: SecretStr | None = None
 
@@ -82,6 +74,24 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: Literal["json", "text"] = "json"
     ui_enabled: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def _apply_b_api_provider_alias(cls, values: object) -> object:
+        if not isinstance(values, dict):
+            return values
+        has_explicit = any(k in values for k in ("b_api_model_provider", "B_API_MODEL_PROVIDER"))
+        for alias in ("B_API_PROVIDER", "b_api_provider"):
+            if alias in values:
+                raw = values[alias]
+                norm = raw.strip().lower() if isinstance(raw, str) else None
+                invalid = not isinstance(raw, str) and raw is not None
+                if invalid or (norm and norm not in {"router", "openai", "academiccloud"}):
+                    values = {**values, "b_api_model_provider": raw}
+                elif not has_explicit and norm in {"openai", "academiccloud"}:
+                    values = {**values, "b_api_model_provider": norm}
+                break
+        return values
 
     @field_validator(
         "b_api_route",

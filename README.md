@@ -15,9 +15,9 @@ request → input & cap checks → resolve refs (allow-listed) → strategy per 
         → dedup, short titles, keys, status, shape & quality checks → JSON response
 ```
 
-- **`topic`**: Generates the complete title-only skeleton across all requested levels in a single LLM call, eliminates any duplicate titles deterministically, and describes all nodes in parallel balanced batches of up to 10 nodes (each sharing the full tree outline in the prompt-cache prefix for crisp demarcation).
-- **`document`**: Parses Markdown headings and page markers deterministically, maps the outline into a tree with `origin.document` (`section`, `page`), and writes node descriptions from section excerpts.
-- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`) and optionally proposes renames/merges/moves when `options.improve=true`.
+- **`topic`**: Generates the complete title-only skeleton across all requested levels in a single LLM call, eliminates any duplicate titles deterministically, and describes all nodes in parallel balanced batches of up to 10 nodes (each sharing the full tree outline in the prompt-cache prefix for crisp demarcation). Extra Level-1 topics (`extra_topics`: `"general"`, `"methodology"`) count toward the total Level-1 `main_topics` range.
+- **`document`**: Parses Markdown headings and page markers deterministically, maps the outline into a tree with `origin.document` (`section`, `page`), and writes node descriptions from section excerpts (falling back deterministically to the document's headings with an `LLM_DEGRADED` warning if the LLM is unavailable).
+- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`), optionally proposes renames/merges/moves when `options.improve=true`, and degrades gracefully (`LLM_DEGRADED`) if the LLM is unavailable.
 - **`contents`**: Induces topic groups from a stratified sample of items (`origin.cluster`), eliminates duplicate group titles, and assigns every item with confidence.
 - **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree.
 - **Prompt caching**: All prompts live in `app/prompts/`; `system.md` is strictly static across every LLM call.
@@ -143,7 +143,7 @@ All settings are read from environment variables or `.env` and have defaults (se
 | `B_API_BASE_URL` | `https://b-api.staging.openeduhub.net` | Base URL of the b-api gateway (router path `/api/v1/llm/router/` is appended automatically). |
 | `B_API_ROUTE` | *(empty)* | Option 1: route name at the b-api LLM router (`/api/v1/llm/router/`), e.g. `topic-tree-generator`. **Used first whenever set** (legacy alias: `LLM_MODEL`). The frozen legacy endpoints fall back to `topic-tree-generator` when it is empty. |
 | `B_API_MODEL` | *(empty)* | Option 2: a single model (e.g. `gpt-6-luna`), used only while `B_API_ROUTE` is empty. It is sent to the provider endpoint `/api/v1/llm/<B_API_MODEL_PROVIDER>/`. Alternatively the router accepts `provider/model` as a route name (`B_API_ROUTE=openai/gpt-6-luna`). Without route and model, b-api requests answer `503 LLM_NOT_CONFIGURED`. |
-| `B_API_MODEL_PROVIDER` | `openai` | Provider of `B_API_MODEL` at the b-api: `openai` or `academiccloud`. |
+| `B_API_MODEL_PROVIDER` | `openai` | Provider of `B_API_MODEL` at the b-api: `openai` or `academiccloud` (alias `B_API_PROVIDER` also accepts `router`). |
 | `B_API_DELEGATION_HEADER` | *(empty)* | Custom header name if the b-api proxy sends the delegation token outside `Authorization`. |
 | `B_API_DEV_KEY` | *(empty)* | Local developer key for direct b-api staging tests when `OPENAI_API_KEY` is not set. |
 | `OPENAI_API_KEY` | *(empty)* | API key for standalone OpenAI or OpenAI-compatible endpoints. |
@@ -196,7 +196,11 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 
 ## Use Cases & Examples (`POST /v2/topic-tree`)
 
-All examples below work directly against `http://localhost:8000/v2/topic-tree` (also saved under [`docs/examples/`](docs/examples/)). If `SERVICE_API_KEYS` is configured in standalone mode, add `-H "Authorization: Bearer <key>"`. When `shape` is omitted, the service automatically applies recommended depth and width ranges based on the educational context (`educational_context_uri`).
+All examples below work directly against `http://localhost:8000/v2/topic-tree` (also saved under [`docs/examples/`](docs/examples/)). If `SERVICE_API_KEYS` is configured in standalone mode, add `-H "Authorization: Bearer <key>"`.
+
+**Automatic `shape` defaults when omitted:**
+- **Pure `topic` (without structure items)**: applies target-group recommendations (`5–15` main topics and `3` levels for school/vocational/higher-ed; `5–10` and `2` levels for early childhood; `5–12` and `2` levels for adult/organizational contexts). Requested `extra_topics` (`"general"`, `"methodology"`) count toward the Level-1 `main_topics` total.
+- **Input-driven requests (`document`, `contents`, `folders`, or `topic` with `"structure"` items)**: width follows the supplied input up to `MAX_NODES_PER_LEVEL` (`20`, e.g. a full curriculum with 20 main areas), while depth stays bounded by `MAX_TREE_DEPTH` (`3`).
 
 ### 1. `topic` – Generate a tree from a topic
 

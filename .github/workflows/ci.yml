@@ -34,7 +34,8 @@ jobs:
             echo "Tag $TAG_VER does not match service version $PY_VER" >&2
             exit 1
           fi
-          git merge-base --is-ancestor HEAD origin/main
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main
       - name: Docker Compose validation
         run: |
           docker compose config -q

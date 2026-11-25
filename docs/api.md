@@ -16,9 +16,10 @@ eingebaute Test-Oberfläche unter `/ui/` bereit (steuerbar über `UI_ENABLED=tru
 {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]}}
 ```
 
-Wird `shape` weggelassen, wählt der Dienst automatisch empfohlene Tiefen- und Breitenwerte passend zur Bildungsstufe
-(`educational_context_uri`). Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, Standard `3`; `MAX_NODES_PER_LEVEL`,
-Standard `20`) können per Anfrage nicht überschritten werden (`422 SHAPE_LIMIT_EXCEEDED`).
+Wird `shape` weggelassen, wählt der Dienst Tiefe und Breite passend zum Aufruf:
+- **Reine Themenvorgabe (`use_case: "topic"` ohne Struktur-Items):** Empfehlungsrahmen je Zielgruppe (`5–15` Hauptknoten und max. `3` Ebenen für Schule/Berufsbildung/Hochschule; `5–10` bzw. `5–12` und max. `2` Ebenen für Elementarbereich bzw. Fortbildung/Organisationen). Gesetzte `extra_topics` (`general`, `methodology`) zählen regulär zur Gesamtzahl auf Ebene 1.
+- **Strukturgetriebene Eingaben (`document`, `contents`, `folders` sowie `topic` mit `"structure"`-Items):** Breite richtet sich nach dem Input bis `MAX_NODES_PER_LEVEL` (Standard `20`, z. B. Lehrplan mit 20 Themenfeldern), Tiefe bleibt auf `MAX_TREE_DEPTH` (Standard `3`) begrenzt.
+Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`) können per Anfrage nicht überschritten werden (`422 SHAPE_LIMIT_EXCEEDED`).
 
 ## Je Use Case
 
@@ -63,10 +64,10 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 
 ## Antwort lesen
 
-- `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `DESCRIBE_FAILED`,
-  `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`, `OUTLINE_FALLBACK`,
-  `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`, `FACET_AS_NODE`,
-  `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+- `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
+  `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
+  `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
+  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 

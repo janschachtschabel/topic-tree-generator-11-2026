@@ -36,12 +36,20 @@ def has_structure_inputs(req: TopicTreeRequestV2) -> bool:
     return any(ItemUse.structure in req.effective_use(item) for item in (req.items or []))
 
 
-def explicit_shape(req: TopicTreeRequestV2) -> ExplicitShape:
-    """Which shape dimensions were explicitly supplied by the caller (or inherited from generation)."""
+def explicit_shape(req: TopicTreeRequestV2, settings: Settings | None = None) -> ExplicitShape:
+    """Which shape dimensions were explicitly constrained by the caller (or non-default generation)."""
     has_shape = "shape" in req.model_fields_set
     sent = req.shape.model_fields_set if has_shape else set()
     gen = req.current_tree.generation if req.current_tree else None
-    gen_sent = gen.shape.model_fields_set if (gen and gen.shape is not None) else set()
+    gen_sent: set[str] = set()
+    if gen and gen.shape is not None:
+        gen_sent = set(gen.shape.model_fields_set)
+        if has_structure_inputs(req):
+            max_w = settings.max_nodes_per_level if settings else 20
+            if (gen.shape.main_topics.min, gen.shape.main_topics.max) == (2, max_w):
+                gen_sent.discard("main_topics")
+            if (gen.shape.children.min, gen.shape.children.max) == (2, max_w):
+                gen_sent.discard("children")
     active = sent | gen_sent
     return ExplicitShape(
         depth="depth" in active,

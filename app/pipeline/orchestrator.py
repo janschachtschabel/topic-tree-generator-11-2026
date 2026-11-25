@@ -173,7 +173,7 @@ async def run(
     if resolved is not req:
         req = resolved
         check_request(req, rc.settings, loaded=True)
-    rc.explicit_shape = explicit_shape(req)
+    rc.explicit_shape = explicit_shape(req, rc.settings)
     req = effective_request(req, rc.settings)
     if req.mode == Mode.refine:
         strategy: Strategy | None = refine.build

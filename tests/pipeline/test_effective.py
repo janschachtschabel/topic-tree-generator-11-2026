@@ -103,6 +103,21 @@ def test_omitted_shape_on_document_and_contents_allows_up_to_20_nodes_from_input
     struct_eff = effective_request(topic_with_struct, Settings(_env_file=None))
     assert (struct_eff.shape.main_topics.min, struct_eff.shape.main_topics.max) == (2, 20)
 
+    # Refining an input-driven tree whose generation stored the automatic 2..20 width keeps main_topics non-explicit.
+    refine_doc = _req(
+        {
+            "mode": "refine",
+            "use_case": "document",
+            "current_tree": {
+                "collection": [{"key": "k-a", "title": "Einziges Kapitel"}],
+                "generation": {"shape": doc_eff.shape.model_dump()},
+            },
+            "feedback": {"text": "Unterpunkt ergänzen"},
+            "frame": {},
+        }
+    )
+    assert explicit_shape(refine_doc, Settings(_env_file=None)).main_topics is False
+
 
 def test_explicit_shape_fields_are_preserved_while_omitted_siblings_get_defaults() -> None:
     req = _req(
