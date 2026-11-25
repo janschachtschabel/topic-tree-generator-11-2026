@@ -57,6 +57,9 @@ als `current_tree.version` sowie (optional) `metadata.title`/`metadata.descripti
 `current_tree.description` zurückgeben und nur das neue `feedback` ergänzen. Fehlende Vorgaben übernimmt der Dienst
 aus `generation` (außer `options.assign_only`, das nur für den einen Aufruf gilt).
 
+Änderungsoperationen in `feedback.changes`: `move` ohne `to` (oder mit `to: null`) verschiebt einen Knoten auf die
+Hauptebene.
+
 ## Seitenmarken im Markdown (use_case document)
 
 Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) sowie `<!-- page_break -->`,

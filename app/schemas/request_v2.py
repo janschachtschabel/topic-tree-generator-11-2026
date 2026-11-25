@@ -150,7 +150,7 @@ _REQUIRED_BY_OP: dict[ChangeOp, tuple[str, ...]] = {
     ChangeOp.remove: ("key",),
     ChangeOp.rename: ("key", "title"),
     ChangeOp.edit: ("key", "properties"),
-    ChangeOp.move: ("key", "to"),
+    ChangeOp.move: ("key",),  # `to` omitted or null: move to the top level
     ChangeOp.merge: ("keys", "title"),
     ChangeOp.split: ("key", "hint"),
 }

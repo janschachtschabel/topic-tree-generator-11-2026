@@ -11,7 +11,7 @@ Ebenen (Jahr, „alt“, „neu“) durch fachliche ersetzen und Einzelkind-Ordn
 passende Geschwister darunter verschieben, sodass kein Ordner genau ein Kind hat).
 Fachlich treffende Namen (z. B. „Optik“, „Linsen“) bleiben unverändert, auch wenn ein Inhalt nur einen Teilaspekt
 behandelt; schlage keine Umbenennung auf den bisherigen Namen vor.
-Erlaubte Operationen: `rename` (key, title), `move` (key, to), `merge` (keys, title), `add` (parent oder null, title)
+Erlaubte Operationen: `rename` (key, title), `move` (key, to oder null für die oberste Ebene), `merge` (keys, title), `add` (parent oder null, title)
 für einen neuen gruppierenden Ordner. Verwende nur Schlüssel aus dem Ordnerbaum oder Schlüssel, die du mit `add`
 angelegt hast, sobald sie zurückgemeldet sind; für neue Ordner nutze nur `add`. Ist nichts zu verbessern, gib
 eine leere Liste zurück.

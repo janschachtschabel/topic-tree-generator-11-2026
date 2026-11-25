@@ -8,7 +8,7 @@
 - `add`: neuen Knoten anlegen (`title` = Name des neuen Knotens, `parent` = `key` des Elternknotens oder `null` für die Hauptebene, `key: null` – der Dienst vergibt neue Schlüssel automatisch!). Soll ein neuer Knoten direkt Unterknoten erhalten, lege zuerst den Elternknoten per `add` an und setze bei den nachfolgenden Kinder-`add`s `parent` auf den exakten `title` dieses neuen Elternknotens.
 - `remove`: bestehenden Knoten entfernen (`key` aus „Aktueller Baum“).
 - `rename`: bestehenden Knoten umbenennen (`key` aus „Aktueller Baum“, `title` = neuer Name).
-- `move`: bestehenden Knoten verschieben (`key` = zu verschiebender Knoten, `to` = Ziel-Elternknoten).
+- `move`: bestehenden Knoten verschieben (`key` = zu verschiebender Knoten, `to` = Ziel-Elternknoten; `to: null` = auf die Hauptebene).
 - `merge`: mindestens zwei bestehende Knoten zusammenlegen (`keys`, `title`).
 - `split`: bestehenden Knoten aufteilen (`key`, `hint`).
 
