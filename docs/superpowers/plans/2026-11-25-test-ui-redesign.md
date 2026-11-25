@@ -1,6 +1,6 @@
 # Test-UI Redesign Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Rebuild the `/ui/` test page around a task navigation ("Ausgangslage + Zusätze"), line editors for
 materials and folders, a structured change editor for `refine`, and a fuller preset catalogue.
@@ -50,15 +50,15 @@ them; DOM code lives in `changes.js`, `result.js`, `app.js`. Python serves the f
     representable → returns `null`).
   - `treeNodeOptions(collection) -> {key, title, depth}[]` (pre-order).
 
-- [ ] Step 1: write `tests/ui_js/parsers.test.cjs` with `node:test` cases: full line, title-only line, CRLF,
+- [x] Step 1: write `tests/ui_js/parsers.test.cjs` with `node:test` cases: full line, title-only line, CRLF,
   blank lines, `a1`/`a2` ids, use passed through; folder outline 2 levels with files; 3-space indent → error line 2;
   file before folder → error line 1; round trip `folderOutlineFromPayload(parseFolderOutline(x))` for the
   `folders_upload` preset text; `treeNodeOptions` depth order.
-- [ ] Step 2: write `tests/api/test_ui_js.py::test_ui_js_unit_tests` running `node --test tests/ui_js/` (skip if
+- [x] Step 2: write `tests/api/test_ui_js.py::test_ui_js_unit_tests` running `node --test tests/ui_js/` (skip if
   `shutil.which("node")` is None), assert returncode 0, show stdout on failure.
-- [ ] Step 3: run `uv run pytest tests/api/test_ui_js.py -q` → FAIL (module missing).
-- [ ] Step 4: implement `parsers.js`.
-- [ ] Step 5: run → PASS; commit `feat(ui): add line parsers for materials and folders`.
+- [x] Step 3: run `uv run pytest tests/api/test_ui_js.py -q` → FAIL (module missing).
+- [x] Step 4: implement `parsers.js`.
+- [x] Step 5: run → PASS; commit `feat(ui): add line parsers for materials and folders`.
 
 ### Task 2: Request builder (`payload.js`)
 
@@ -69,19 +69,19 @@ them; DOM code lives in `changes.js`, `result.js`, `app.js`. Python serves the f
 - Consumes Task 1.
 - Produces `TopicTreePayload.build(form) -> payload` (throws `Error` whose `message` is an i18n key, with
   `.vars`). `form` is a plain object:
-  `{task: "topic"|"document"|"folders"|"contents"|"refine", topic, frame:{discipline_uri[],educational_context_uri[],intended_end_user_role_uri[]}, shape:{depth,mainMin,mainMax,childMin,childMax,extraGeneral,extraMethodology}, hints:{context,order,language,include,exclude,descriptionLength}, options:{autoMetadata,improve,assignContents,assignOnly,multiAssign,minConfidence}, extras:{structureMaterials:bool, contentMaterials:bool, document:bool, topicFrame:bool}, materialsA, materialsB, itemsRef, document:{markdown, ref, title}, folderOutline, currentTree, feedback:{text, locked[], changes[]}}`.
+  `{task: "topic"|"document"|"folders"|"contents"|"refine", topic, frame:{discipline_uri[],educational_context_uri[],intended_end_user_role_uri[]}, shape:{depth,mainMin,mainMax,childMin,childMax,extraGeneral,extraMethodology}, hints:{context,order,language,include,exclude,descriptionLength}, options:{autoMetadata,improve,assignContents,assignOnly,multiAssign,minConfidence}, extras:{structureMaterials:bool, contentMaterials:bool, document:bool, topicFrame:bool}, materialsA, materialsB, itemsRef, documentMarkdown, documentRef, documentTitle, folderOutline, currentTree, feedback:{text, locked[], rows[]}, limits}`.
   Mapping per spec table "Abdeckung"; fields of hidden extras are ignored; `use_case` for refine =
   `currentTree.generation.use_case || "topic"`.
 - Produces `TopicTreePayload.validateChanges(rows) -> {changes, errors}`; row
   `{op, key, keys[], to, title, hint, description}`; required fields as `_REQUIRED_BY_OP`; `edit` maps
   `description` to `properties["cm:description"]`; `move` with empty `to` sends `to: null`; `merge` needs ≥2 keys.
 
-- [ ] Step 1: tests: topic + both material lists → `a*` with `["structure","content"]`, `b*` with `["content"]`;
+- [x] Step 1: tests: topic + both material lists → `a*` with `["structure","content"]`, `b*` with `["content"]`;
   topic with extras off but text in material fields → no `items`; document with ref → fulltext.ref; folders outline →
   `folders` + `f*` items; contents without materialsA → throws `err.materialsRequired`; refine use_case fallback;
   `itemsRef` plus items → throws `err.itemsAndRef`; shape partial min/max as current UI; every op valid/invalid.
-- [ ] Step 2: run → FAIL. Step 3: implement. Step 4: run → PASS.
-- [ ] Step 5: commit `feat(ui): build v2 requests from task form state`.
+- [x] Step 2: run → FAIL. Step 3: implement. Step 4: run → PASS.
+- [x] Step 5: commit `feat(ui): build v2 requests from task form state`.
 
 ### Task 3: Presets with tasks and new scenarios
 
