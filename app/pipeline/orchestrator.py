@@ -88,7 +88,7 @@ def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
 
 async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
     """Assign content items that the strategy did not place itself."""
-    if not req.options.assign_contents or result.contents_assigned:
+    if not req.options.assign_contents:
         return
     assign_missing_keys(result.roots)
     placed = {ref.id for node, _, _ in walk(result.roots) for ref in node.contents}
