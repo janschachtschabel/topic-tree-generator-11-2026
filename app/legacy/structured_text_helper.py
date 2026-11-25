@@ -7,10 +7,16 @@ from pydantic import ValidationError
 from app.legacy.dtos.collection import Collection
 from app.legacy.dtos.properties import Properties
 from app.legacy.prompts import BASE_INSTRUCTIONS
+from app.llm.client import acquire_llm_slot
 
 
 async def generate_structured_text(
-    client: AsyncOpenAI, prompt: str, model: str, max_description_length: int, require_list=True
+    client: AsyncOpenAI,
+    prompt: str,
+    model: str,
+    max_description_length: int,
+    require_list: bool = True,
+    concurrency: int = 20,
 ) -> list[Collection] | dict | None:
     """
     Schickt die Prompt-Anfrage an das konfigurierte LLM
@@ -18,12 +24,13 @@ async def generate_structured_text(
     """
     try:
         system_prompt = BASE_INSTRUCTIONS.format(max_description_length=max_description_length)
-        resp = await client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            # max_tokens=2000,
-            # temperature=0.7,
-        )
+        async with acquire_llm_slot(concurrency):
+            resp = await client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                # max_tokens=2000,
+                # temperature=0.7,
+            )
         content = resp.choices[0].message.content
         if not content.strip():
             raise Exception("The AI model returned an empty response.")

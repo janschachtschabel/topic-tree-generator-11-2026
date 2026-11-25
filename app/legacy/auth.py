@@ -15,6 +15,7 @@ class LegacyTarget:
     base_url: str | None
     model: str
     max_retries: int
+    concurrency: int = 20
 
 
 def _unauthorized() -> HTTPException:
@@ -32,6 +33,7 @@ def _standalone_target(cfg: Settings) -> LegacyTarget | None:
             cfg.openai_base_url,
             cfg.openai_model,
             cfg.legacy_max_retries,
+            cfg.llm_max_concurrency,
         )
     if cfg.b_api_dev_key:
         return LegacyTarget(
@@ -39,6 +41,7 @@ def _standalone_target(cfg: Settings) -> LegacyTarget | None:
             cfg.b_api_router_url,
             cfg.legacy_route,
             cfg.legacy_max_retries,
+            cfg.llm_max_concurrency,
         )
     return None
 
@@ -53,7 +56,13 @@ def resolve_target(request: Request, cfg: Settings) -> LegacyTarget:
         raise HTTPException(status_code=exc.status, detail=exc.message) from exc
 
     if caller.mode == "bapi" and caller.delegation_token:
-        return LegacyTarget(caller.delegation_token, cfg.b_api_router_url, cfg.legacy_route, cfg.legacy_max_retries)
+        return LegacyTarget(
+            caller.delegation_token,
+            cfg.b_api_router_url,
+            cfg.legacy_route,
+            cfg.legacy_max_retries,
+            cfg.llm_max_concurrency,
+        )
 
     target = _standalone_target(cfg)
     if target is not None:
@@ -62,7 +71,13 @@ def resolve_target(request: Request, cfg: Settings) -> LegacyTarget:
     if cfg.service_mode == "auto" and not cfg.service_api_keys:
         token = extract_bearer(request.headers)
         if token:
-            return LegacyTarget(token, cfg.b_api_router_url, cfg.legacy_route, cfg.legacy_max_retries)
+            return LegacyTarget(
+                token,
+                cfg.b_api_router_url,
+                cfg.legacy_route,
+                cfg.legacy_max_retries,
+                cfg.llm_max_concurrency,
+            )
         raise _unauthorized()
 
     raise HTTPException(

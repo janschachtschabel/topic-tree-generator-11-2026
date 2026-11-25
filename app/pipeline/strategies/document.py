@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from app.domain.keys import assign_missing_keys
 from app.domain.text import truncate_sentences
 from app.domain.tree import Node, walk
+from app.llm.client import LLMStepError
 from app.pipeline.inputs.outline import Section, parse_outline
 from app.pipeline.inputs.outline_tree import drop_title_heading, outline_mapping
 from app.pipeline.result import StrategyResult
@@ -118,8 +119,22 @@ def _checked_mapping(
 async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     docs = structure_documents(req)
     sections = [s for doc in docs for s in _sections(doc)]
-    mapping = await map_outline(_outline_text(sections, docs, rc), rc)
-    mapped = _checked_mapping(mapping.nodes, sections, req, rc)
+    try:
+        mapping = await map_outline(_outline_text(sections, docs, rc), rc)
+        mapped = _checked_mapping(mapping.nodes, sections, req, rc)
+        order, levels, description = mapping.order, mapping.levels, mapping.description
+    except LLMStepError as err:
+        fallback = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
+        if not fallback or len(sections) <= len(docs):
+            raise
+        rc.warn(
+            "LLM_DEGRADED",
+            f"Sprachmodell für Gliederung nicht verfügbar ({err.status or err.reason}); "
+            "der Baum folgt direkt den Überschriften des Dokuments.",
+            step="map_outline",
+        )
+        mapped = fallback
+        order, levels, description = "Gliederung", [], ""
 
     converter = _Converter({s.ref: s for s in sections}, docs[0].id, req)
     roots = converter.nodes(mapped, req.shape.depth, req.shape.main_topics.max)
@@ -146,10 +161,10 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     return StrategyResult(
         roots=roots,
         title=title,
-        description=mapping.description,
+        description=description,
         structure=StructureInfo(
-            order=req.hints.order or mapping.order,
-            levels=mapping.levels[: req.shape.depth],
+            order=req.hints.order or order,
+            levels=levels[: req.shape.depth],
             source="hint" if req.hints.order else "input",
         ),
     )

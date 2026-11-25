@@ -249,3 +249,56 @@ async def test_whitespace_only_structure_item_is_ignored_when_valid_doc_follows(
     )
     result = await build(req([blank, valid]), rc(llm))
     assert result.roots[0].origin.id == "d-real"
+
+
+async def test_document_without_explicit_shape_keeps_all_20_curriculum_main_areas() -> None:
+    sections_md = "# Rahmenlehrplan\n" + "\n".join(
+        f"## Themenfeld {i}: Bereich {i}\n### Teil {i}.1\n### Teil {i}.2" for i in range(1, 21)
+    )
+    mapped_20 = {
+        "order": "Themenfelder",
+        "levels": ["Themenfeld", "Thema"],
+        "description": "Vollständiger Lehrplan mit 20 Hauptbereichen",
+        "nodes": [
+            {
+                "title": f"Bereich {i}",
+                "shorttitle": f"B{i}",
+                "section_ids": [f"d1:s{1 + (i - 1) * 3 + 1}"],
+                "children": [
+                    {"title": f"Teil {i}a", "shorttitle": f"T{i}a", "section_ids": [], "children": []},
+                    {"title": f"Teil {i}b", "shorttitle": f"T{i}b", "section_ids": [], "children": []},
+                ],
+            }
+            for i in range(1, 21)
+        ],
+    }
+    raw_req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "create",
+            "use_case": "document",
+            "items": [doc(text=sections_md)],
+            "frame": ex.FRAME,
+        }
+    )
+    llm = FakeLLM({"map_outline": mapped_20, "describe_nodes": describe})
+    run = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(raw_req, run)
+    assert len(resp.collection) == 20
+    assert "SHAPE_WIDTH" not in [w.code for w in resp.warnings]
+    assert "nach Struktur der Eingaben (bis höchstens 20 Knoten)" in llm.prompts("map_outline")[0]
+
+
+async def test_document_falls_back_to_deterministic_outline_when_llm_unavailable() -> None:
+    from app.llm.client import LLMStepError
+
+    llm = FakeLLM(
+        {
+            "map_outline": LLMStepError("map_outline", "http_error", 429),
+            "describe_nodes": LLMStepError("describe_nodes", "http_error", 429),
+        }
+    )
+    run = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60, mode="bapi")
+    resp = await orchestrator.run(req([doc(text=TITLED)], hints={"exclude": ["Wahlpflicht"]}), run)
+    assert [n.title for n in resp.collection] == ["Themenfeld 1: Licht", "Themenfeld 2: Grenzflächen"]
+    codes = [w.code for w in resp.warnings]
+    assert "LLM_DEGRADED" in codes and "DESCRIBE_FAILED" in codes

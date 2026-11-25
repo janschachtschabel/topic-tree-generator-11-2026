@@ -252,6 +252,36 @@ def test_lowercase_bearer_scheme_is_rejected_like_v2(monkeypatch) -> None:
     assert resp.headers["www-authenticate"] == "Bearer"
 
 
+def test_legacy_endpoints_propagate_trace_headers_and_hide_exception_text(monkeypatch) -> None:
+    monkeypatch.setattr(legacy, "settings", Settings(_env_file=None))
+    seen_headers: list[dict[str, str]] = []
+
+    class HeaderRecordingOpenAI:
+        def __init__(self, *, api_key: str, base_url: str | None, max_retries: int, default_headers: dict[str, str]):
+            seen_headers.append(default_headers)
+            self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.fail))
+
+        async def fail(self, **_: object) -> SimpleNamespace:
+            raise RuntimeError("secret-internal-dsn=postgres://hunter2")
+
+    with patch.object(legacy, "AsyncOpenAI", HeaderRecordingOpenAI):
+        resp = client.post(
+            "/generate-collection-description",
+            json={"text_context": "SENSITIVE_USER_INPUT_123"},
+            headers={
+                "Authorization": "Bearer bdt_tok",
+                "X-B3-TraceId": "463ac35c9f6413ad48485a3953bb6124",
+                "x-client-trace-id": "client-trace-42",
+            },
+        )
+
+    assert resp.status_code == 500
+    assert "hunter2" not in resp.text
+    assert seen_headers[0]["X-B3-TraceId"] == "463ac35c9f6413ad48485a3953bb6124"
+    assert seen_headers[0]["x-client-trace-id"] == "client-trace-42"
+    assert not any(k.lower() == "x-api-key" or k.lower().startswith("x-edu") for k in seen_headers[0])
+
+
 def test_max_retries_uses_environment_override(monkeypatch) -> None:
     monkeypatch.setenv("MAX_RETRIES", "7")
 

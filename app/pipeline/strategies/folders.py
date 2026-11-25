@@ -3,6 +3,7 @@
 from app.domain.diff import FOLDER_SEPARATOR
 from app.domain.keys import assign_missing_keys
 from app.domain.tree import Node, walk
+from app.llm.client import LLMStepError
 from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
@@ -48,9 +49,17 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     titles = item_titles(req.items or [])
     changes = []
     if req.options.improve:
-        applied = await improve_folders(roots, titles, rc, inputs_block=structure_inputs_block(req, rc))
-        changes = applied.applied
-        assign_missing_keys(roots)
+        try:
+            applied = await improve_folders(roots, titles, rc, inputs_block=structure_inputs_block(req, rc))
+            changes = applied.applied
+            assign_missing_keys(roots)
+        except LLMStepError as err:
+            rc.warn(
+                "LLM_DEGRADED",
+                f"Sprachmodell für Ordner-Verbesserung nicht verfügbar ({err.status or err.reason}); "
+                "Ordnerstruktur unverändert übernommen.",
+                step="improve_folders",
+            )
     extra = {
         node.key: "Inhalte: " + ", ".join(titles.get(ref.id, ref.id) for ref in node.contents[:_DESCRIBE_TITLES])
         for node, _, _ in walk(roots)

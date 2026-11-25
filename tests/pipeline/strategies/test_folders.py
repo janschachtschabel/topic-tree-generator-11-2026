@@ -122,3 +122,20 @@ async def test_improve_includes_supplementary_structure_items() -> None:
     await build(req(items=items, options={"improve": True}), rc(llm))
     assert "Stoffverteilungsplan Optik" in llm.prompts("improve_folders")[0]
     assert "Farben und Spektrum" in llm.prompts("improve_folders")[0]
+
+
+async def test_folders_degrade_gracefully_when_llm_rejects_requests() -> None:
+    from app.llm.client import LLMStepError
+
+    llm = FakeLLM(
+        {
+            "improve_folders": LLMStepError("improve_folders", "http_error", 403),
+            "describe_nodes": LLMStepError("describe_nodes", "http_error", 403),
+        }
+    )
+    context = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60, mode="bapi")
+    resp = await orchestrator.run(req(options={"improve": True}), context)
+    assert [n.title for n in resp.collection] == ["Optik", "Neuer Ordner (2)"]
+    assert [c.id for c in resp.collection[0].contents] == ["c1", "c2"]
+    codes = [w.code for w in resp.warnings]
+    assert "LLM_DEGRADED" in codes and "DESCRIBE_FAILED" in codes

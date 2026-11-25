@@ -42,14 +42,15 @@ _http_clients: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, httpx.Async
 class LLMStepError(Exception):
     """A pipeline step could not get a usable answer. Carries no prompt or response content."""
 
-    def __init__(self, step: str, reason: str, status: int | None = None) -> None:
+    def __init__(self, step: str, reason: str, status: int | None = None, detail: str | None = None) -> None:
         super().__init__(f"LLM step '{step}' failed: {reason}" + (f" (HTTP {status})" if status else ""))
         self.step = step
         self.reason = reason
         self.status = status
+        self.detail = detail
 
 
-def _semaphore(limit: int) -> asyncio.Semaphore:
+def acquire_llm_slot(limit: int) -> asyncio.Semaphore:
     loop = asyncio.get_running_loop()
     entry = _semaphores.get(loop)
     if entry is None or entry[0] != limit:
@@ -58,7 +59,7 @@ def _semaphore(limit: int) -> asyncio.Semaphore:
     return entry[1]
 
 
-def _shared_http_client() -> httpx.AsyncClient:
+def shared_http_client() -> httpx.AsyncClient:
     loop = asyncio.get_running_loop()
     client = _http_clients.get(loop)
     if client is None:
@@ -68,7 +69,7 @@ def _shared_http_client() -> httpx.AsyncClient:
 
 
 def default_client_factory(**kwargs: Any) -> openai.AsyncOpenAI:
-    return openai.AsyncOpenAI(http_client=_shared_http_client(), **kwargs)
+    return openai.AsyncOpenAI(http_client=shared_http_client(), **kwargs)
 
 
 def parse_json[M: BaseModel](content: str | None, model: type[M]) -> M:
@@ -162,7 +163,7 @@ class LLMClient:
         outcome = "ok"
         response = None
         try:
-            async with _semaphore(self.settings.llm_max_concurrency):
+            async with acquire_llm_slot(self.settings.llm_max_concurrency):
                 response = await self._openai().chat.completions.create(**body, timeout=timeout)
         except openai.APITimeoutError as exc:
             outcome = "timeout"
@@ -172,7 +173,8 @@ class LLMClient:
             raise LLMStepError(step, "connection") from exc
         except openai.APIStatusError as exc:
             outcome = f"http_{exc.status_code}"
-            raise LLMStepError(step, "http_error", exc.status_code) from exc
+            raw_detail = str(exc.body if exc.body is not None else exc.message)[:200]
+            raise LLMStepError(step, "http_error", exc.status_code, detail=raw_detail) from exc
         finally:
             seconds = time.perf_counter() - start
             usage = getattr(response, "usage", None)

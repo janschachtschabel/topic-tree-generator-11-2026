@@ -1,6 +1,7 @@
 import asyncio
+import inspect
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -8,6 +9,7 @@ from loguru import logger
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 
+from app.context.tracing import get_trace, outgoing_headers
 from app.legacy.auth import LegacyTarget, resolve_target
 from app.legacy.dtos.collection import Collection
 from app.legacy.dtos.description_request import DescriptionRequest
@@ -21,6 +23,7 @@ from app.legacy.prompts import (
 )
 from app.legacy.structured_text_helper import generate_structured_text
 from app.legacy.vocab_helper import get_discipline_pref_labels, get_educational_context_pref_labels
+from app.llm.client import acquire_llm_slot, shared_http_client
 from app.settings import Settings, get_settings
 from app.version import service_version
 
@@ -40,6 +43,7 @@ Collection.model_rebuild()
 API_VERSION = service_version()
 settings = get_settings()
 _DEFAULT_SETTINGS = settings
+_REAL_ASYNC_OPENAI = AsyncOpenAI
 
 b_api_key_scheme = HTTPBearer(auto_error=False)
 
@@ -48,6 +52,26 @@ def _active_settings(request: Request) -> Settings:
     if settings is not _DEFAULT_SETTINGS:
         return settings
     return getattr(request.app.state, "settings", None) or settings
+
+
+def _build_openai_client(target: LegacyTarget) -> Any:
+    kwargs: dict[str, Any] = {
+        "api_key": target.api_key,
+        "base_url": target.base_url,
+        "max_retries": target.max_retries,
+    }
+    headers = outgoing_headers(get_trace())
+    if AsyncOpenAI is _REAL_ASYNC_OPENAI:
+        kwargs["default_headers"] = headers
+        kwargs["http_client"] = shared_http_client()
+        return AsyncOpenAI(**kwargs)
+    try:
+        params = inspect.signature(AsyncOpenAI).parameters
+    except (TypeError, ValueError):
+        return AsyncOpenAI(**kwargs)
+    if "default_headers" in params:
+        kwargs["default_headers"] = headers
+    return AsyncOpenAI(**kwargs)
 
 
 async def resolve_legacy_target(
@@ -147,16 +171,13 @@ async def generate_topic_tree(
     - ``model``: Optionaler Legacy-Parameter, der ignoriert wird. Das Modell wird ausschließlich serverseitig ausgewählt.
     """
     logger.info(
-        f"Request received. Starting LLM chat completion request with the following settings: {topic_tree_request}"
+        f"Legacy topic-tree request received (main={topic_tree_request.num_main_topics}, "
+        f"sub={topic_tree_request.num_subtopics}, lp={topic_tree_request.num_curriculum_topics})"
     )
     try:
-        client = AsyncOpenAI(
-            api_key=target.api_key,
-            base_url=target.base_url,
-            max_retries=target.max_retries,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM-Client-Init-Fehler: {str(e)}")
+        client = _build_openai_client(target)
+    except Exception:
+        raise HTTPException(status_code=500, detail="LLM-Client-Initialisierung fehlgeschlagen.")
 
     try:
         # 2) Spezialanweisungen für Hauptthemen (z.B. Allgemeines, Methodik etc.)
@@ -208,15 +229,15 @@ async def generate_topic_tree(
             ),
             model=target.model,
             max_description_length=topic_tree_request.max_description_length,
+            concurrency=target.concurrency,
             require_list=False,
         )
         if not response:
             raise HTTPException(status_code=500, detail="Fehler bei der Generierung der Hauptthemen")
 
-        logger.info(response)
         main_topics = response["collections"]
         description = response["description"]
-        logger.info("Received main topics ('Hauptthemen'). Beginning generation of sub topics ('Unterthemen') next.")
+        logger.info(f"Received {len(main_topics)} main topics. Generating subtopics next.")
         # we need to keep track of existing main topics
         # (to avoid duplicates and improve the quality of the generated descriptions below)
         _previous_main_topic_titles = [f"- {main_topic.title}" for main_topic in main_topics]
@@ -242,6 +263,7 @@ async def generate_topic_tree(
                 prompt=_subtopic_prompt,
                 model=target.model,
                 max_description_length=topic_tree_request.max_description_length,
+                concurrency=target.concurrency,
             )
             sub_topic_tasks.append(_task)
 
@@ -282,6 +304,7 @@ async def generate_topic_tree(
                     prompt=_lp_prompt,
                     model=target.model,
                     max_description_length=topic_tree_request.max_description_length,
+                    concurrency=target.concurrency,
                 )
                 lp_tasks.append(_lp_task)
                 lp_mapping.append((main_topic, sub_topic))
@@ -340,9 +363,11 @@ async def generate_topic_tree(
         # ToDo: actually return a JSON object (instead of a python dict) as soon as you're done with debugging
         return final_data
 
-    except Exception as e:
-        logger.error(f"Unhandled Exception occured while generating topic tree: {e}")
-        raise HTTPException(status_code=500, detail=f"Fehler bei der Generierung: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.error("Unhandled error while generating legacy topic tree")
+        raise HTTPException(status_code=500, detail="Fehler bei der Generierung.")
 
 
 @router.post(
@@ -376,16 +401,14 @@ async def generate_collection_description(
     :return: Generierter Beschreibungstext als `str`
     :raises HTTPException: Falls ein Fehler bei der Generierung aufgetreten ist
     """
-    logger.info(f"Generating collection description for '{description_request.text_context}' ...")
+    logger.info(
+        f"Legacy collection-description request received (max_words={description_request.max_description_length})"
+    )
 
     try:
-        client = AsyncOpenAI(
-            api_key=target.api_key,
-            base_url=target.base_url,
-            max_retries=target.max_retries,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM-Client-Init-Fehler: {str(e)}")
+        client = _build_openai_client(target)
+    except Exception:
+        raise HTTPException(status_code=500, detail="LLM-Client-Initialisierung fehlgeschlagen.")
 
     try:
         # prepare the prompt with the given parameters
@@ -410,14 +433,15 @@ async def generate_collection_description(
             role="user",
         )
         _ts_before: datetime = datetime.now()
-        response = await client.chat.completions.create(
-            model=target.model,
-            messages=[
-                _system_prompt,
-                _user_prompt,
-            ],
-            # temperature=0.7,
-        )
+        async with acquire_llm_slot(target.concurrency):
+            response = await client.chat.completions.create(
+                model=target.model,
+                messages=[
+                    _system_prompt,
+                    _user_prompt,
+                ],
+                # temperature=0.7,
+            )
         # attention: setting the `max_token`-Parameter causes the API to return more text than requested.
         # e.g.: when setting a max_token limit of 600 while also using a max_description_length of 200,
         # it will rarely result in a response within the 200-char limit!
@@ -428,9 +452,11 @@ async def generate_collection_description(
 
         _description = response.choices[0].message.content
         return _description
-    except Exception as e:
-        logger.error(f"Error while generating collection description: {e}")
-        raise HTTPException(status_code=500, detail=f"Fehler bei der Generierung: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.error("Error while generating legacy collection description")
+        raise HTTPException(status_code=500, detail="Fehler bei der Generierung.")
 
 
 @router.get(path="/", include_in_schema=False)

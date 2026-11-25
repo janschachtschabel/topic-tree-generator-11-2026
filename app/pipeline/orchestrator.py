@@ -24,7 +24,7 @@ from app.domain.tree import Node, from_tree_in, index, walk
 from app.errors import ApiError
 from app.llm.client import LLMStepError
 from app.pipeline.context_block import build_context_block
-from app.pipeline.effective import effective_request
+from app.pipeline.effective import effective_request, explicit_shape, has_structure_inputs
 from app.pipeline.finalize import FinalizeInput, finalize
 from app.pipeline.input_checks import check_request
 from app.pipeline.inputs.refs import resolve_refs
@@ -53,6 +53,8 @@ STRATEGIES: dict[UseCase, Strategy] = {
 _RETRYABLE = {429, 500, 502, 503, 504}
 # Upstream rejections that point to a configuration mismatch (unknown route/model, unsupported parameters).
 _CONFIG_REJECTIONS = {400, 404, 422}
+# Leitfaden Kap. 2.1: permanent 503 errors from the b-api that clients must not retry.
+_PERMANENT_503_MARKERS = ("model pricing unavailable", "not_eligible")
 
 
 def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
@@ -65,9 +67,11 @@ def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
         )
     if mode == "bapi" and error.status == 403:
         return ApiError(403, "FORBIDDEN", "Fehlende Berechtigung an der b-api für diesen LLM-Aufruf.")
-    retry = error.status in _RETRYABLE or error.reason in {"timeout", "connection"}
+    detail_low = (error.detail or "").casefold()
+    permanent_503 = error.status == 503 and any(marker in detail_low for marker in _PERMANENT_503_MARKERS)
+    retry = not permanent_503 and (error.status in _RETRYABLE or error.reason in {"timeout", "connection"})
     message = "Das Sprachmodell hat keine verwertbare Antwort geliefert."
-    if error.status in _CONFIG_REJECTIONS:
+    if error.status in _CONFIG_REJECTIONS or permanent_503:
         message = (
             f"Der LLM-Endpunkt hat die Anfrage abgelehnt (HTTP {error.status}). Wahrscheinlich passen Modell bzw. Route "
             "und Endpunkt nicht zusammen: B_API_ROUTE (Route) bzw. B_API_MODEL/B_API_MODEL_PROVIDER (einzelnes Modell) "
@@ -146,7 +150,8 @@ def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         plan = ShapePlan.from_shape(req.shape)
         requested_extra = set(req.shape.extra_topics)
         actual_extra = sum(1 for r in result.roots if extra_kind(r.title) in requested_extra)
-        for warning in check_shape(result.roots, plan, extra=actual_extra):
+        check_min = rc.explicit_shape.main_topics or not has_structure_inputs(req)
+        for warning in check_shape(result.roots, plan, extra=actual_extra, check_main_min=check_min):
             rc.warn(warning.code, warning.message, warning.key, warning.step)
     allowed_extra = {EXTRA_TITLES[kind].casefold() for kind in req.shape.extra_topics}
     history = is_history_context(
@@ -168,6 +173,7 @@ async def run(
     if resolved is not req:
         req = resolved
         check_request(req, rc.settings, loaded=True)
+    rc.explicit_shape = explicit_shape(req)
     req = effective_request(req, rc.settings)
     if req.mode == Mode.refine:
         strategy: Strategy | None = refine.build
@@ -175,7 +181,7 @@ async def run(
         strategy = (strategies if strategies is not None else STRATEGIES).get(req.use_case)
     if strategy is None:
         raise ApiError(501, "NOT_IMPLEMENTED", f"use_case '{req.use_case}' ist noch nicht umgesetzt.")
-    rc.context, unknown = build_context_block(req)
+    rc.context, unknown = build_context_block(req, explicit=rc.explicit_shape)
     for uri in unknown:
         rc.warn("VOCAB_UNKNOWN", f"Unbekannter Vokabularwert: {uri}", step="context")
     try:

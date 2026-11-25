@@ -144,6 +144,7 @@ def test_b_api_model_uses_the_openai_provider_endpoint_by_default() -> None:
     s = make(B_API_MODEL="gpt-6-luna")
     assert s.b_api_model_url == "https://b-api.staging.openeduhub.net/api/v1/llm/openai/"
     assert make(B_API_MODEL_PROVIDER="academiccloud").b_api_model_url.endswith("/api/v1/llm/academiccloud/")
+    assert make(B_API_PROVIDER="academiccloud").b_api_model_url.endswith("/api/v1/llm/academiccloud/")
     assert s.b_api_router_url.endswith("/api/v1/llm/router/")
     assert make(B_API_MODEL="").b_api_model is None
 

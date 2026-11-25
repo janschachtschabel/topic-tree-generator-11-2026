@@ -34,9 +34,17 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("b_api_route", "B_API_ROUTE", "LLM_MODEL", "llm_model"),
     )
     # Option 2: one model (e.g. gpt-6-luna) at its provider's endpoint /api/v1/llm/{provider}/; used when no route
-    # is set. Providers of the gateway: openai, academiccloud. The frozen legacy endpoints always use the router.
+    # is set. Providers of the gateway: openai, academiccloud (alias B_API_PROVIDER also accepts "router").
     b_api_model: str | None = None
-    b_api_model_provider: Literal["openai", "academiccloud"] = "openai"
+    b_api_model_provider: Literal["openai", "academiccloud"] = Field(
+        "openai",
+        validation_alias=AliasChoices(
+            "b_api_model_provider",
+            "B_API_MODEL_PROVIDER",
+            "b_api_provider",
+            "B_API_PROVIDER",
+        ),
+    )
     b_api_delegation_header: str | None = None
     b_api_dev_key: SecretStr | None = None
 
@@ -89,6 +97,13 @@ class Settings(BaseSettings):
     def _empty_to_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
             return None
+        return value
+
+    @field_validator("b_api_model_provider", mode="before")
+    @classmethod
+    def _normalize_provider(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return "openai"
         return value
 
     @field_validator("domain")

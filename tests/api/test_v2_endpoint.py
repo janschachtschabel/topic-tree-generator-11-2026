@@ -156,3 +156,27 @@ async def test_upstream_rejection_points_to_the_llm_configuration(status: int) -
         and "B_API_ROUTE" in err.value.message
     )
     assert err.value.headers is None
+
+
+@pytest.mark.parametrize(
+    ("detail", "expected_status", "expect_retry"),
+    [
+        ("Model pricing unavailable for openai/typo", 502, False),
+        ("Endpoint NOT_ELIGIBLE (HTTP 403)", 502, False),
+        ("No deployment could serve model 'topic-tree-generator'", 503, True),
+    ],
+)
+async def test_permanent_vs_transient_503_from_bapi(detail: str, expected_status: int, expect_retry: bool) -> None:
+    from app.errors import ApiError
+    from app.llm.client import LLMStepError
+
+    req = TopicTreeRequestV2.model_validate(copy.deepcopy(ex.TOPIC))
+
+    async def fail_503(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
+        raise LLMStepError("plan_structure", "http_error", 503, detail=detail)
+
+    rc = RunContext(llm=FakeLLM(), settings=Settings(_env_file=None), deadline=time.monotonic() + 60, mode="bapi")
+    with pytest.raises(ApiError) as err:
+        await orchestrator.run(req, rc, {UseCase.topic: fail_503})
+    assert err.value.status == expected_status
+    assert bool(err.value.headers and "Retry-After" in err.value.headers) is expect_retry
