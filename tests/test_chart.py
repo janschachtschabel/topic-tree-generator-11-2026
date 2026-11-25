@@ -108,3 +108,11 @@ def test_enabled_policy_without_peers_denies_instead_of_allowing_everyone() -> N
     policy = kinds(render("--set", "networkPolicy.enabled=true"))["NetworkPolicy"]["spec"]
     assert not policy.get("ingress")  # null or [] with policyTypes Ingress = deny all
     assert "Ingress" in policy["policyTypes"]
+
+
+def test_gitlab_ci_kubeconform_job_uses_alpine_image_with_shell() -> None:
+    # GitLab Runner's Docker executor invokes `sh` inside every job image; bare kubeconform tags are `FROM scratch`.
+    gitlab_ci = yaml.safe_load((CHART.parents[2] / ".gitlab-ci.yml").read_text(encoding="utf-8"))
+    image = gitlab_ci["kubeconform"]["image"]
+    image_name = image["name"] if isinstance(image, dict) else image
+    assert image_name.startswith("ghcr.io/yannh/kubeconform:") and image_name.endswith("-alpine"), image_name
