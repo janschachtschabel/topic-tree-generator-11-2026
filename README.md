@@ -5,7 +5,7 @@ FastAPI service that generates edu-sharing collection structures ("Themenbäume"
 - **`POST /v2/topic-tree`** – current v2 API ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
 - **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2)
 - **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
-- **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [docs/measurements/2026-11-24-openai-gpt-6-luna.md](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
+- **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [v1 vs. v2 comparison](docs/measurements/2026-11-25-v1-vs-v2-comparison.md) · [v2 load & token benchmark](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
 
 ## How it works
 

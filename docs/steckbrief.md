@@ -93,7 +93,7 @@ Aufrufer / edu-sharing (/bapi/**) / Kestra-Flow
 
 ## 4. Ressourcen, Laufzeiten & Kosten (Ist-Messung)
 
-Vollständige Einzel- und Lastmessung mit Token-Aufschlüsselung und Kostenformel: [`docs/measurements/2026-11-24-openai-gpt-6-luna.md`](measurements/2026-11-24-openai-gpt-6-luna.md).
+Vollständige Einzel- und Lastmessung mit Token-Aufschlüsselung und Kostenformel: [`docs/measurements/2026-11-24-openai-gpt-6-luna.md`](measurements/2026-11-24-openai-gpt-6-luna.md) · Direktvergleich v1 vs. v2 über 3 Themen (25.11.2026): [`docs/measurements/2026-11-25-v1-vs-v2-comparison.md`](measurements/2026-11-25-v1-vs-v2-comparison.md).
 
 ### CPU, RAM und Storage (`geprüft`)
 
@@ -117,7 +117,7 @@ Vollständige Einzel- und Lastmessung mit Token-Aufschlüsselung und Kostenforme
 | `POST /v2/topic-tree` — `contents` (12 Materialien) | **19,7 s** | — | 2 | ~4.650 (36 % gecacht) | ~2.470 |
 | `POST /v2/topic-tree` — `refine` (Freitext-Feedback) | **4,2 s** | — | 1 – 2 | ~3.815 (43 % gecacht) | ~160 |
 | `POST /v2/topic-tree` — `refine` (`feedback.changes` `remove`/`move`/`edit`) | **< 0,05 s** | — | **0** | 0 | 0 |
-| `POST /generate-topic-tree` *(v1 Legacy, 78 Knoten = 6×3×3)* | **41,6 s** | — | 25 | ungecachte Einzel-Calls | ~14.000 |
+| `POST /generate-topic-tree` *(v1 Legacy, 65–78 Knoten)* | **40,2 – 41,9 s** | — | 21 – 25 | 21.647 – 25.673 (**0 % gecacht**) | 31.943 – 33.876 *(inkl. Reasoning)* |
 | `POST /generate-collection-description` *(v1 Legacy, 70 Wörter)* | **10,4 – 12,7 s** | — | 1 | ~600 | ~110 |
 
 - **Kostenschätzung:** Vollständiges Token-Rechenmodell je 1.000 Aufrufe in [`docs/measurements/2026-11-24-openai-gpt-6-luna.md`](measurements/2026-11-24-openai-gpt-6-luna.md#6-rechenmodell-für-spätere-kostenbewertungen). Die exakte EUR/USD-Buchung hinter der b-api wird beim Staging-Abnahmelauf direkt aus den b-api-Nutzungsdaten des Testschlüssels übernommen (`In Klärung`).
