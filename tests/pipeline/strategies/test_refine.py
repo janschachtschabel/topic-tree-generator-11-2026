@@ -238,3 +238,61 @@ async def test_refine_combines_feedback_with_assigning_new_items_into_added_node
     assert farben is not None and farben.status == "new"
     assert [c.id for c in farben.contents] == ["c99"]
     assert "k-farben: Farben" in llm.prompts("assign_contents")[0]
+
+
+def _with_origin(nodes: list[dict], kind: str = "topic") -> None:
+    for item in nodes:
+        item["origin"] = {"type": kind}
+        _with_origin(item["subcollections"], kind)
+
+
+async def test_assign_only_from_previous_generation_is_not_inherited() -> None:
+    # Audit 2026-11-25 #1: a refine after an assign-only run must still apply the new feedback.
+    req = request({"changes": [{"op": "rename", "key": "k-optik", "title": "Strahlenoptik"}]})
+    data = req.model_dump(by_alias=True, exclude_unset=True)
+    data["current_tree"]["generation"]["options"] = {"assign_only": True}
+    resp, _ = await run(TopicTreeRequestV2.model_validate(data), {})
+    assert by_key(resp.collection, "k-optik").title == "Strahlenoptik"
+    assert [c.op for c in resp.changes] == ["rename"]
+    assert resp.metadata.generation.options.assign_only is False
+
+
+async def test_explicit_assign_only_with_feedback_warns_that_feedback_is_ignored() -> None:
+    req = request({"text": "Optik umbenennen"}, options={"assign_only": True})
+    resp, llm = await run(req, {})
+    assert llm.prompts("interpret_feedback") == []
+    assert "FEEDBACK_IGNORED" in [w.code for w in resp.warnings]
+
+
+async def test_carried_over_duplicate_siblings_are_not_merged_in_refine() -> None:
+    # Audit 2026-11-25 #2: renaming next to a locked sibling must not merge (and thereby change) the locked node.
+    current = copy.deepcopy(CURRENT)
+    _with_origin(current["collection"])
+    current["collection"][0]["contents"] = [{"id": "c9", "confidence": 0.7}]
+    current["collection"][1]["contents"] = [{"id": "c9", "confidence": 0.9}]
+    req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "refine",
+            "use_case": "topic",
+            "current_tree": current,
+            "frame": ex.FRAME,
+            "feedback": {"locked": ["k-optik"], "changes": [{"op": "rename", "key": "k-mechanik", "title": "Optik"}]},
+        }
+    )
+    resp, _ = await run(req, {})
+    optik = by_key(resp.collection, "k-optik")
+    assert [c.key for c in optik.subcollections] == ["k-linsen", "k-spiegel"]
+    assert [c.id for c in optik.contents] == ["c9"]
+    assert by_key(resp.collection, "k-mechanik").title == "Optik"
+    assert "DUPLICATE_TITLE" in [w.code for w in resp.warnings]
+
+
+async def test_removed_node_content_still_placed_elsewhere_is_not_unassigned() -> None:
+    # Audit 2026-11-25 #3: with multi-assignment an item can sit in several nodes.
+    current = copy.deepcopy(CURRENT)
+    current["collection"][0]["contents"] = [{"id": "c1", "nodeId": "n1", "confidence": 0.8}]
+    data = {"mode": "refine", "use_case": "topic", "current_tree": current, "frame": ex.FRAME}
+    req = TopicTreeRequestV2.model_validate({**data, "feedback": {"changes": [{"op": "remove", "key": "k-akustik"}]}})
+    resp, _ = await run(req, {})
+    assert [c.id for c in by_key(resp.collection, "k-optik").contents] == ["c1"]
+    assert resp.unassigned == []

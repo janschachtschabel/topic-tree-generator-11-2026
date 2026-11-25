@@ -45,10 +45,15 @@ class _Refiner:
         self.result.changes.extend(applied.applied)
         for warning in applied.rejected:
             self.rc.warn(warning.code, warning.message, warning.key, warning.step)
-        self.result.unassigned.extend(
-            Unassigned(id=ref.id, nodeId=ref.node_id, reason=UnassignedReason.no_matching_node)
-            for ref in applied.released_contents
-        )
+        # With multi-assignment a released item can still sit in another node; only report truly homeless ones.
+        placed = {ref.id for node, _, _ in walk(self.roots) for ref in node.contents}
+        reported = {u.id for u in self.result.unassigned}
+        for ref in applied.released_contents:
+            if ref.id not in placed and ref.id not in reported:
+                reported.add(ref.id)
+                self.result.unassigned.append(
+                    Unassigned(id=ref.id, nodeId=ref.node_id, reason=UnassignedReason.no_matching_node)
+                )
         self.refresh.update(r.key for r in applied.applied if r.op in _REFRESH_OPS and r.key)
         for change in applied.pending_splits:
             outcome = await split_node(self.roots, change, source, self.rc)
@@ -88,7 +93,15 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         shape_checked=not (req.use_case == UseCase.folders and not req.options.improve),
     )
     feedback = req.feedback
-    if req.options.assign_only or feedback is None:
+    if feedback is None:
+        return result
+    if req.options.assign_only:
+        if feedback.text or feedback.changes:
+            rc.warn(
+                "FEEDBACK_IGNORED",
+                "options.assign_only ist gesetzt: Die Rückmeldung wurde nicht umgesetzt, nur Inhalte zugeordnet.",
+                step="refine",
+            )
         return result
     refiner = _Refiner(roots, set(feedback.locked), rc, result)
     if feedback.changes:
