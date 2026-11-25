@@ -158,8 +158,17 @@ class LLMClient:
         return f"{user}\n\nAntworte ausschließlich mit JSON nach diesem Schema:\n{schema}"
 
     def _budget(self, step: str) -> float | None:
-        """Seconds left for the whole call (slot wait, SDK retries included); None without a deadline."""
-        return None if self.deadline is None else self._timeout(step)
+        """Request time left for the whole call (slot wait, SDK retries included); None without a deadline.
+
+        Deliberately not capped by LLM_TIMEOUT_SECONDS: that limit applies per attempt (SDK `timeout`), so a slow
+        attempt stays a retryable "timeout" and only an exhausted request deadline is reported as "deadline".
+        """
+        if self.deadline is None:
+            return None
+        remaining = self.deadline - time.monotonic()
+        if remaining < _MIN_CALL_SECONDS:
+            raise LLMStepError(step, "deadline")
+        return remaining
 
     async def _call(self, step: str, body: dict[str, Any]) -> str | None:
         budget = self._budget(step)

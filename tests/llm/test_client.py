@@ -206,3 +206,12 @@ async def test_waiting_for_a_concurrency_slot_counts_against_the_deadline() -> N
     )
     assert sum(isinstance(r, LLMStepError) and r.reason == "deadline" for r in results) == 1
     assert time.monotonic() - started < 2.2
+
+
+async def test_attempt_timeout_with_request_time_left_stays_a_retryable_timeout() -> None:
+    # Review of audit fix #4: only the request deadline is "deadline"; a slow attempt is still "timeout".
+    fake = FakeOpenAI([GOOD], delay=5, honor_timeout=True)
+    client = make_client(fake, deadline=time.monotonic() + 60, llm_timeout_seconds=1, llm_max_retries=0)
+    with pytest.raises(LLMStepError) as err:
+        await client.complete_json("plan", "USER", Answer)
+    assert err.value.reason == "timeout"

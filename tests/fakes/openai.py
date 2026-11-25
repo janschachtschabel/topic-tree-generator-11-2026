@@ -6,6 +6,9 @@ from collections.abc import Callable
 from types import SimpleNamespace
 from typing import Any
 
+import httpx
+import openai
+
 Reply = str | Exception | Callable[[dict[str, Any]], str]
 
 
@@ -24,8 +27,10 @@ def completion(content: str, prompt: int = 100, cached: int = 0, completion_toke
 class FakeOpenAI:
     """Replies are consumed in order; the last one repeats."""
 
-    def __init__(self, replies: list[Reply], delay: float = 0.0) -> None:
+    def __init__(self, replies: list[Reply], delay: float = 0.0, honor_timeout: bool = False) -> None:
         self.replies = list(replies)
+        # Like the SDK: an attempt longer than the `timeout` argument fails with APITimeoutError.
+        self.honor_timeout = honor_timeout
         self.calls: list[dict[str, Any]] = []
         self.constructed: list[dict[str, Any]] = []
         self.delay = delay
@@ -42,6 +47,10 @@ class FakeOpenAI:
         self.active += 1
         self.max_active = max(self.max_active, self.active)
         try:
+            timeout = kwargs.get("timeout")
+            if self.honor_timeout and timeout is not None and self.delay > timeout:
+                await asyncio.sleep(timeout)
+                raise openai.APITimeoutError(request=httpx.Request("POST", "https://llm.invalid/chat/completions"))
             if self.delay:
                 await asyncio.sleep(self.delay)
             reply = self.replies.pop(0) if len(self.replies) > 1 else self.replies[0]
