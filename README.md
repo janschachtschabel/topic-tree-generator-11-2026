@@ -192,6 +192,7 @@ All settings are read from environment variables or `.env` and have defaults (se
 | `REF_MAX_BYTES` | `10485760` | Max download size per referenced resource (10 MiB). |
 | `REF_TIMEOUT_SECONDS` | `20` | Download timeout per `ref` URL. |
 | `ITEMS_INLINE_MAX` | `500` | Max inline items per request (larger batches use `items_ref`, up to 5,000 items). |
+| `MAX_REQUEST_BYTES` | `33554432` | Max request body in bytes (32 MiB); larger bodies get `413 REQUEST_TOO_LARGE`. |
 | `LOG_LEVEL` | `INFO` | Log verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
 | `LOG_FORMAT` | `json` | `json` for container/production logs, `text` for readable local logs. |
 | `UI_ENABLED` | `true` | Enables (`true`) or completely disables (`false`) the built-in test UI at `/ui/`. |

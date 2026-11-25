@@ -76,4 +76,5 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
 (`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
 `REF_NOT_ALLOWED` …),
+413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
 401/403 Anmeldung bzw. fehlende b-api-Berechtigung, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.

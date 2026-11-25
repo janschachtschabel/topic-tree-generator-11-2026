@@ -354,6 +354,7 @@ class CallerContext:
 | `PUBLIC_PORT` / `INTERNAL_PORT` | 8000 / 9000 | Leitfaden Kap. 3 |
 | `REF_ALLOWED_HOSTS` / `REF_MAX_BYTES` / `REF_TIMEOUT_SECONDS` | leer / 10485760 / 20 | E6 |
 | `ITEMS_INLINE_MAX` | 500 | E10 |
+| `MAX_REQUEST_BYTES` | 33554432 | Audit 2026-11-25 |
 | `LOG_LEVEL` / `LOG_FORMAT` | `INFO` / `json` | Logging (`text` für lokal) |
 | `PROMETHEUS_MULTIPROC_DIR` | `/tmp/prometheus` | Multiprozess-Metriken |
 

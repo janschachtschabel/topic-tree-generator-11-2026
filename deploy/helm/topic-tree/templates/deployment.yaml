@@ -59,6 +59,7 @@ spec:
             - { name: REF_MAX_BYTES, value: {{ .Values.config.refMaxBytes | quote }} }
             - { name: REF_TIMEOUT_SECONDS, value: {{ .Values.config.refTimeoutSeconds | quote }} }
             - { name: ITEMS_INLINE_MAX, value: {{ .Values.config.itemsInlineMax | quote }} }
+            - { name: MAX_REQUEST_BYTES, value: {{ .Values.config.maxRequestBytes | quote }} }
             - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
             - { name: LOG_FORMAT, value: "json" }
             - { name: UI_ENABLED, value: {{ .Values.config.uiEnabled | quote }} }

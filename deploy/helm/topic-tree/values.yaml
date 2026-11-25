@@ -36,6 +36,7 @@ replicaCount: 2
 ## @param config.refMaxBytes Maximum download size per referenced resource in bytes
 ## @param config.refTimeoutSeconds Timeout in seconds per referenced URL download
 ## @param config.itemsInlineMax Maximum number of inline items per request
+## @param config.maxRequestBytes Maximum request body size in bytes (413 above it)
 ## @param config.logLevel Log level
 ## @param config.uiEnabled Serve the built-in test UI under /ui/ (keep false in production)
 ## @param config.extraEnv Additional environment variables (name: value)
@@ -62,6 +63,7 @@ config:
   refMaxBytes: 10485760
   refTimeoutSeconds: 20
   itemsInlineMax: 500
+  maxRequestBytes: 33554432
   logLevel: INFO
   uiEnabled: false
   extraEnv: {}
