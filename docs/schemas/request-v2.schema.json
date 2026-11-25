@@ -623,6 +623,7 @@
             }
           ],
           "default": null,
+          "description": "Rolle des Eintrags: ['structure'] Gliederung, ['content'] Inhalt, beide, oder [] keines von beiden (wird angenommen, aber weder für die Struktur genutzt noch einsortiert). Fehlt use, gilt der Standard des Use Case.",
           "title": "Use"
         },
         "properties": {

@@ -43,6 +43,21 @@ Strukturerzeugung und Inhaltszuordnung sind entkoppelt und lassen sich über das
 - **`use_case: "folders"` + `folders` + lose Zusatz-`items` (+ optionales Strukturdokument bei `options.improve: true`)**: Übernimmt bestehende Ordnerzuordnungen (`confidence: 1.0`), verbessert auf Wunsch die Ordnerstruktur und sortiert lose Materialien nach.
 - **`mode: "refine"` + `feedback` + neue `items`**: Setzt Strukturänderungen unter Schutz von `locked` um, beschreibt neue/umbenannte Knoten und sortiert neue Materialien im selben Aufruf in den aktualisierten Baum ein.
 
+## Rollen je Eintrag (`use`)
+
+Jeder Eintrag in `items` trägt eine von vier Rollen, unabhängig vom Use Case und zusätzlich zu `folders`:
+
+| `use` | Rolle | Wirkung |
+|---|---|---|
+| `["structure"]` | Gliederung (z. B. Lehrplan) | prägt die Struktur, wird nicht einsortiert |
+| `["content"]` | Inhalt | wird einsortiert, prägt die Struktur nicht |
+| `["structure", "content"]` | beides | prägt die Struktur und wird selbst einsortiert |
+| `[]` | keines von beiden | wird angenommen, aber weder genutzt noch einsortiert (auch nicht in einem Ordner aus `folders`) |
+
+Fehlt `use`, gilt der Standard des Use Case: `["structure", "content"]` bei `contents`, sonst `["content"]`. Ein
+Strukturdokument mit Volltext darf zugleich Inhalt sein (`["structure", "content"]`): Es liefert die Gliederung und
+wird anschließend selbst einem Knoten zugeordnet. Einträge mit `[]` erscheinen nicht in `unassigned`.
+
 ## Automatische Knoten-Metadaten (`options.auto_metadata`)
 
 Ist `options.auto_metadata: true` gesetzt und ein Feld im `frame` leer oder mehrwertig (z. B. fächerübergreifendes
