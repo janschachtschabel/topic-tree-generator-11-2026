@@ -24,3 +24,31 @@ async def test_probes_report_each_capability_without_leaking_the_key() -> None:
     assert sent["json_schema"]["response_format"]["type"] == "json_schema"
     assert sent["prompt_cache_key"]["prompt_cache_key"] == "topic-tree:probe"
     assert sent["common_body"]["reasoning_effort"] == "none"
+
+
+def test_preset_summary_counts_levels_descriptions_duplicates_and_assignment() -> None:
+    from scripts.run_presets import markdown_table, summarize
+
+    request = {"shape": {"main_topics": {"min": 2, "max": 4}}, "items": [{"id": "a"}, {"id": "n", "use": []}]}
+    response = {
+        "metadata": {"generation": {"usage": {"llm_calls": 3, "prompt_tokens": 100, "completion_tokens": 20}}},
+        "collection": [
+            {
+                "title": "A",
+                "properties": {"cm:description": ["x"]},
+                "contents": [{"id": "a", "confidence": 0.9}],
+                "subcollections": [{"title": "a", "properties": {}}],
+            },
+            {"title": "B", "properties": {"cm:description": ["y"]}},
+        ],
+        "unassigned": [],
+        "warnings": [{"code": "DESCRIBE_FAILED"}],
+    }
+    row = summarize("p", "topic", request, response, 1.234)
+    assert row["levels"] == {1: 2, 2: 1}
+    assert row["described_pct"] == 67
+    assert row["duplicates"] == 1
+    assert row["main_in_shape"] is True
+    assert row["assigned"] == 1
+    assert row["warnings"] == ["DESCRIBE_FAILED"]
+    assert "| p | topic | 3 (2/1/0) | 67 % | 1 | 1 / 0 | DESCRIBE_FAILED | 3 | 120 (0) |" in markdown_table([row])
