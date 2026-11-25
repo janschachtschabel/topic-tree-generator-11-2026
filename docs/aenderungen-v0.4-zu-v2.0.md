@@ -53,6 +53,8 @@ Kompakte Übersicht aller funktionalen, architektonischen und betrieblichen Änd
 
 Direktvergleich über drei Fächer (Physik Sek I, Politik Sek II, Kfz-Mechatronik) auf `gpt-6-luna` (Details in [2026-11-25-v1-vs-v2-comparison.md](measurements/2026-11-25-v1-vs-v2-comparison.md)):
 
+![Leistungsvergleich Alt (/generate-topic-tree) vs. Neu (/v2/topic-tree)](measurements/v1-vs-v2-comparison.svg)
+
 - **38–48 % kürzere Antwortzeit** (z. B. 78 Knoten in **24,5 s** statt 41,9 s).
 - **62–76 % weniger LLM-Aufrufe** (1 kompletter Titel-Entwurf + parallele 10er-Beschreibungs-Batches statt 21–25 Einzelaufrufen).
 - **60–68 % geringere Tokenkosten pro Baum:**

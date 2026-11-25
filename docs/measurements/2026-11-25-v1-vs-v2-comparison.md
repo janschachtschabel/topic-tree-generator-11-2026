@@ -16,6 +16,8 @@ Für v1 wurden die exakten Token- und Cache-Werte direkt an der OpenAI-Client-Sc
 
 ## 2. Messergebnisse: Laufzeit, Aufrufe & Tokenverbrauch
 
+![Leistungsvergleich Alt (/generate-topic-tree) vs. Neu (/v2/topic-tree)](v1-vs-v2-comparison.svg)
+
 | Thema | Endpunkt | Knoten (`E1/E2/E3`) | Dauer | LLM-Calls | Input ungecacht | Input gecacht (Quote) | Output-Tokens | Gesamt-Tokens | Tokens / Knoten (davon Output) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
 | **1. Physik Optik (Sek I)** | **v1** alt | **78** (`6/18/54`) | 41,9 s | 25 | 25.673 | 0 (**0,0 %**) | 33.876 | 59.549 | 763 (**434**) |
