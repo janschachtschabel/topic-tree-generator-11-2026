@@ -41,9 +41,11 @@ def structure_documents(req: TopicTreeRequestV2) -> list[Item]:
 
 def _sections(doc: Item) -> list[DocSection]:
     title = doc.properties.first("cm:title") or doc.id
-    text = doc.fulltext.text if doc.fulltext.format == FulltextFormat.markdown else ""
-    sections = drop_title_heading(parse_outline(text, fallback_title=title)) if text else []
-    return [DocSection(doc.id, s) for s in sections]
+    text = doc.fulltext.text or ""
+    if doc.fulltext.format != FulltextFormat.markdown:
+        # Plain text has no headings: the whole document is one section, so it still enters the outline.
+        return [DocSection(doc.id, Section("s1", 1, title, None, text.splitlines()))]
+    return [DocSection(doc.id, s) for s in drop_title_heading(parse_outline(text, fallback_title=title))]
 
 
 def _outline_text(sections: list[DocSection], docs: list[Item], rc: RunContext) -> str:
