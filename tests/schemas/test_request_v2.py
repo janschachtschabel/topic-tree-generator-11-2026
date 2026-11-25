@@ -224,3 +224,28 @@ def test_move_without_target_means_top_level() -> None:
     from app.schemas.request_v2 import Change
 
     assert Change.model_validate({"op": "move", "key": "k"}).to is None
+
+
+def _refine_with_placed(item: dict) -> dict:
+    return {
+        "mode": "refine",
+        "use_case": "topic",
+        "frame": copy.deepcopy(ex.FRAME),
+        "current_tree": {
+            "collection": [
+                {"key": "k-a", "title": "A", "contents": [{"id": "c1", "nodeId": "n-1"}], "subcollections": []}
+            ]
+        },
+        "items": [item],
+    }
+
+
+def test_refine_rejects_an_item_whose_id_is_placed_in_the_tree_for_another_material() -> None:
+    other = {"id": "c1", "nodeId": "n-2", "properties": {"cm:title": ["Anderes Material"]}}
+    with pytest.raises(ApiError) as err:
+        check_request(parse(_refine_with_placed(other)), SETTINGS)
+    assert err.value.status == 422
+    assert err.value.code == "ID_CONFLICT"
+    # The same material (same nodeId) or one without nodeId is not a conflict.
+    check_request(parse(_refine_with_placed({**other, "nodeId": "n-1"})), SETTINGS)
+    check_request(parse(_refine_with_placed({"id": "c1", "properties": {"cm:title": ["X"]}})), SETTINGS)

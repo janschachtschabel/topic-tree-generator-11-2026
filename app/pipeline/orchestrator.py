@@ -102,6 +102,19 @@ def _drop_untitled(rc: RunContext, result: StrategyResult) -> None:
             )
 
 
+def _warn_already_placed(rc: RunContext, ids: list[str]) -> None:
+    """refine: an item id that already sits in the tree keeps its place; say so instead of skipping it silently."""
+    if not ids:
+        return
+    shown = ", ".join(ids[:20]) + (" …" if len(ids) > 20 else "")
+    rc.warn(
+        "ITEM_ALREADY_PLACED",
+        f"{len(ids)} Material(ien) sind mit dieser id schon im Baum einsortiert und bleiben dort: {shown}. "
+        "Ist es ein anderes Material, bitte eine eigene id vergeben.",
+        step="assign_contents",
+    )
+
+
 async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
     """Assign content items that the strategy did not place itself."""
     if not req.options.assign_contents:
@@ -109,11 +122,10 @@ async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
     assign_missing_keys(result.roots)
     placed = {ref.id for node, _, _ in walk(result.roots) for ref in node.contents}
     already_unassigned = {u.id for u in result.unassigned}
-    pending = [
-        i
-        for i in req.items or []
-        if ItemUse.content in req.effective_use(i) and i.id not in placed and i.id not in already_unassigned
-    ]
+    content_items = [i for i in req.items or [] if ItemUse.content in req.effective_use(i)]
+    if req.mode == Mode.refine:
+        _warn_already_placed(rc, [i.id for i in content_items if i.id in placed])
+    pending = [i for i in content_items if i.id not in placed and i.id not in already_unassigned]
     if pending:
         result.unassigned.extend(await assign_contents(result.roots, pending, rc, req.options))
 

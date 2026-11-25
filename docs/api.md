@@ -60,6 +60,10 @@ aus `generation` (außer `options.assign_only`, das nur für den einen Aufruf gi
 Ein geänderter `frame` ersetzt die alten Frame-Werte an bestehenden Knoten; gezielt eingegrenzte Knoten und gesperrte
 Äste (`locked`) behalten ihre Werte.
 
+Neue `items` beim Weiterentwickeln brauchen eigene ids: Eine id, die im Baum schon einsortiert ist, gilt als dasselbe
+Material und bleibt an ihrem Platz (Warnung `ITEM_ALREADY_PLACED`); trägt sie eine andere `nodeId` als im Baum,
+antwortet der Dienst mit `422 ID_CONFLICT`.
+
 Änderungsoperationen in `feedback.changes`: `move` ohne `to` (oder mit `to: null`) verschiebt einen Knoten auf die
 Hauptebene.
 
@@ -78,14 +82,14 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
-  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `FEEDBACK_IGNORED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `FEEDBACK_IGNORED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 
 ## Fehler
 
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
-(`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
+(`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
 `REF_NOT_ALLOWED` …),
 413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
 401/403 Anmeldung bzw. fehlende b-api-Berechtigung, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.

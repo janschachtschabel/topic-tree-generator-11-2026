@@ -7,6 +7,9 @@ Changed
   folders, a row editor for targeted changes (`refine`), an always-visible editable request JSON, and 18 task-grouped
   examples (new: Kita, Hochschule, topic + document, folders + loose files, contents with sort-in-only items, all
   change ops, changes + new items, frame change). API unchanged.
+- `refine`: an item whose id is already placed in `current_tree` is no longer skipped silently. The same material
+  keeps its place with warning `ITEM_ALREADY_PLACED`; a different material (other `nodeId`) under that id is rejected
+  with `422 ID_CONFLICT`.
 
 ## 2.0.0 (2026-11-25)
 
