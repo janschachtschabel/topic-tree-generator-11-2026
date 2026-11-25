@@ -215,3 +215,19 @@ async def test_attempt_timeout_with_request_time_left_stays_a_retryable_timeout(
     with pytest.raises(LLMStepError) as err:
         await client.complete_json("plan", "USER", Answer)
     assert err.value.reason == "timeout"
+
+
+async def test_reply_cut_at_the_token_limit_is_retried_once_with_double_budget() -> None:
+    # Decided with Jan (audit 2026-11-25, open point 2).
+    fake = FakeOpenAI([('{"title": "Op', "length"), GOOD])
+    result = await make_client(fake).complete_json("plan", "USER", Answer, max_tokens=4000)
+    assert result.title == "Optik"
+    retry = fake.calls[1]
+    assert retry["max_completion_tokens"] == 8000
+    assert retry["messages"] == fake.calls[0]["messages"]  # the cut-off fragment is not sent back
+
+
+async def test_double_budget_is_capped() -> None:
+    fake = FakeOpenAI([('{"title": "Op', "length"), GOOD])
+    await make_client(fake).complete_json("plan", "USER", Answer, max_tokens=30000)
+    assert fake.calls[1]["max_completion_tokens"] == 32000

@@ -9,12 +9,15 @@ from typing import Any
 import httpx
 import openai
 
-Reply = str | Exception | Callable[[dict[str, Any]], str]
+# A (content, finish_reason) tuple simulates e.g. a reply cut off at the token limit ("length").
+Reply = str | tuple[str, str] | Exception | Callable[[dict[str, Any]], str]
 
 
-def completion(content: str, prompt: int = 100, cached: int = 0, completion_tokens: int = 50) -> SimpleNamespace:
+def completion(
+    content: str, prompt: int = 100, cached: int = 0, completion_tokens: int = 50, finish_reason: str = "stop"
+) -> SimpleNamespace:
     return SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=content))],
+        choices=[SimpleNamespace(message=SimpleNamespace(content=content), finish_reason=finish_reason)],
         usage=SimpleNamespace(
             prompt_tokens=prompt,
             completion_tokens=completion_tokens,
@@ -58,6 +61,8 @@ class FakeOpenAI:
                 raise reply
             if callable(reply):
                 reply = reply(kwargs)
+            if isinstance(reply, tuple):
+                return completion(reply[0], finish_reason=reply[1])
             return completion(reply)
         finally:
             self.active -= 1
