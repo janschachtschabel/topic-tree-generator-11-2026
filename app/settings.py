@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     ref_max_bytes: int = Field(10 * 1024 * 1024, gt=0)
     ref_timeout_seconds: float = Field(20, gt=0)
     items_inline_max: int = Field(500, ge=1)
+    # Upper bound for one request body (413 above it); generous enough for a large inline curriculum.
+    max_request_bytes: int = Field(32 * 1024 * 1024, ge=1024)
 
     log_level: str = "INFO"
     log_format: Literal["json", "text"] = "json"

@@ -116,6 +116,14 @@ async def test_several_documents_are_merged_into_one_outline() -> None:
     assert "d2:s2 | Ebene 1 | Farben" in prompt and "d1:s2" in prompt
 
 
+async def test_plain_text_document_next_to_a_markdown_outline_is_not_dropped() -> None:
+    # Audit 2026-11-25 #6: a `text` document beside a Markdown outline used to vanish without a warning.
+    llm = FakeLLM({"map_outline": MAPPING, "describe_nodes": describe})
+    plain = doc("d2", "# kein Titel\nFarben entstehen durch Brechung.", fmt="text")
+    await build(req([doc("d1"), plain]), rc(llm))
+    assert "d2:s1 | Ebene 1 | Lehrplan d2" in llm.prompts("map_outline")[0]
+
+
 async def test_document_without_headings_sends_an_excerpt() -> None:
     llm = FakeLLM(
         {

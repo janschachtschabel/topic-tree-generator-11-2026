@@ -16,4 +16,3 @@ class StrategyResult:
     changes: list[ChangeRecord] = field(default_factory=list)
     questions: list[Question] = field(default_factory=list)
     shape_checked: bool = True
-    contents_assigned: bool = False

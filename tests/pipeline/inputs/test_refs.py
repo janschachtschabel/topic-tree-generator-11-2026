@@ -172,3 +172,22 @@ async def test_resolve_refs_caps_concurrent_fetches(monkeypatch: pytest.MonkeyPa
     data = {**copy.deepcopy(ex.DOCUMENT), "items": items}
     await resolve_refs(TopicTreeRequestV2.model_validate(data), ALLOWED)
     assert 1 <= max_active <= refs.MAX_CONCURRENT_REFS
+
+
+async def test_slow_drip_response_is_cut_at_the_total_time_limit(serve) -> None:
+    # Audit 2026-11-25 #5: httpx timeouts apply per read, so a server sending tiny chunks never timed out.
+    import asyncio
+    import time
+
+    async def drip():
+        for _ in range(20):
+            await asyncio.sleep(0.2)
+            yield b"x"
+
+    serve(lambda r: httpx.Response(200, content=drip()))
+    settings = Settings(_env_file=None, ref_allowed_hosts=["files.example.org"], ref_timeout_seconds=1)
+    started = time.monotonic()
+    with pytest.raises(ApiError) as err:
+        await fetch_text("https://files.example.org/a.md", settings)
+    assert err.value.code == "REF_FAILED"
+    assert time.monotonic() - started < 2

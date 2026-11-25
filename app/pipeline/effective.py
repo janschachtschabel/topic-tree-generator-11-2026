@@ -125,9 +125,11 @@ def effective_request(req: TopicTreeRequestV2, settings: Settings | None = None)
     if generation is not None:
         if "topic" not in sent and generation.topic:
             updates["topic"] = generation.topic
-        for name in ("hints", "options"):
-            if name not in sent and getattr(generation, name) is not None:
-                updates[name] = getattr(generation, name)
+        if "hints" not in sent and generation.hints is not None:
+            updates["hints"] = generation.hints
+        if "options" not in sent and generation.options is not None:
+            # `assign_only` describes one call, not the tree: inheriting it would silently drop the next feedback.
+            updates["options"] = generation.options.model_copy(update={"assign_only": False})
         if "frame" in sent and not any(req.frame.model_dump().values()) and generation.frame is not None:
             updates["frame"] = generation.frame
 

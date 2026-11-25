@@ -116,13 +116,14 @@ class _Applier:
 
     def move(self, change: Change) -> None:
         node = self.node(change.key)
-        target = self.node(change.to)
-        if target.key in {n.key for n, _, _ in walk([node])}:
+        target = self.node(change.to) if change.to else None  # None: the top level
+        if target is not None and target.key in {n.key for n, _, _ in walk([node])}:
             raise _Rejected(f"{change.key} kann nicht unter sich selbst verschoben werden")
-        if any(child is node for child in target.children):
+        destination = target.children if target is not None else self.roots
+        if any(child is node for child in destination):
             return  # already there
         _detach(self.roots, node.key)
-        target.children.append(node)
+        destination.append(node)
         self.record(change)
 
     def merge(self, change: Change) -> None:

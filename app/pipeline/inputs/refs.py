@@ -51,7 +51,11 @@ def _parse_content_length(raw: str | None) -> int:
 async def _read_response(client: httpx.AsyncClient, url: str, host: str, settings: Settings) -> str:
     failed = ApiError(422, "REF_FAILED", "Verweis konnte nicht geladen werden.", details={"host": host})
     try:
-        async with client.stream("GET", url, timeout=settings.ref_timeout_seconds, follow_redirects=False) as response:
+        # httpx timeouts apply per operation; the outer bound limits the whole download (slow-drip servers).
+        async with (
+            asyncio.timeout(settings.ref_timeout_seconds),
+            client.stream("GET", url, timeout=settings.ref_timeout_seconds, follow_redirects=False) as response,
+        ):
             if response.status_code != 200:
                 raise failed
             if _parse_content_length(response.headers.get("content-length")) > settings.ref_max_bytes:
@@ -61,7 +65,7 @@ async def _read_response(client: httpx.AsyncClient, url: str, host: str, setting
                 body.extend(chunk)
                 if len(body) > settings.ref_max_bytes:
                     raise _too_large(host)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, TimeoutError) as exc:
         raise failed from exc
     return body.decode("utf-8", errors="replace")
 

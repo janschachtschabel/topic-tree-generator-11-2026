@@ -238,3 +238,16 @@ async def test_requested_extra_topic_is_never_marked_suggested() -> None:
     result = await build(TopicTreeRequestV2.model_validate(data), rc(llm))
     assert result.roots[0].title == "Allgemeines"
     assert result.roots[0].status is None
+
+
+async def test_untitled_llm_nodes_are_dropped_with_a_warning() -> None:
+    # Audit 2026-11-25, open point 1: a collection without a name is unusable in edu-sharing.
+    answer = plan_answer(3, 2)
+    answer["main_topics"][1]["children"][0]["title"] = "   "
+    llm = FakeLLM({"plan_structure": answer, "describe_nodes": describe})
+    context = rc(llm)
+    request = req(shape={"depth": 2, "main_topics": {"min": 3, "max": 3}, "children": {"min": 2, "max": 2}})
+    resp = await orchestrator.run(request, context)
+    titles = [n.title for n in resp.collection[1].subcollections]
+    assert titles == ["Kind 1.1"]
+    assert "UNTITLED_NODE" in [w.code for w in resp.warnings]

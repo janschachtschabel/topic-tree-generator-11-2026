@@ -1,5 +1,5 @@
 from app.domain.keys import assign_missing_keys, make_key, slugify
-from app.domain.tree import Node, find, from_tree_in, index, parent_of, path, walk
+from app.domain.tree import Node, drop_untitled, find, from_tree_in, index, parent_of, path, walk
 from app.schemas.request_v2 import TreeNodeIn
 
 
@@ -78,3 +78,17 @@ def test_invalid_origin_in_input_is_dropped() -> None:
 def test_from_tree_in_preserves_zero_confidence() -> None:
     roots = from_tree_in([TreeNodeIn.model_validate({"title": "A", "contents": [{"id": "c1", "confidence": 0.0}]})])
     assert roots[0].contents[0].confidence == 0.0
+
+
+def test_untitled_nodes_are_removed_and_their_children_take_their_place() -> None:
+    blank = Node(key="k-b", title="  ", children=[Node(key="k-c1", title="C1"), Node(key="k-c2", title="C2")])
+    roots = [Node(key="k-a", title="A"), blank, Node(key="k-z", title="Z")]
+    removed = drop_untitled(roots)
+    assert [n.key for n in removed] == ["k-b"]
+    assert [n.key for n in roots] == ["k-a", "k-c1", "k-c2", "k-z"]
+
+
+def test_nested_untitled_nodes_are_removed_too() -> None:
+    roots = [Node(key="k-a", title="A", children=[Node(key="k-x", title=""), Node(key="k-y", title="Y")])]
+    assert [n.key for n in drop_untitled(roots)] == ["k-x"]
+    assert [c.key for c in roots[0].children] == ["k-y"]

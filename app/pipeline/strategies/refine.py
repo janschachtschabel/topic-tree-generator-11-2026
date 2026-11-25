@@ -12,7 +12,7 @@ from app.pipeline.steps.describe_nodes import describe_nodes
 from app.pipeline.steps.interpret_feedback import interpret_feedback
 from app.pipeline.steps.split_node import split_node
 from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
-from app.schemas.request_v2 import Change, TopicTreeRequestV2
+from app.schemas.request_v2 import Change, Frame, TopicTreeRequestV2
 from app.schemas.response_v2 import ChangeRecord, Question, StructureInfo, Unassigned
 
 _REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge}
@@ -45,10 +45,15 @@ class _Refiner:
         self.result.changes.extend(applied.applied)
         for warning in applied.rejected:
             self.rc.warn(warning.code, warning.message, warning.key, warning.step)
-        self.result.unassigned.extend(
-            Unassigned(id=ref.id, nodeId=ref.node_id, reason=UnassignedReason.no_matching_node)
-            for ref in applied.released_contents
-        )
+        # With multi-assignment a released item can still sit in another node; only report truly homeless ones.
+        placed = {ref.id for node, _, _ in walk(self.roots) for ref in node.contents}
+        reported = {u.id for u in self.result.unassigned}
+        for ref in applied.released_contents:
+            if ref.id not in placed and ref.id not in reported:
+                reported.add(ref.id)
+                self.result.unassigned.append(
+                    Unassigned(id=ref.id, nodeId=ref.node_id, reason=UnassignedReason.no_matching_node)
+                )
         self.refresh.update(r.key for r in applied.applied if r.op in _REFRESH_OPS and r.key)
         for change in applied.pending_splits:
             outcome = await split_node(self.roots, change, source, self.rc)
@@ -76,10 +81,40 @@ class _Refiner:
         await self.apply(allowed, ChangeSource.feedback_text)
 
 
+_FRAME_FIELDS = (
+    ("ccm:taxonid", "discipline_uri"),
+    ("ccm:educationalcontext", "educational_context_uri"),
+    ("ccm:educationalintendedenduserrole", "intended_end_user_role_uri"),
+)
+
+
+def apply_changed_frame(roots: list[Node], old: Frame | None, new: Frame, locked: set[str]) -> None:
+    """A changed `frame` replaces the old frame values on carried-over nodes.
+
+    Only nodes that still carry exactly the old values change; nodes narrowed on purpose (auto_metadata, `edit`)
+    and locked branches keep theirs. An emptied frame field removes the old values.
+    """
+    if old is None:
+        return
+    protected = protected_keys(roots, locked)
+    for prop_key, attr in _FRAME_FIELDS:
+        before, after = getattr(old, attr), getattr(new, attr)
+        if not before or before == after:
+            continue
+        for node, _, _ in walk(roots):
+            if node.key not in protected and node.properties.values(prop_key) == before:
+                if after:
+                    node.properties.set(prop_key, after)
+                else:
+                    node.properties.root.pop(prop_key, None)
+
+
 async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     current = req.current_tree
     roots = from_tree_in(current.collection)
     assign_missing_keys(roots)
+    locked = set(req.feedback.locked) if req.feedback else set()
+    apply_changed_frame(roots, current.generation.frame if current.generation else None, req.frame, locked)
     result = StrategyResult(
         roots=roots,
         title=current.title or req.topic or (roots[0].title if len(roots) == 1 else "Themenbaum"),
@@ -88,7 +123,15 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         shape_checked=not (req.use_case == UseCase.folders and not req.options.improve),
     )
     feedback = req.feedback
-    if req.options.assign_only or feedback is None:
+    if feedback is None:
+        return result
+    if req.options.assign_only:
+        if feedback.text or feedback.changes:
+            rc.warn(
+                "FEEDBACK_IGNORED",
+                "options.assign_only ist gesetzt: Die Rückmeldung wurde nicht umgesetzt, nur Inhalte zugeordnet.",
+                step="refine",
+            )
         return result
     refiner = _Refiner(roots, set(feedback.locked), rc, result)
     if feedback.changes:

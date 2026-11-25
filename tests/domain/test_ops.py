@@ -57,6 +57,20 @@ def test_move_keeps_children_and_key() -> None:
     assert [r.key for r in roots] == ["k-optik", "k-mechanik"]
 
 
+def test_move_without_target_lifts_the_node_to_the_top_level() -> None:
+    # Decided with Jan (audit 2026-11-25, open point 3): `to` omitted or null means the top level.
+    roots, result = run([ch(op="move", key="k-linsen"), ch(op="move", key="k-spiegel", to=None)])
+    assert [r.key for r in roots] == ["k-optik", "k-mechanik", "k-akustik", "k-linsen", "k-spiegel"]
+    assert find(roots, "k-optik").children == []
+    assert [(r.op, r.key, r.to) for r in result.applied] == [("move", "k-linsen", None), ("move", "k-spiegel", None)]
+
+
+def test_move_of_a_top_level_node_to_the_top_level_changes_nothing() -> None:
+    roots, result = run([ch(op="move", key="k-optik")])
+    assert [r.key for r in roots] == ["k-optik", "k-mechanik", "k-akustik"]
+    assert result.applied == [] and result.rejected == []
+
+
 def test_move_into_own_descendant_is_rejected() -> None:
     roots, result = run([ch(op="move", key="k-optik", to="k-linsen")])
     assert parent_of(roots, "k-optik") is None

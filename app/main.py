@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.api.body_limit import BodyLimitMiddleware
 from app.api.errors import install_error_handlers
 from app.api.health import router as health_router
 from app.api.v2 import router as v2_router
@@ -40,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="Themenbaum-Generator", description=DESCRIPTION, version=service_version())
     app.state.settings = settings
     install_error_handlers(app)
+    app.add_middleware(BodyLimitMiddleware, max_bytes=settings.max_request_bytes)
     app.add_middleware(
         AccessLogMiddleware,
         route_classes=ROUTE_CLASSES,
