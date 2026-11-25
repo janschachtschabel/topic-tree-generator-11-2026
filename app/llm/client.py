@@ -157,14 +157,23 @@ class LLMClient:
         schema = json.dumps(strict_schema(model), ensure_ascii=False)
         return f"{user}\n\nAntworte ausschließlich mit JSON nach diesem Schema:\n{schema}"
 
+    def _budget(self, step: str) -> float | None:
+        """Seconds left for the whole call (slot wait, SDK retries included); None without a deadline."""
+        return None if self.deadline is None else self._timeout(step)
+
     async def _call(self, step: str, body: dict[str, Any]) -> str | None:
-        timeout = self._timeout(step)
+        budget = self._budget(step)
         start = time.perf_counter()
         outcome = "ok"
         response = None
         try:
-            async with acquire_llm_slot(self.settings.llm_max_concurrency):
+            # The SDK applies `timeout` per attempt; the outer bound keeps retries and slot waits within the deadline.
+            async with asyncio.timeout(budget), acquire_llm_slot(self.settings.llm_max_concurrency):
+                timeout = self._timeout(step)  # recomputed: waiting for the slot used up part of the budget
                 response = await self._openai().chat.completions.create(**body, timeout=timeout)
+        except (TimeoutError, LLMStepError) as exc:
+            outcome = "deadline"
+            raise LLMStepError(step, "deadline") from exc
         except openai.APITimeoutError as exc:
             outcome = "timeout"
             raise LLMStepError(step, "timeout") from exc

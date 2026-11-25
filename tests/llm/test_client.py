@@ -185,3 +185,24 @@ async def test_expired_deadline_raises_without_calling() -> None:
         await make_client(fake, deadline=time.monotonic() - 1).complete_json("plan", "U", Answer)
     assert err.value.reason == "deadline"
     assert fake.calls == []
+
+
+async def test_request_deadline_bounds_the_whole_call_including_sdk_retries() -> None:
+    # Audit 2026-11-25 #4: the SDK applies `timeout` per attempt, so retries could run past the deadline.
+    fake = FakeOpenAI([GOOD], delay=5)
+    started = time.monotonic()
+    with pytest.raises(LLMStepError) as err:
+        await make_client(fake, deadline=time.monotonic() + 1.5).complete_json("plan", "USER", Answer)
+    assert err.value.reason == "deadline"
+    assert time.monotonic() - started < 2.5
+
+
+async def test_waiting_for_a_concurrency_slot_counts_against_the_deadline() -> None:
+    fake = FakeOpenAI([GOOD], delay=1.2)
+    client = make_client(fake, deadline=time.monotonic() + 1.6, llm_max_concurrency=1)
+    started = time.monotonic()
+    results = await asyncio.gather(
+        client.complete_json("a", "USER", Answer), client.complete_json("b", "USER", Answer), return_exceptions=True
+    )
+    assert sum(isinstance(r, LLMStepError) and r.reason == "deadline" for r in results) == 1
+    assert time.monotonic() - started < 2.2
