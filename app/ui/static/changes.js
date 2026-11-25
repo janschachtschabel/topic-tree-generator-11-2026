@@ -28,14 +28,16 @@
     const row = { op: change.op, key: change.key || "", title: change.title || "", hint: change.hint || "" };
     row.parent = change.parent || "";
     row.to = change.to || "";
-    row.description = ((change.properties || {})["cm:description"] || [""])[0];
-    if (change.op === "merge") [row.key = "", row.key2 = ""] = change.keys || [];
+    const { "cm:description": description = [""], ...otherProps } = change.properties || {};
+    row.description = description[0] || "";
+    row.otherProps = otherProps;
+    if (change.op === "merge") [row.key = "", row.key2 = "", ...row.moreKeys] = change.keys || [];
     return row;
   }
 
   /** Editor row -> row as expected by TopicTreePayload.validateChanges. */
   function toPayloadRow(row) {
-    return row.op === "merge" ? { ...row, keys: [row.key, row.key2] } : { ...row };
+    return row.op === "merge" ? { ...row, keys: [row.key, row.key2, ...(row.moreKeys || [])] } : { ...row };
   }
 
   function nodeSelect(row, field, nodes) {

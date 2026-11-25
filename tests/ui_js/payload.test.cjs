@@ -170,3 +170,45 @@ test("change rows: missing fields are reported per row", () => {
     "err.changeField",
   );
 });
+
+test("refine: new material ids never collide with contents of the base tree", () => {
+  const base = {
+    collection: [{ key: "k", title: "K", contents: [{ id: "b1" }], subcollections: [{ key: "c", title: "C", contents: [{ id: "b3" }] }] }],
+    generation: { use_case: "topic" },
+  };
+  const p = B.build(form({ task: "refine", currentTree: base, extras: { contentMaterials: true }, materialsB: "Neu 1\nNeu 2\nNeu 3" }));
+  assert.deepEqual(p.items.map((i) => i.id), ["b2", "b4", "b5"]);
+});
+
+test("refine: hints, options and shape equal to the base generation are left out so they are inherited", () => {
+  const generation = {
+    use_case: "folders",
+    hints: { context: null, include: ["X"], exclude: [], order: null, description_length: 40, language: "en" },
+    options: { improve: true, assign_contents: true, assign_only: false, multi_assign: true, min_confidence: 0.8, auto_metadata: false },
+    shape: { depth: 2, main_topics: { min: 3, max: 6 }, children: { min: 2, max: 5 }, extra_topics: [] },
+  };
+  const same = form({
+    task: "refine",
+    currentTree: { collection: [], generation },
+    hints: { include: ["X"], descriptionLength: 40, language: "en" },
+    options: { improve: true, assignContents: true, multiAssign: true, minConfidence: 0.8 },
+    shape: { depth: 2, mainMin: 3, mainMax: 6, childMin: 2, childMax: 5 },
+  });
+  const p = B.build(same);
+  assert.equal(p.hints, undefined);
+  assert.equal(p.options, undefined);
+  assert.equal(p.shape, undefined);
+  const changed = B.build({ ...same, hints: { ...same.hints, language: "de" }, options: { ...same.options, assignOnly: true } });
+  assert.equal(changed.hints.language, "de");
+  assert.equal(changed.options.assign_only, true);
+  assert.equal(changed.options.improve, true, "improve of the base survives a refine");
+});
+
+test("change rows keep extra merge keys and other edited properties", () => {
+  const { changes } = B.validateChanges([
+    { op: "merge", keys: ["a", "b", "c"], title: "ABC" },
+    { op: "edit", key: "a", description: "D", otherProps: { "cclom:general_keyword": ["k"] } },
+  ]);
+  assert.deepEqual(changes[0].keys, ["a", "b", "c"]);
+  assert.deepEqual(changes[1].properties, { "cclom:general_keyword": ["k"], "cm:description": ["D"] });
+});

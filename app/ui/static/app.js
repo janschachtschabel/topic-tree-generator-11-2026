@@ -103,6 +103,7 @@
     if (!keepJson) setJsonOverride(false);
     fillPresetSelect();
     refresh();
+    renderBase();
   }
 
   function setJsonOverride(on) {
@@ -116,7 +117,6 @@
   function refresh() {
     F().syncVisibility(state);
     renderChips();
-    renderBase();
     if (state.jsonOverride) return;
     try {
       $("f-json").value = JSON.stringify(window.TopicTreePayload.build(F().readForm(state)), null, 2);
@@ -146,11 +146,20 @@
     else state.lockedKeys.add(key);
     $("f-fb-locked").value = [...state.lockedKeys].join(", ");
     refresh();
+    renderBase();
     return state.lockedKeys.has(key);
   }
 
+  const resultShown = () => Boolean(state.lastResponse) && !$("result-area").hidden;
+
+  // Actions on the result tree first make that result the base, so keys and locks refer to the tree on screen.
+  function lockOnResult(key) {
+    adoptResult();
+    return toggleLock(key);
+  }
+
   function editNode(key) {
-    if (state.task !== "refine") adoptResult();
+    if (resultShown()) adoptResult();
     state.changes.addRow({ op: "rename", key });
     $("changes-editor").scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -173,8 +182,13 @@
       description: resp.metadata.description,
       collection: resp.collection,
       generation,
-    });
+    }, setSelectValue);
+    // Feedback and materials of the last run are already in the adopted tree; start the next change from scratch.
     $("f-fb-text").value = "";
+    $("f-materials-b").value = "";
+    $("x-content-materials").checked = false;
+    state.lockedKeys = new Set();
+    $("f-fb-locked").value = "";
     state.changes.setChanges([]);
     $("result-area").hidden = true;
     selectTask("refine");
@@ -183,14 +197,14 @@
 
   function readBaseJson() {
     const raw = $("f-current-tree").value.trim();
-    if (!raw) return F().setBase(state, null);
     try {
-      F().setBase(state, JSON.parse(raw));
+      F().setBase(state, raw ? JSON.parse(raw) : null, setSelectValue);
       showFormError("");
     } catch {
       showFormError(t("err.json", { field: "current_tree" }));
     }
-    return undefined;
+    refresh();
+    renderBase();
   }
 
   // --- submit and result -------------------------------------------------------------------------------
@@ -262,7 +276,7 @@
       ? t("tree.orderLine", { source: st.source, order: st.order }) + ((st.levels || []).length ? ` · ${st.levels.join(" → ")}` : "")
       : "";
     window.TopicTreeView.renderTree(
-      $("tree-container"), resp.collection, state.lockedKeys, toggleLock, resp.metadata.vocab_labels || {}, editNode,
+      $("tree-container"), resp.collection, new Set(), lockOnResult, resp.metadata.vocab_labels || {}, editNode,
     );
     if ($("tree-filter").value) window.TopicTreeView.filterTree($("tree-container"), $("tree-filter").value);
     renderRaw();
@@ -287,6 +301,6 @@
 
   window.TopicTreeApp = {
     state, $, t, setStatus, showFormError, populateSelect, selectTask, applyPreset, refresh, submitForm,
-    adoptResult, readBaseJson, renderSuccess, renderRaw, setJsonOverride, renderChips, TASKS,
+    adoptResult, readBaseJson, renderSuccess, renderRaw, setJsonOverride, renderChips, renderBase, fillPresetSelect, TASKS,
   };
 })();

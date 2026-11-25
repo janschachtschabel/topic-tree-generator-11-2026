@@ -67,11 +67,12 @@
     return out;
   }
 
-  function buildOptions(options, task) {
+  function buildOptions(options, task, generation) {
     const o = options || {};
+    const inheritedImprove = Boolean(generation && generation.options && generation.options.improve);
     return {
       auto_metadata: Boolean(o.autoMetadata),
-      improve: task === "folders" && Boolean(o.improve),
+      improve: task === "refine" ? inheritedImprove : task === "folders" && Boolean(o.improve),
       assign_contents: o.assignContents !== false,
       assign_only: task === "refine" && Boolean(o.assignOnly),
       multi_assign: o.multiAssign !== false,
@@ -128,7 +129,61 @@
     if (itemsRef && items.length) throw fail("err.itemsAndRef");
     if (task === "contents" && !itemsRef && !items.length) throw fail("err.materialsRequired");
     if (itemsRef) payload.items_ref = itemsRef;
+    if (task === "refine") renameColliding(items, placedIds(form.currentTree));
     if (items.length) payload.items = items;
+  }
+
+  /** Content ids already placed in the base tree: the service skips re-sent ids, so new items must not reuse them. */
+  function placedIds(tree) {
+    const ids = new Set();
+    (function visit(nodes) {
+      for (const node of nodes || []) {
+        for (const ref of node.contents || []) ids.add(ref.id);
+        visit(node.subcollections);
+      }
+    })(tree && tree.collection);
+    return ids;
+  }
+
+  function renameColliding(items, reserved) {
+    const used = new Set(reserved);
+    for (const item of items) {
+      if (used.has(item.id)) {
+        const prefix = item.id.replace(/\d+$/, "");
+        let n = 1;
+        while (used.has(`${prefix}${n}`)) n += 1;
+        item.id = `${prefix}${n}`;
+      }
+      used.add(item.id);
+    }
+  }
+
+  /** Drops null, empty strings and empty lists, sorts keys: makes sent and stored settings comparable. */
+  function canonical(value) {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === "object") {
+      const out = {};
+      for (const key of Object.keys(value).sort()) {
+        const v = value[key];
+        if (v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length)) continue;
+        out[key] = canonical(v);
+      }
+      return out;
+    }
+    return value;
+  }
+
+  const sameAs = (a, b) => b !== undefined && b !== null && JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+
+  /** Refine inherits hints, options and shape from the base when they are left out; only send what changed. */
+  function inheritUnchanged(payload, generation) {
+    if (!generation) return;
+    if (sameAs(payload.hints, generation.hints)) delete payload.hints;
+    if (payload.shape && sameAs(payload.shape, generation.shape)) delete payload.shape;
+    const stored = generation.options;
+    if (stored && !payload.options.assign_only && sameAs({ ...payload.options }, { ...stored, assign_only: false })) {
+      delete payload.options;
+    }
   }
 
   function changeFromRow(row) {
@@ -142,7 +197,7 @@
     } else {
       out.key = text(row.key);
       if (row.op === "rename") out.title = text(row.title);
-      if (row.op === "edit") out.properties = { "cm:description": [text(row.description)] };
+      if (row.op === "edit") out.properties = { ...(row.otherProps || {}), "cm:description": [text(row.description)] };
       if (row.op === "move") out.to = text(row.to) || null;
       if (row.op === "split") out.hint = text(row.hint);
     }
@@ -200,7 +255,9 @@
     const shape = buildShape(form.shape, form.limits);
     if (shape) payload.shape = shape;
     payload.hints = buildHints(form.hints);
-    payload.options = buildOptions(form.options, form.task);
+    const generation = form.task === "refine" ? form.currentTree.generation : null;
+    payload.options = buildOptions(form.options, form.task, generation);
+    if (generation) inheritUnchanged(payload, generation);
     return payload;
   }
 

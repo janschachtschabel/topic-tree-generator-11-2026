@@ -116,8 +116,10 @@
     setBase(state, null);
   }
 
-  function setBase(state, tree) {
+  /** With `setSelectValue`, frame, shape, hints and options of the base's generation are loaded into the form. */
+  function setBase(state, tree, setSelectValue) {
     state.currentTree = tree;
+    if (tree && tree.generation && setSelectValue) applySettings(state, tree.generation, setSelectValue);
     $("f-current-tree").value = tree ? JSON.stringify(tree, null, 2) : "";
     const count = tree ? P().treeNodeOptions(tree.collection).length : 0;
     $("base-summary").textContent = tree

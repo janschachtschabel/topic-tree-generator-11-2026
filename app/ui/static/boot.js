@@ -31,6 +31,9 @@
       dMax: state.limits.max_tree_depth, wMax: state.limits.max_nodes_per_level,
     });
     A().setJsonOverride(state.jsonOverride);
+    const selected = $("f-preset").value;
+    A().fillPresetSelect();
+    $("f-preset").value = selected;
     state.changes.refresh();
     renderTaskCards();
     refresh();
@@ -96,6 +99,11 @@
     $("btn-add-change").addEventListener("click", () => state.changes.addRow({}));
     $("btn-json-edit").addEventListener("click", () => { app.setJsonOverride(true); $("f-json").focus(); });
     $("btn-json-reset").addEventListener("click", () => { app.setJsonOverride(false); app.refresh(); });
+  }
+
+  function wireResultEvents() {
+    const app = A();
+    const { $, state } = app;
     $("btn-cancel").addEventListener("click", () => state.controller?.abort());
     $("btn-retry").addEventListener("click", app.submitForm);
     $("btn-copy-json").addEventListener("click", copyJson);
@@ -144,6 +152,7 @@
       onChange: () => app.refresh(),
     });
     wireEvents();
+    wireResultEvents();
     try {
       await loadPresets();
     } catch {
