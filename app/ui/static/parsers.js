@@ -15,22 +15,30 @@
   const NONE = new Set(["-", "–", "0"]);
   const MARKER = /^\[([^\]]*)\]\s*/;
 
+  /** Code of a leading `[..]` with at most two letters (e.g. `G`, `GI`, `-`); longer brackets belong to the title. */
+  function markerCode(text) {
+    const match = MARKER.exec(text);
+    if (!match) return null;
+    const code = match[1].replace(/[\s+]/g, "").toUpperCase();
+    return code.length <= 2 ? { code, length: match[0].length } : null;
+  }
+
   /** Optional leading role marker: [G] structure, [I] content, [GI] both, [-] neither. `use: null` = unknown marker. */
   function parseRole(text, defaultUse) {
-    const match = MARKER.exec(text);
-    if (!match) return { use: [...defaultUse], rest: text };
-    const code = match[1].replace(/[\s+]/g, "").toUpperCase();
-    const use = NONE.has(code) ? [] : ROLES[code] || null;
-    return { use: use && [...use], rest: text.slice(match[0].length) };
+    const marker = markerCode(text);
+    if (!marker) return { use: [...defaultUse], rest: text };
+    const use = NONE.has(marker.code) ? [] : ROLES[marker.code] || null;
+    return { use: use && [...use], rest: text.slice(marker.length) };
   }
 
   function sameUse(a, b) {
     return a.length === b.length && a.every((role) => b.includes(role));
   }
 
-  function roleMarker(use, defaultUse) {
+  /** Marker for a line; written for the default role too when the title itself would read as a marker. */
+  function roleMarker(use, defaultUse, title) {
     const roles = use || defaultUse;
-    if (sameUse(roles, defaultUse)) return "";
+    if (sameUse(roles, defaultUse) && !markerCode(title)) return "";
     if (!roles.length) return "[-] ";
     if (roles.length === 2) return "[GI] ";
     return roles[0] === "structure" ? "[G] " : "[I] ";
@@ -80,7 +88,7 @@
       const parts = [title];
       if (keywords || description) parts.push(keywords);
       if (description) parts.push(description);
-      out.push(roleMarker(item.use, defaultUse) + parts.join(" | "));
+      out.push(roleMarker(item.use, defaultUse, title) + parts.join(" | "));
     }
     return out.join("\n");
   }
@@ -125,7 +133,10 @@
   /** Inverse of parseFolderOutline for presets: item ids are replaced by the items' titles. */
   function folderOutlineFromPayload(folders, items) {
     const titles = new Map(
-      (items || []).map((item) => [item.id, roleMarker(item.use, ["content"]) + (first(item, TITLE) || item.id)]),
+      (items || []).map((item) => {
+        const title = first(item, TITLE) || item.id;
+        return [item.id, roleMarker(item.use, ["content"], title) + title];
+      }),
     );
     const out = [];
     function visit(list, depth) {
