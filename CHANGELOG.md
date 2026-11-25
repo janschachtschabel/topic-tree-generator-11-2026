@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+Changed
+- Test UI (`/ui/`) rebuilt around a task navigation with combinations as add-ons, line editors for materials and
+  folders, a row editor for targeted changes (`refine`), an always-visible editable request JSON, and 18 task-grouped
+  examples (new: Kita, Hochschule, topic + document, folders + loose files, contents with sort-in-only items, all
+  change ops, changes + new items, frame change). API unchanged.
+
 ## 2.0.0 (2026-11-25)
 
 New

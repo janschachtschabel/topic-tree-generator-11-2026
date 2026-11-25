@@ -44,8 +44,14 @@ def test_ui_enabled_serves_self_hosted_html_and_assets_without_exposing_in_opena
     for name, mime in (
         ("styles.css", "text/css"),
         ("i18n.js", "javascript"),
+        ("parsers.js", "javascript"),
+        ("payload.js", "javascript"),
         ("tree.js", "javascript"),
+        ("changes.js", "javascript"),
+        ("result.js", "javascript"),
+        ("form.js", "javascript"),
         ("app.js", "javascript"),
+        ("boot.js", "javascript"),
     ):
         asset = client.get(f"/ui/assets/{name}")
         assert asset.status_code == 200, name
@@ -106,27 +112,47 @@ def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
     assert html.count("<summary>") == html.count("<summary><span")
 
 
-def test_ui_exposes_compact_preset_selector_and_all_manual_v2_inputs() -> None:
+def test_ui_navigates_by_task_and_exposes_every_request_input() -> None:
     client = _client(ui_enabled=True)
     html = client.get("/ui/").text
-    # Compact dropdown in sidebar instead of a tall preset button wall.
-    assert 'id="f-preset"' in html
-    assert 'id="btn-reset"' in html
-    assert 'id="preset-list"' not in html
-    # Full manual input coverage for v2 request fields.
+    for task in ("topic", "document", "folders", "contents", "refine"):
+        assert f'data-task="{task}"' in html, task
+    # Example picker in the sidebar, filtered by task in the browser.
+    assert 'id="f-preset"' in html and 'id="btn-reset"' in html
     for field_id in (
+        "f-topic",
         "discipline-chips",
-        "f-hint-lang",
-        "f-items-ref",
+        "f-context",
+        "f-role",
+        "f-materials-a",
+        "f-materials-b",
+        "f-folder-outline",
+        "f-opt-improve",
         "f-doc-markdown",
-        "f-items",
-        "f-folders",
+        "f-doc-ref",
+        "f-items-ref",
         "f-current-tree",
+        "changes-editor",
+        "btn-add-change",
         "f-fb-text",
         "f-fb-locked",
-        "f-fb-changes",
+        "f-opt-assign-only",
+        "f-opt-auto-meta",
+        "f-extra-general",
+        "f-extra-methodology",
+        "f-hint-lang",
+        "f-desc-len",
+        "f-json",
+        "btn-json-edit",
+        "x-structure-materials",
+        "x-content-materials",
+        "x-document",
     ):
         assert f'id="{field_id}"' in html, f"missing UI control #{field_id}"
+    # Result view: metrics card, adopt-as-base action and the base tree for targeted changes.
+    for field_id in ("metrics", "btn-use-refine", "base-tree", "btn-copy-json", "btn-download-json"):
+        assert f'id="{field_id}"' in html, field_id
+    assert "onEditNode" in client.get("/ui/assets/tree.js").text
 
 
 def test_ui_tree_defaults_to_titles_only_with_details_toggle() -> None:
@@ -157,14 +183,24 @@ def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
     i18n_js = client.get("/ui/assets/i18n.js").text
 
     assert 'id="lang-de"' in html and 'id="lang-en"' in html
-    assert html.index("/ui/assets/i18n.js") < html.index("/ui/assets/tree.js") < html.index("/ui/assets/app.js")
+    order = [
+        "i18n.js",
+        "parsers.js",
+        "payload.js",
+        "tree.js",
+        "changes.js",
+        "result.js",
+        "form.js",
+        "app.js",
+        "boot.js",
+    ]
+    positions = [html.index(f"/ui/assets/{name}") for name in order]
+    assert positions == sorted(positions)
     assert ".tree-node.is-duplicate" in css
     assert ".status-badge.duplicate" in css
     assert "is-duplicate" in tree_js
     assert "tree.badge.duplicate" in tree_js
     assert '"Duplikat"' in i18n_js and '"Duplicate"' in i18n_js
-    app_js = client.get("/ui/assets/app.js").text
-    assert "doc-manual-" in app_js
 
 
 def test_refine_presets_start_from_a_fully_described_tree() -> None:
@@ -183,3 +219,64 @@ def test_refine_presets_start_from_a_fully_described_tree() -> None:
             n["key"] for n in nodes(current["collection"]) if not n.get("properties", {}).get("cm:description")
         ]
         assert undescribed == [], f"{preset['id']}: {undescribed}"
+
+
+def _walk(nodes: list[dict]):
+    for node in nodes:
+        yield node
+        yield from _walk(node.get("subcollections", []))
+
+
+def test_presets_are_grouped_by_task_with_at_least_two_per_task() -> None:
+    from app.ui.presets import PRESETS
+
+    tasks = [p["task"] for p in PRESETS]
+    for task in ("topic", "document", "folders", "contents", "refine"):
+        assert tasks.count(task) >= 2, task
+    for preset in PRESETS:
+        payload = preset["payload"]
+        expected = "refine" if payload["mode"] == "refine" else payload["use_case"]
+        assert preset["task"] == expected, preset["id"]
+    assert len({p["id"] for p in PRESETS}) == len(PRESETS)
+
+
+def test_presets_cover_every_change_op_with_existing_keys() -> None:
+    from app.schemas.common import ChangeOp
+    from app.ui.presets import PRESETS
+
+    seen: set[str] = set()
+    for preset in PRESETS:
+        payload = preset["payload"]
+        changes = (payload.get("feedback") or {}).get("changes") or []
+        if not changes:
+            continue
+        keys = {n["key"] for n in _walk(payload["current_tree"]["collection"])}
+        for change in changes:
+            seen.add(change["op"])
+            refs = [change.get("key"), change.get("parent"), change.get("to"), *(change.get("keys") or [])]
+            assert {r for r in refs if r} <= keys, (preset["id"], change)
+    assert seen == {op.value for op in ChangeOp}
+
+
+def test_presets_include_elementary_and_higher_education_and_combinations() -> None:
+    from app.ui.presets import PRESETS
+
+    contexts = {uri for p in PRESETS for uri in p["payload"]["frame"]["educational_context_uri"]}
+    assert any(uri.endswith("/elementarbereich") for uri in contexts)
+    assert any(uri.endswith("/hochschule") for uri in contexts)
+
+    def uses(preset: dict) -> set[tuple[str, ...]]:
+        return {tuple(item.get("use") or ()) for item in preset["payload"].get("items") or []}
+
+    by_task: dict[str, list[dict]] = {}
+    for preset in PRESETS:
+        by_task.setdefault(preset["task"], []).append(preset)
+    assert any({("structure", "content"), ("content",)} <= uses(p) for p in by_task["topic"])
+    assert any(("structure",) in uses(p) for p in by_task["topic"])
+    assert any(p["payload"].get("topic") for p in by_task["document"])
+    assert any(
+        not p["payload"].get("options", {}).get("improve") and ("content",) in uses(p) for p in by_task["folders"]
+    )
+    assert any({("structure", "content"), ("content",)} <= uses(p) for p in by_task["contents"])
+    assert any(p["payload"].get("items") and p["payload"]["feedback"].get("changes") for p in by_task["refine"])
+    assert any(p["payload"]["frame"] != p["payload"]["current_tree"]["generation"]["frame"] for p in by_task["refine"])

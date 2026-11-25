@@ -63,6 +63,11 @@ Ein geänderter `frame` ersetzt die alten Frame-Werte an bestehenden Knoten; gez
 Änderungsoperationen in `feedback.changes`: `move` ohne `to` (oder mit `to: null`) verschiebt einen Knoten auf die
 Hauptebene.
 
+In der Test-UI (`/ui/`) heißt das „Baum ändern“: Basis aus einem Beispiel, dem letzten Ergebnis oder JSON, alle sieben
+Operationen (`add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`) als Zeilen mit Knotenauswahl, dazu Freitext,
+gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema + Materialien) laufen dort über
+„Zusätzlich einbeziehen“.
+
 ## Seitenmarken im Markdown (use_case document)
 
 Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) sowie `<!-- page_break -->`,

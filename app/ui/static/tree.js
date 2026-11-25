@@ -71,7 +71,8 @@
     };
   }
 
-  function renderNode(node, depth, lockedSet, onToggleLock, vocabLabels, titleCounts) {
+  function renderNode(node, depth, ctx) {
+    const { lockedSet, onToggleLock, vocabLabels, titleCounts } = ctx;
     const children = node.subcollections || [];
     const hasChildren = children.length > 0;
     const isDuplicate = (titleCounts.get(normTitle(node.title)) || 0) > 1;
@@ -123,6 +124,13 @@
         lockBtn.textContent = nowLocked ? t("tree.locked") : t("tree.lock");
       });
       head.appendChild(lockBtn);
+      if (ctx.onEditNode) {
+        const editBtn = el("button", "lock-btn edit-btn", t("tree.edit"));
+        editBtn.type = "button";
+        editBtn.title = t("tree.editTitle");
+        editBtn.addEventListener("click", () => ctx.onEditNode(node.key));
+        head.appendChild(editBtn);
+      }
     }
     item.appendChild(head);
 
@@ -173,7 +181,7 @@
     if (hasChildren) {
       childBox.setAttribute("role", "group");
       for (const child of children) {
-        childBox.appendChild(renderNode(child, depth + 1, lockedSet, onToggleLock, vocabLabels, titleCounts));
+        childBox.appendChild(renderNode(child, depth + 1, ctx));
       }
       const toggleBranch = () => {
         const open = !childBox.hidden;
@@ -193,12 +201,11 @@
     return item;
   }
 
-  function renderTree(container, nodes, lockedSet, onToggleLock, vocabLabels) {
+  /** `onEditNode(key)` is optional; without it nodes get no "Ändern …" action. */
+  function renderTree(container, nodes, lockedSet, onToggleLock, vocabLabels, onEditNode) {
     container.replaceChildren();
-    const titleCounts = countTitles(nodes);
-    for (const root of nodes || []) {
-      container.appendChild(renderNode(root, 1, lockedSet, onToggleLock, vocabLabels || {}, titleCounts));
-    }
+    const ctx = { lockedSet, onToggleLock, vocabLabels: vocabLabels || {}, titleCounts: countTitles(nodes), onEditNode };
+    for (const root of nodes || []) container.appendChild(renderNode(root, 1, ctx));
   }
 
   function setAllExpanded(container, expand) {

@@ -206,11 +206,15 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 - **Enable** (default in local dev and Docker Compose): `UI_ENABLED=true` → accessible at `http://localhost:8000/ui/` (and `/ui` redirects to `/ui/`).
 - **Disable** (recommended for production; default in the Helm chart): set `UI_ENABLED=false` in `.env` or container environment. All UI routes (`/ui`, `/ui/`, `/ui/presets`, `/ui/assets/*`) immediately return **`404 Not Found`**. UI routes are never exposed in `/openapi.json`.
 - **Capabilities**:
-  - Preset templates for all use cases (`topic`, `auto_metadata`, `document`, `folders`, `contents`, `refine`, `assign_only`) that pre-fill the form without auto-starting so you can edit any field before running.
-  - Full manual input for every v2 field (multi-select school & university disciplines, direct Markdown editor for `document`, optional `shape` fields that fall back to target-group recommendations when left empty).
-  - Default title-only collapsible tree view with an opt-in checkbox to show descriptions, keywords, and vocabulary pills; automatic visual highlighting (`Duplikat` / `Duplicate` badge) if a tree contains duplicate titles.
-  - Live metrics (node counts per level, duration, LLM calls, prompt-cache hit ratio), warnings/questions/changes panels, raw request/response JSON viewer, and one-click transfer into `refine` mode with locked branches.
-
+  - Left navigation by task (Thema, Dokument, Ordner, Inhalte gruppieren, Baum ändern); each task shows only its fields
+    plus an "also include" group for combinations (materials that shape the structure, materials that are only sorted
+    in, a structure document as inspiration or guide). 18 examples, filtered per task, fill the form without starting.
+  - Line editors instead of JSON: materials as `Titel | Schlagworte | Beschreibung`, folders as an indented outline.
+  - "Baum ändern": targeted changes (`feedback.changes`, all seven ops) in a row editor with node pickers; "Lock" and
+    "Change …" directly on the base or result tree; "Use as base for changes" adopts a result.
+  - The request as JSON is always visible and can be edited and sent as is, so every option (e.g. `nodeId`) stays
+    reachable. Result card with quality, cost and time metrics, foldable warnings/questions/changes/unassigned, tree
+    viewer with duplicate highlighting, copy/save JSON.
 ---
 
 ## Use Cases & Examples (`POST /v2/topic-tree`)
