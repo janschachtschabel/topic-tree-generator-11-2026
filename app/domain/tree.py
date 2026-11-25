@@ -95,3 +95,25 @@ def from_tree_in(nodes: list[TreeNodeIn]) -> list[Node]:
             )
         )
     return result
+
+
+def drop_untitled(roots: list[Node]) -> list[Node]:
+    """Remove nodes whose title is empty or blank; their children take their place. Returns the removed nodes.
+
+    A collection without a name is unusable in edu-sharing, so such nodes never reach the answer.
+    """
+    removed: list[Node] = []
+
+    def clean(nodes: list[Node]) -> list[Node]:
+        result: list[Node] = []
+        for node in nodes:
+            node.children = clean(node.children)
+            if node.title.strip():
+                result.append(node)
+            else:
+                removed.append(node)
+                result.extend(node.children)
+        return result
+
+    roots[:] = clean(roots)
+    return removed

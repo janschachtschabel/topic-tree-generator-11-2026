@@ -20,7 +20,7 @@ from app.domain.shape_rules import (
     extra_kind,
     normalize_shorttitles,
 )
-from app.domain.tree import Node, from_tree_in, index, walk
+from app.domain.tree import Node, drop_untitled, from_tree_in, index, walk
 from app.errors import ApiError
 from app.llm.client import LLMStepError
 from app.pipeline.context_block import build_context_block
@@ -33,9 +33,9 @@ from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
 from app.pipeline.steps.infer_metadata import infer_metadata
 from app.pipeline.strategies import contents, document, folders, refine, topic
-from app.schemas.common import ChangeOp, ItemUse, Mode, UseCase
+from app.schemas.common import ChangeOp, ItemUse, Mode, UnassignedReason, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
-from app.schemas.response_v2 import TopicTreeResponseV2
+from app.schemas.response_v2 import TopicTreeResponseV2, Unassigned
 from app.vocab.labels import label
 
 __all__ = ["STRATEGIES", "Strategy", "StrategyResult", "run"]
@@ -84,6 +84,22 @@ def _llm_unavailable(error: LLMStepError, mode: str) -> ApiError:
         details={"step": error.step, "reason": error.reason, "status": error.status},
         headers={"Retry-After": "30"} if retry else None,
     )
+
+
+def _drop_untitled(rc: RunContext, result: StrategyResult) -> None:
+    """Untitled nodes (e.g. a blank LLM title) are removed; their own contents count as unassigned."""
+    removed = drop_untitled(result.roots)
+    if not removed:
+        return
+    rc.warn("UNTITLED_NODE", f"{len(removed)} Knoten ohne Titel verworfen; ihre Unterknoten rücken auf.")
+    placed = {ref.id for node, _, _ in walk(result.roots) for ref in node.contents}
+    reported = {u.id for u in result.unassigned}
+    for ref in (ref for node in removed for ref in node.contents):
+        if ref.id not in placed and ref.id not in reported:
+            reported.add(ref.id)
+            result.unassigned.append(
+                Unassigned(id=ref.id, nodeId=ref.node_id, reason=UnassignedReason.no_matching_node)
+            )
 
 
 async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
@@ -186,6 +202,7 @@ async def run(
         rc.warn("VOCAB_UNKNOWN", f"Unbekannter Vokabularwert: {uri}", step="context")
     try:
         result = await strategy(req, rc)
+        _drop_untitled(rc, result)
         await _assign(req, rc, result)
         if req.options.auto_metadata:
             await infer_metadata(result.roots, req, rc)

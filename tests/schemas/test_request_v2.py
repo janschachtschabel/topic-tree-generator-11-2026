@@ -209,3 +209,13 @@ def test_env_shape_cost_limits_reject_explicit_excess_but_allow_omitted_shape() 
     very_strict = Settings(_env_file=None, max_tree_depth=2, max_nodes_per_level=8)
     minimal = parse({"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}})
     check_request(minimal, very_strict)
+
+
+def test_change_with_blank_title_is_rejected() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from app.schemas.request_v2 import Change
+
+    with pytest.raises(ValidationError):
+        Change.model_validate({"op": "rename", "key": "k-a", "title": "   "})

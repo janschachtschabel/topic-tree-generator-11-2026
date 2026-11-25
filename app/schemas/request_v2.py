@@ -169,6 +169,8 @@ class Change(_Model):
     @model_validator(mode="after")
     def _required_fields(self) -> Self:
         missing = [name for name in _REQUIRED_BY_OP[self.op] if getattr(self, name) in (None, "", [])]
+        if self.title is not None and not self.title.strip():
+            missing.append("title")
         if missing:
             raise ValueError(f"op '{self.op}' requires {', '.join(missing)}")
         if self.op == ChangeOp.merge and len(self.keys or []) < 2:
