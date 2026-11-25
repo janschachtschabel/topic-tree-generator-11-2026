@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 (unreleased)
+## 2.0.0 (2026-11-25)
 
 New
 - `POST /v2/topic-tree`: four use cases (`topic`, `document`, `folders`, `contents`), `mode: refine` with text or
@@ -14,8 +14,14 @@ New
 - `current_tree` accepts optional `title` and `description` so `refine` keeps the tree's title and description.
 - Optional built-in test UI under `/ui/` with ready-to-run sample scenarios for all use cases, interactive tree
   viewer, token/cache/timing metrics and diagnostics (`UI_ENABLED=false` disables it completely; off by default in Helm).
-- Operations (Leitfaden): gunicorn with several workers, internal port with `/health`, `/ready`, `/metrics`,
-  JSON logs with B3 / `x-client-trace-id`, non-root image, Helm chart `deploy/helm/topic-tree`.
+- Operations (Leitfaden): gunicorn with several workers (`graceful_timeout=290s`), internal port with `/health`,
+  `/ready`, `/metrics`, JSON logs with B3 / `x-client-trace-id` (propagated on both v2 and legacy v1 endpoints),
+  digest-pinned non-root image, Dependabot, and versioned Helm chart `deploy/helm/topic-tree` published to GHCR OCI on
+  `vX.Y.Z` tags.
+- Resilient degraded fallback (`LLM_DEGRADED` warning) for `document` and `folders` when the LLM is unavailable;
+  permanent b-api `503` errors (`Model pricing unavailable`, `NOT_ELIGIBLE`) answered as `502` without `Retry-After`.
+- Unified Level-1 counting (`extra_topics` count toward `main_topics`) and input-driven width up to 20 nodes per level
+  when `shape` is omitted on `document`/`contents`/`folders` (`5–15` recommendation on pure `topic`).
 
 Changed (operators)
 - Vocabulary labels come from a bundled snapshot; the service no longer needs network access at start-up.
@@ -39,4 +45,5 @@ Changed (operators)
   (`HOST_PORT`); after setting `DOMAIN`, `HOST_BIND=127.0.0.1` closes the direct path.
 
 Unchanged
-- `/generate-topic-tree` and `/generate-collection-description`: same request, response and behaviour.
+- `/generate-topic-tree` and `/generate-collection-description`: frozen request and response schemas preserved; now
+  also callable in standalone mode (`OPENAI_API_KEY` / `SERVICE_API_KEYS`) consistently with `/v2/topic-tree`.

@@ -13,7 +13,7 @@ Legende Status: `geprüft` / `vorhanden` (✅ im Code & durch Tests/Messung bele
 |---|---|
 | **Service / Dienst-ID** | **`topic-tree`** (einheitlich in `SERVICE_ID`, JSON-Logs `service`, Prometheus-Präfix `topic_tree_*`, Helm-Chart `deploy/helm/topic-tree`, b-api-Proxy `/api/v1/proxy/topic-tree`) |
 | **Funktionalität / Kurzbeschreibung** *(gleich `info.description`)* | Erzeugt Themenbäume (Sammlungsstrukturen) für Bildungsinhalte: aus einem Thema (`topic`), einem Strukturdokument wie einem Lehrplan (`document`), aus Ordnern und Dateien (`folders`) oder aus unstrukturierten Inhalten (`contents`). Entwürfe lassen sich mit Rückmeldungen gezielt weiterentwickeln (`mode: refine`), Inhalte werden den Knoten mit Konfidenz zugeordnet. |
-| **Stabile Version** | `vorhanden` **`2.0.0`** (`pyproject.toml`, `Chart.yaml` `version` = `appVersion` = `"2.0.0"`, durch CI-Test synchron gehalten; Altstand `0.4.0` archiviert in Branch `backup_old`) |
+| **Stabile Version** | `geprüft` **`2.0.0`** (Git-Tag **`v2.0.0`**, Image `ghcr.io/janschachtschabel/topic-tree-generator-11-2026:2.0.0`, OCI-Helm-Chart `oci://ghcr.io/janschachtschabel/topic-tree-generator-11-2026/charts/topic-tree:2.0.0`; `pyproject.toml` & `Chart.yaml` per CI-Test synchron; Altstand `0.4.0` archiviert in Branch `backup_old`) |
 | **Technischer Owner / Ansprechperson** | Jan Schachtschabel · **Vertretung:** `In Klärung` *(vor T6-Übergabe benennen, z. B. Tobias Müller)* |
 | **Jira** | `WLO-87: Themenbaum-Generator` |
 | **Deployment Status** | `extern` (Docker/Compose Testinstanz) · `staging` (`0.4.0` aktiv hinter b-api; Upgrade auf `2.0.0` vorbereitet) · `prod` (ausstehend nach T6-Abnahme) |
@@ -56,7 +56,7 @@ Aufrufer / edu-sharing (/bapi/**) / Kestra-Flow
 |---|---|
 | **Überblick** | Python 3.13, FastAPI, Pydantic v2, `openai` AsyncClient (über geteilten `httpx.AsyncClient`), `gunicorn` + `uvicorn-worker`, `loguru`, `prometheus-client`; gebündelter Offline-SkoHub-Vokabular-Snapshot (`discipline`, `educationalContext`, `intendedEndUserRole`) |
 | **Horizontale Skalierbarkeit / Clusterfähigkeit** | `geprüft` **Vollständig zustandslos (`stateless`)** — keine Sessions, keine In-Memory-Jobs, keine SQLite/Datenbank, kein geteiltes Volume. Beliebig viele Pods parallel hinter einem Service (`RollingUpdate`, Standard im Chart `replicaCount: 2`, optionaler HPA `2–6` Pods). Skalierungsgrenzen liegen ausschließlich in den Rate-Limits/Kontingenten der upstream LLM-Route (insb. GWDG-Kontingent ~10 Req/min; ein 3-Ebenen-Baum benötigt ~9–14 LLM-Calls und sollte daher auf OpenAI/Azure-Routen statt GWDG laufen). |
-| **Integriert in B-API (`b-api`)** | `In Klärung` *(Code fertig & getestet; Proxy-Update auf Staging/Prod mit b-api-Admin vorzunehmen)*:<br>• Proxy-Eintrag: **`topic-tree`** (`/api/v1/proxy/topic-tree`)<br>• `forwardDelegation: true`, `delegationScopes: ["llm"]` (`forwardApiKey` entfällt)<br>• `responseTimeout: 310000` (310 s), `delegationLifetimeSeconds` ≥ `310`<br>• Benötigte Rechte am Schlüssel: Dienst-Recht `topic-tree` + LLM-Recht<br>• Route: `B_API_ROUTE=topic-tree-generator` (oder geteilte OpenAI-Route wie `schnell-guenstig-openai` / `kompendium` mit `common`-Body) |
+| **Integriert in B-API (`b-api`)** | `In Klärung` *(Code & Referenz-Route fertig; Proxy-Update auf Staging/Prod mit b-api-Admin vorzunehmen)*:<br>• Proxy-Eintrag: **`topic-tree`** (`/api/v1/proxy/topic-tree`)<br>• `forwardDelegation: true`, `delegationScopes: ["llm"]` (`forwardApiKey` entfällt)<br>• `responseTimeout: 310000` (310 s), `delegationLifetimeSeconds` ≥ `310`<br>• Benötigte Rechte am Schlüssel: Dienst-Recht `topic-tree` + LLM-Recht<br>• **Empfohlene LLM-Route `topic-tree-generator`** (Referenzvorlage [`deploy/b-api/route-topic-tree-generator.json`](../deploy/b-api/route-topic-tree-generator.json)):<br>  – **Stufe 0 (Primär):** **`gpt-6-luna`** (OpenAI, `oa-gpt6-luna`, Gewicht `1`)<br>  – **Stufe 1 (Sekundär / Reserve):** **`gpt-5.6-luna`** (OpenAI, `oa-gpt56-luna`, Gewicht `1`)<br>  – `maxAttempts: 3`, `clearCache: true` beim Speichern; beide Modelle nutzen identisch den `common`-Body (`max_completion_tokens` + `reasoning_effort: "none"`, `json_schema` `strict: true`, kein Streaming). Keine GWDG-Reserve hinterlegen (~8–14 parallele Calls/Baum überschreiten das GWDG-Limit von ~10 Req/min). |
 | **Ruft selbst die b-api?** | `geprüft` **Ja**, ausschließlich `POST /api/v1/llm/router/chat/completions` (bzw. bei gesetztem `B_API_MODEL` `/api/v1/llm/{provider}/chat/completions`) mit dem unveränderten `Authorization: Bearer bdt_…`-Header. **Keine** Aufrufe an `/api/v1/edu-sharing/**`, **keine verifizierte Person erforderlich** (funktioniert auch für Gast-Schlüssel, sofern LLM-Scope erlaubt ist). |
 | **Schreibt Suggestions** | `geprüft` **Nein** (reiner Berechnungsdienst, gibt JSON an den Aufrufer zurück) |
 | **Nutzt Routing** | `geprüft` **Ja** (`B_API_ROUTE`, Standard im Chart `topic-tree-generator`, versteht auch `provider/modell`; Parameterfamilie `LLM_PARAM_FAMILY=common` sendet `max_completion_tokens` + `reasoning_effort: "none"`, kompatibel mit GPT-5/GPT-6 sowie Qwen/Gemma/DeepSeek) |
@@ -68,7 +68,7 @@ Aufrufer / edu-sharing (/bapi/**) / Kestra-Flow
 
 | Dienst-ID | braucht Dienste | Rechte am Schlüssel | Delegations-Scopes | LLM-Route | Repository-Bezug | nur gemeinsam mit |
 |---|---|---|---|---|---|---|
-| `topic-tree` | keine (nur b-api LLM; im Flow optional `text-extraction` / Repo-Volltext davor) | Proxy-Recht `topic-tree` + LLM | `llm` | `topic-tree-generator` *(OpenAI-basiert, `common`-Body; nicht reine GWDG-Route wegen ~9–14 Calls/Baum)* | keiner (`nodeId` wird nur durchgereicht; Volltexte/Metadaten kommen als Eingabe) | — (eigenständig nutzbar) |
+| `topic-tree` | keine (nur b-api LLM; im Flow optional `text-extraction` / Repo-Volltext davor) | Proxy-Recht `topic-tree` + LLM | `llm` | `topic-tree-generator` *(Primär: `gpt-6-luna`, Sekundär: `gpt-5.6-luna`; `common`-Body)* | keiner (`nodeId` wird nur durchgereicht; Volltexte/Metadaten kommen als Eingabe) | — (eigenständig nutzbar) |
 
 ---
 
@@ -141,8 +141,9 @@ Alle technischen Leitfaden-Anpassungen im Code, Helm-Chart, Dockerfile und CI-Wo
 
 Vor der finalen Produktiv-Übergabe sind nur noch folgende **organisatorische / plattformseitige Abstimmungen** offen:
 
-1. **b-api-Proxy-Eintrag `topic-tree` aktualisieren (b-api-Admin):**
-   - `forwardDelegation: true` und `delegationScopes: ["llm"]` aktivieren (`forwardApiKey` entfernen), `responseTimeout` ≥ `310000` ms setzen, Pfad `/v2/topic-tree` im Proxy-Eintrag prüfen und LLM-Route `topic-tree-generator` auf OpenAI-kompatiblen `common`-Body konfigurieren (`clearCache: true`).
+1. **b-api-Proxy-Eintrag `topic-tree` & Route `topic-tree-generator` einrichten (b-api-Admin):**
+   - Proxy: `forwardDelegation: true` und `delegationScopes: ["llm"]` aktivieren (`forwardApiKey` entfernen), `responseTimeout` ≥ `310000` ms setzen, Pfad `/v2/topic-tree` prüfen.
+   - LLM-Route `topic-tree-generator` gemäß [`deploy/b-api/route-topic-tree-generator.json`](../deploy/b-api/route-topic-tree-generator.json) anlegen (**Stufe 0: `gpt-6-luna`**, **Stufe 1: `gpt-5.6-luna`**, `maxAttempts: 3`, `clearCache: true`).
 2. **Stufe-2/3-Messung über b-api-Staging:**
    - `scripts/probe_llm.py` und `scripts/loadtest.py` über die echte Staging-b-api ausführen und die gebuchten EUR/USD-Kosten je Use Case aus den b-api-Nutzungsdaten oben in Abschnitt 4 eintragen.
 3. **Plattform-Angaben, Namenskonvention & Vertretung mit Team 6 klären:**

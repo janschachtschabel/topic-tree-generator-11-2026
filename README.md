@@ -88,13 +88,31 @@ Uses [`docker-compose.yml`](docker-compose.yml) with Traefik HTTPS labels and ze
    DNS A/AAAA record to the host and redeploy. Traefik terminates TLS and routes HTTPS traffic to container port
    `8000`; port `9000` stays internal only. Then set `HOST_BIND=127.0.0.1` to close the unencrypted direct port.
 
-To pin a specific container image instead of building locally:
+To pin a specific release tag (recommended for staging/production) instead of `:latest`:
 
 ```shell
-IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:latest docker compose up -d
+IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:2.0.0 docker compose up -d
 ```
 
-### Option C: Local Python development (without Docker)
+### Option C: Kubernetes / Helm Chart (`deploy/helm/topic-tree`)
+
+A production-ready Helm chart template (`version` = `appVersion` = `2.0.0`, non-root `uid=10001`, `readOnlyRootFilesystem: true`, two-port `Service` `:8000` / `:9000`, `NetworkPolicy`, `ServiceMonitor`, `PrometheusRule`, `HPA`) is included in [`deploy/helm/topic-tree/`](deploy/helm/topic-tree/) and published as an OCI artifact on every `vX.Y.Z` release tag (reference b-api route template: [`deploy/b-api/route-topic-tree-generator.json`](deploy/b-api/route-topic-tree-generator.json)):
+
+```shell
+# Install from the published OCI Helm chart (tag v2.0.0)
+helm upgrade --install topic-tree \
+  oci://ghcr.io/janschachtschabel/topic-tree-generator-11-2026/charts/topic-tree \
+  --version 2.0.0 \
+  --set image.repository=ghcr.io/janschachtschabel/topic-tree-generator-11-2026 \
+  --set image.tag=2.0.0 \
+  --set config.bApiBaseUrl=https://b-api.staging.openeduhub.net \
+  --set config.bApiRoute=topic-tree-generator
+
+# Or install/render directly from the local chart template in the repository
+helm upgrade --install topic-tree ./deploy/helm/topic-tree -f values-custom.yaml
+```
+
+### Option D: Local Python development (without Docker)
 
 Requires **Python 3.13** and [uv](https://docs.astral.sh/uv/):
 
@@ -437,6 +455,7 @@ app/context    tracing and caller/mode detection
 app/vocab      bundled SkoHub vocabulary snapshot (no runtime network)
 app/ui         optional self-hosted test UI (/ui/, toggled via UI_ENABLED)
 app/legacy     frozen v1 endpoints
-deploy/helm    Helm chart
+deploy/helm    Helm chart template (published to GHCR OCI on vX.Y.Z tags)
+deploy/b-api   Reference LLM route definition (gpt-6-luna primary, gpt-5.6-luna fallback)
 docs/          API reference, JSON schemas, request examples, benchmarks, design plan
 ```

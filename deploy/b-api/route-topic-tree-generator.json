@@ -1,0 +1,22 @@
+{
+  "name": "topic-tree-generator",
+  "description": "Themenbaum-Dienst (topic-tree): OpenAI primary + fallback, common parameter family (max_completion_tokens + reasoning_effort=none, strict json_schema, no streaming).",
+  "maxAttempts": 3,
+  "clearCache": true,
+  "deployments": [
+    {
+      "id": "oa-gpt6-luna",
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "priority": 0,
+      "weight": 1
+    },
+    {
+      "id": "oa-gpt56-luna",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "priority": 1,
+      "weight": 1
+    }
+  ]
+}
