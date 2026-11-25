@@ -296,3 +296,38 @@ async def test_removed_node_content_still_placed_elsewhere_is_not_unassigned() -
     resp, _ = await run(req, {})
     assert [c.id for c in by_key(resp.collection, "k-optik").contents] == ["c1"]
     assert resp.unassigned == []
+
+
+SEK2 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2"
+
+
+async def test_changed_frame_replaces_old_frame_values_but_keeps_narrowed_and_locked_nodes() -> None:
+    # Decided with Jan (audit 2026-11-25, open point 4).
+    current = copy.deepcopy(CURRENT)
+    current["generation"]["frame"] = ex.FRAME
+    for item in current["collection"]:
+        item["properties"]["ccm:educationalcontext"] = [ex.SEK1]
+        for child in item["subcollections"]:
+            child["properties"]["ccm:educationalcontext"] = [ex.SEK1]
+    narrowed = current["collection"][1]["subcollections"][0]  # k-kraft, set by hand to another level
+    narrowed["properties"]["ccm:educationalcontext"] = [
+        "http://w3id.org/openeduhub/vocabs/educationalContext/grundschule"
+    ]
+    frame = {**ex.FRAME, "educational_context_uri": [SEK2]}
+    req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "refine",
+            "use_case": "topic",
+            "current_tree": current,
+            "frame": frame,
+            "feedback": {"locked": ["k-akustik"]},
+        }
+    )
+    resp, _ = await run(req, {})
+
+    def ctx(key: str) -> list[str]:
+        return by_key(resp.collection, key).properties.values("ccm:educationalcontext")
+
+    assert ctx("k-optik") == [SEK2] and ctx("k-linsen") == [SEK2]
+    assert ctx("k-kraft") == ["http://w3id.org/openeduhub/vocabs/educationalContext/grundschule"]
+    assert ctx("k-akustik") == [ex.SEK1] and ctx("k-schall") == [ex.SEK1]

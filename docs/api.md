@@ -57,6 +57,9 @@ als `current_tree.version` sowie (optional) `metadata.title`/`metadata.descripti
 `current_tree.description` zurückgeben und nur das neue `feedback` ergänzen. Fehlende Vorgaben übernimmt der Dienst
 aus `generation` (außer `options.assign_only`, das nur für den einen Aufruf gilt).
 
+Ein geänderter `frame` ersetzt die alten Frame-Werte an bestehenden Knoten; gezielt eingegrenzte Knoten und gesperrte
+Äste (`locked`) behalten ihre Werte.
+
 Änderungsoperationen in `feedback.changes`: `move` ohne `to` (oder mit `to: null`) verschiebt einen Knoten auf die
 Hauptebene.
 
