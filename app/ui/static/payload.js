@@ -99,7 +99,7 @@
     const title = text(form.documentTitle) || text(form.topic) || "Strukturdokument";
     return {
       id: "doc1",
-      use: ["structure"],
+      use: (form.extras || {}).documentContent ? ["structure", "content"] : ["structure"],
       properties: { "cm:title": [title] },
       fulltext: ref ? { format: "markdown", ref } : { format: "markdown", text: markdown },
     };

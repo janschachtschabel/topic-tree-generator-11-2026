@@ -56,7 +56,7 @@
           <div class="field">
             <label for="f-folder-outline" data-i18n="field.folders">Ordner und Dateien</label>
             <textarea id="f-folder-outline" class="code-area" rows="7" spellcheck="false" placeholder="Optik&#10;  - Licht und Schatten&#10;  Linsen&#10;    - Sammellinse"></textarea>
-            <p class="help-text" data-i18n="help.folders">Eine Zeile je Ordner, zwei Leerzeichen je Ebene. „- Titel“ ist eine Datei im Ordner darüber.</p>
+            <p class="help-text" data-i18n="help.folders">Eine Zeile je Ordner, zwei Leerzeichen je Ebene. „- Titel“ ist eine Datei im Ordner darüber, „- [G] Titel“ eine Datei, die nur die Gliederung prägt ([GI] beides, [-] keines).</p>
           </div>
           <label class="check"><input id="f-opt-improve" type="checkbox"> <span data-i18n="opt.improve">Ordnerstruktur verbessern</span></label>
         </section>
@@ -133,13 +133,14 @@
             <label for="f-doc-title" data-i18n="field.docTitle">Titel des Dokuments (optional)</label>
             <input id="f-doc-title" type="text" maxlength="200">
           </div>
+          <label class="check"><input id="x-doc-content" type="checkbox"> <span data-i18n="x.docContent">Dokument auch als Inhalt einsortieren</span></label>
         </section>
 
         <section id="sec-materials-a" class="task-section">
           <div class="field">
             <label for="f-materials-a" id="materials-a-label" data-i18n="field.materialsA">Materialien, die die Struktur prägen</label>
             <textarea id="f-materials-a" class="code-area" rows="6" spellcheck="false" placeholder="Lochkamera bauen | Licht, Experiment | Kurzbeschreibung"></textarea>
-            <p class="help-text" data-i18n="help.materials">Eine Zeile je Material: Titel | Schlagworte (Komma) | Kurzbeschreibung. Nur der Titel ist Pflicht.</p>
+            <p class="help-text" data-i18n="help.materials">Eine Zeile je Material: Titel | Schlagworte (Komma) | Kurzbeschreibung. Nur der Titel ist Pflicht. Optional vorn eine Rolle: [G] Gliederung, [I] Inhalt, [GI] beides, [-] keines.</p>
           </div>
         </section>
 
@@ -147,7 +148,7 @@
           <div class="field">
             <label for="f-materials-b" id="materials-b-label" data-i18n="field.materialsB">Materialien zum Einsortieren</label>
             <textarea id="f-materials-b" class="code-area" rows="5" spellcheck="false" placeholder="Arbeitsblatt Reflexion | Spiegel"></textarea>
-            <p class="help-text" data-i18n="help.materialsB">Werden nur zugeordnet und prägen die Struktur nicht. Gleiches Zeilenformat.</p>
+            <p class="help-text" data-i18n="help.materialsB">Werden nur zugeordnet und prägen die Struktur nicht. Gleiches Zeilenformat; mit [G], [GI] oder [-] vorn gilt die Rolle nur für diese Zeile.</p>
           </div>
         </section>
 

@@ -208,8 +208,10 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 - **Capabilities**:
   - Left navigation by task (Thema, Dokument, Ordner, Inhalte gruppieren, Baum ändern); each task shows only its fields
     plus an "also include" group for combinations (materials that shape the structure, materials that are only sorted
-    in, a structure document as inspiration or guide). 18 examples, filtered per task, fill the form without starting.
+    in, a structure document as inspiration or guide). 19 examples, filtered per task, fill the form without starting.
   - Line editors instead of JSON: materials as `Titel | Schlagworte | Beschreibung`, folders as an indented outline.
+    An optional leading marker sets the role per line or file (`[G]` structure, `[I]` content, `[GI]` both, `[-]`
+    neither); a structure document can also be sorted in as content.
   - "Baum ändern": targeted changes (`feedback.changes`, all seven ops) in a row editor with node pickers; "Lock" and
     "Change …" directly on the base or result tree; "Use as base for changes" adopts a result.
   - The request as JSON is always visible and can be edited and sent as is, so every option (e.g. `nodeId`) stays

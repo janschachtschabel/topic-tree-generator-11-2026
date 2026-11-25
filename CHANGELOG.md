@@ -4,12 +4,15 @@
 
 Changed
 - Test UI (`/ui/`) rebuilt around a task navigation with combinations as add-ons, line editors for materials and
-  folders, a row editor for targeted changes (`refine`), an always-visible editable request JSON, and 18 task-grouped
+  folders, a row editor for targeted changes (`refine`), an always-visible editable request JSON, and 19 task-grouped
   examples (new: Kita, Hochschule, topic + document, folders + loose files, contents with sort-in-only items, all
-  change ops, changes + new items, frame change). API unchanged.
+  change ops, changes + new items, frame change, roles per item).
 - `refine`: an item whose id is already placed in `current_tree` is no longer skipped silently. The same material
   keeps its place with warning `ITEM_ALREADY_PLACED`; a different material (other `nodeId`) under that id is rejected
   with `422 ID_CONFLICT`.
+- Items accept `"use": []` (neither structure nor content); before, an empty list fell back to the use case
+  default. A structure document may also be content. The test UI sets the role per line with a leading marker
+  (`[G]` structure, `[I]` content, `[GI]` both, `[-]` neither) and has "also sort the document in as content".
 
 ## 2.0.0 (2026-11-25)
 

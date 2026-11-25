@@ -79,6 +79,7 @@
         structureMaterials: $("x-structure-materials").checked,
         contentMaterials: $("x-content-materials").checked,
         document: $("x-document").checked,
+        documentContent: $("x-doc-content").checked,
         topicFrame: task === "document" || task === "contents",
       },
       materialsA: $("f-materials-a").value,
@@ -105,6 +106,7 @@
     "f-extra-general": false, "f-extra-methodology": false, "f-opt-auto-meta": false, "f-opt-improve": false,
     "f-opt-assign": true, "f-opt-assign-only": false, "f-opt-multi": true, "x-structure-materials": false,
     "x-content-materials": false, "x-document": false,
+    "x-doc-content": false,
   };
 
   function resetFields(state) {
@@ -134,9 +136,12 @@
   }
 
 
-  function sameUse(item, task) {
-    if (item.use && item.use.length) return [...item.use].sort().join("+");
-    return task === "contents" ? "content+structure" : "content";
+  const BOTH = ["structure", "content"];
+
+  /** Roles of an item as the service reads them: a missing `use` means the use case default, `[]` means neither. */
+  function rolesOf(item, task) {
+    if (Array.isArray(item.use)) return item.use;
+    return task === "contents" ? BOTH : ["content"];
   }
 
   /** Splits preset items into the form's slots; `null` when something only the JSON view can hold. */
@@ -146,20 +151,19 @@
     (function visit(list) {
       for (const f of list || []) { (f.items || []).forEach((id) => folderIds.add(id)); visit(f.subcollections); }
     })(payload.folders);
-    const slots = { docs: [], a: [], b: [], folderItems: [] };
-    for (const item of items) {
-      const use = sameUse(item, task);
-      if (folderIds.has(item.id)) slots.folderItems.push(item);
-      else if (use === "structure" && item.fulltext) slots.docs.push(item);
-      else if (use === "content+structure") slots.a.push(item);
-      else if (use === "content") slots.b.push(item);
-      else return null;
-    }
     const aAllowed = task === "topic" || task === "contents";
     const docAllowed = ["topic", "document", "folders"].includes(task);
-    if (slots.docs.length > 1 || (slots.docs.length && !docAllowed) || (slots.a.length && !aAllowed)) return null;
-    const linesA = P().materialLinesFromItems(slots.a);
-    const linesB = P().materialLinesFromItems(slots.b);
+    const slots = { docs: [], a: [], b: [], folderItems: [] };
+    for (const item of items) {
+      const roles = rolesOf(item, task);
+      const isBoth = roles.length === 2 && BOTH.every((role) => roles.includes(role));
+      if (folderIds.has(item.id)) slots.folderItems.push(item);
+      else if (item.fulltext && roles.includes("structure") && docAllowed && !slots.docs.length) slots.docs.push(item);
+      else if (isBoth && aAllowed) slots.a.push(item);
+      else slots.b.push({ ...item, use: roles });
+    }
+    const linesA = P().materialLinesFromItems(slots.a, BOTH);
+    const linesB = P().materialLinesFromItems(slots.b, ["content"]);
     if (linesA === null || linesB === null || P().materialLinesFromItems(slots.folderItems) === null) return null;
     return { ...slots, linesA, linesB };
   }
@@ -168,6 +172,7 @@
     const doc = slots.docs[0];
     if (doc) {
       $("x-document").checked = task !== "document";
+      $("x-doc-content").checked = rolesOf(doc, task).includes("content");
       $("f-doc-markdown").value = doc.fulltext.text || "";
       $("f-doc-ref").value = doc.fulltext.ref || "";
       $("f-doc-title").value = ((doc.properties || {})["cm:title"] || [""])[0];
