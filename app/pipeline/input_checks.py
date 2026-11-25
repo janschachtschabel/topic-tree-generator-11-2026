@@ -5,7 +5,7 @@ from collections.abc import Iterator
 
 from app.errors import ApiError
 from app.schemas.common import ItemUse, Mode, UseCase
-from app.schemas.request_v2 import FolderNode, TopicTreeRequestV2
+from app.schemas.request_v2 import FolderNode, TopicTreeRequestV2, TreeNodeIn
 from app.settings import Settings
 
 
@@ -35,6 +35,31 @@ def _check_items(req: TopicTreeRequestV2, settings: Settings, loaded: bool) -> N
         unknown = sorted(set(_folder_item_ids(req.folders)) - set(counts))
         if unknown:
             raise ApiError(422, "UNKNOWN_ITEM", "Ordner verweisen auf unbekannte Items.", details={"ids": unknown[:20]})
+
+
+def _placed_node_ids(nodes: list[TreeNodeIn], out: dict[str, set[str]]) -> dict[str, set[str]]:
+    for node in nodes:
+        for ref in node.contents:
+            out.setdefault(ref.id, set()).update([ref.node_id] if ref.node_id else [])
+        _placed_node_ids(node.subcollections, out)
+    return out
+
+
+def _check_refine_ids(req: TopicTreeRequestV2) -> None:
+    """An item id already placed in `current_tree` must name the same material (same nodeId where both are given)."""
+    placed = _placed_node_ids(req.current_tree.collection, {})
+    conflicts = sorted(
+        item.id
+        for item in req.items or []
+        if item.node_id and placed.get(item.id) and item.node_id not in placed[item.id]
+    )
+    if conflicts:
+        raise ApiError(
+            422,
+            "ID_CONFLICT",
+            "Item-ids sind im bestehenden Baum schon für ein anderes Material (andere nodeId) vergeben.",
+            details={"ids": conflicts[:20]},
+        )
 
 
 def _has_fulltext(item) -> bool:
@@ -90,6 +115,8 @@ def check_request(req: TopicTreeRequestV2, settings: Settings, *, loaded: bool =
     """`loaded=True` re-checks a request after items_ref was resolved (no inline limit then)."""
     if req.mode == Mode.refine and req.current_tree is None:
         raise _missing("mode 'refine' braucht 'current_tree'.")
+    if req.mode == Mode.refine:
+        _check_refine_ids(req)
     if req.options.assign_only and req.mode != Mode.refine:
         raise ApiError(422, "INVALID_OPTION", "options.assign_only ist nur mit mode 'refine' möglich.")
     _check_shape_limits(req, settings)

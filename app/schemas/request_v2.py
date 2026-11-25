@@ -87,7 +87,12 @@ class Fulltext(_Model):
 class Item(_Model):
     id: ItemId
     node_id: str | None = Field(None, alias="nodeId", max_length=200)
-    use: list[ItemUse] | None = None
+    use: list[ItemUse] | None = Field(
+        None,
+        description="Rolle des Eintrags: ['structure'] Gliederung, ['content'] Inhalt, beide, oder [] keines von "
+        "beiden (wird angenommen, aber weder für die Struktur genutzt noch einsortiert). Fehlt use, gilt der Standard "
+        "des Use Case.",
+    )
     properties: Properties = Field(default_factory=Properties)
     fulltext: Fulltext | None = None
     path: str | None = Field(None, max_length=1000)
@@ -199,8 +204,9 @@ class TopicTreeRequestV2(_Model):
     options: Options = Field(default_factory=Options)
 
     def effective_use(self, item: Item) -> set[ItemUse]:
-        """Spec: without `use`, contents items are structure and content; everything else is content only."""
-        if item.use:
+        """Spec: without `use`, contents items are structure and content; everything else is content only.
+        An explicit empty list means neither (the item is carried along, e.g. as a folder file, but not used)."""
+        if item.use is not None:
             return set(item.use)
         if self.use_case == UseCase.contents:
             return {ItemUse.structure, ItemUse.content}

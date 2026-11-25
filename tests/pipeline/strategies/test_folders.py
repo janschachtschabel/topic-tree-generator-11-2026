@@ -139,3 +139,9 @@ async def test_folders_degrade_gracefully_when_llm_rejects_requests() -> None:
     assert [c.id for c in resp.collection[0].contents] == ["c1", "c2"]
     codes = [w.code for w in resp.warnings]
     assert "LLM_DEGRADED" in codes and "DESCRIBE_FAILED" in codes
+
+
+async def test_items_marked_neither_structure_nor_content_stay_out_of_folders() -> None:
+    items = [*ex.FOLDER_ITEMS[:1], {"id": "c2", "use": [], "properties": {"cm:title": ["Notiz"]}}, *ex.FOLDER_ITEMS[2:]]
+    result = await build(req(items=items), rc(FakeLLM({"describe_nodes": describe})))
+    assert [c.id for c in result.roots[0].contents] == ["c1"]

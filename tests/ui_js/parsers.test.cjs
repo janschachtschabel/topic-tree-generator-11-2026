@@ -94,3 +94,54 @@ test("tree node options in pre-order with depth", () => {
     { key: "b", title: "B", depth: 1 },
   ]);
 });
+
+test("role markers set the use per line: [G] structure, [I] content, [GI] both, [-] neither", () => {
+  const text = "[G] Lehrplan\n[i] Video\n[GI] Arbeitsblatt | a\n[-] Notiz\n[G+I] Quiz\nOhne Marker";
+  const { items, errors } = P.parseMaterialLines(text, "b", ["content"]);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(items.map((i) => [i.properties["cm:title"][0], i.use]), [
+    ["Lehrplan", ["structure"]],
+    ["Video", ["content"]],
+    ["Arbeitsblatt", ["structure", "content"]],
+    ["Notiz", []],
+    ["Quiz", ["structure", "content"]],
+    ["Ohne Marker", ["content"]],
+  ]);
+  assert.deepEqual(P.parseMaterialLines("[X] Falsch", "b", ["content"]).errors, [{ line: 1, key: "err.roleMarker" }]);
+});
+
+test("folder files take role markers too", () => {
+  const { items } = P.parseFolderOutline("Ordner\n  - [G] Lehrplan\n  - [-] Notiz\n  - Datei");
+  assert.deepEqual(items.map((i) => i.use), [["structure"], [], ["content"]]);
+});
+
+test("lines from items write a marker only where the use differs from the list default", () => {
+  const items = [
+    { id: "1", use: ["structure"], properties: { "cm:title": ["L"] } },
+    { id: "2", use: [], properties: { "cm:title": ["N"] } },
+    { id: "3", use: ["content", "structure"], properties: { "cm:title": ["B"] } },
+    { id: "4", use: ["content"], properties: { "cm:title": ["I"] } },
+  ];
+  assert.equal(P.materialLinesFromItems(items, ["content"]), "[G] L\n[-] N\n[GI] B\nI");
+  assert.equal(P.materialLinesFromItems(items.slice(2), ["structure", "content"]), "B\n[I] I");
+  const folders = [{ title: "O", items: ["1", "4"], subcollections: [] }];
+  assert.equal(P.folderOutlineFromPayload(folders, items), "O\n  - [G] L\n  - I");
+});
+
+test("titles that start with brackets survive: long codes stay in the title, short ones get an explicit marker", () => {
+  assert.deepEqual(P.parseMaterialLines("[Video] Licht", "b", ["content"]).items[0].properties["cm:title"], ["[Video] Licht"]);
+  const items = [
+    { id: "1", use: ["content"], properties: { "cm:title": ["[G] wie Glas"] } },
+    { id: "2", use: ["content"], properties: { "cm:title": ["[Video] Licht"] } },
+  ];
+  const text = P.materialLinesFromItems(items, ["content"]);
+  assert.equal(text, "[I] [G] wie Glas\n[Video] Licht");
+  const back = P.parseMaterialLines(text, "b", ["content"]).items;
+  assert.deepEqual(back.map((i) => [i.properties["cm:title"][0], i.use]), [
+    ["[G] wie Glas", ["content"]],
+    ["[Video] Licht", ["content"]],
+  ]);
+  const outline = P.folderOutlineFromPayload([{ title: "O", items: ["1"], subcollections: [] }], items);
+  assert.equal(outline, "O\n  - [I] [G] wie Glas");
+  assert.deepEqual(P.parseFolderOutline(outline).items[0].properties["cm:title"], ["[G] wie Glas"]);
+});

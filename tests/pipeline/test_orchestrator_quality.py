@@ -240,3 +240,33 @@ async def test_extra_topics_outside_topic_do_not_cause_false_shape_width_warning
     resp = await orchestrator.run(request, rc, strategies={UseCase.contents: fake_contents})
     assert "Zusatzthemen" not in rc.context
     assert [w.code for w in resp.warnings] == []
+
+
+async def test_refine_reports_items_that_are_already_placed_instead_of_skipping_them_silently() -> None:
+    req = TopicTreeRequestV2.model_validate(
+        {
+            "mode": "refine",
+            "use_case": "folders",
+            "frame": copy.deepcopy(ex.FRAME),
+            "current_tree": {
+                "version": "v1",
+                "collection": [
+                    {
+                        "key": "k-optik",
+                        "title": "Optik",
+                        "properties": {"cm:title": ["Optik"], "cm:description": ["Kurz."]},
+                        "contents": [{"id": "c1", "nodeId": "n-1", "confidence": 0.9}],
+                        "subcollections": [],
+                    }
+                ],
+            },
+            "items": [{"id": "c1", "nodeId": "n-1", "properties": {"cm:title": ["Linsen"]}}],
+            "options": {"assign_only": True},
+        }
+    )
+    rc = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(req, rc)
+    warnings = [w for w in resp.warnings if w.code == "ITEM_ALREADY_PLACED"]
+    assert len(warnings) == 1 and "c1" in warnings[0].message
+    assert [ref.id for ref in resp.collection[0].contents] == ["c1"]
+    assert resp.unassigned == []

@@ -224,3 +224,58 @@ def test_move_without_target_means_top_level() -> None:
     from app.schemas.request_v2 import Change
 
     assert Change.model_validate({"op": "move", "key": "k"}).to is None
+
+
+def _refine_with_placed(item: dict) -> dict:
+    return {
+        "mode": "refine",
+        "use_case": "topic",
+        "frame": copy.deepcopy(ex.FRAME),
+        "current_tree": {
+            "collection": [
+                {"key": "k-a", "title": "A", "contents": [{"id": "c1", "nodeId": "n-1"}], "subcollections": []}
+            ]
+        },
+        "items": [item],
+    }
+
+
+def test_refine_rejects_an_item_whose_id_is_placed_in_the_tree_for_another_material() -> None:
+    other = {"id": "c1", "nodeId": "n-2", "properties": {"cm:title": ["Anderes Material"]}}
+    with pytest.raises(ApiError) as err:
+        check_request(parse(_refine_with_placed(other)), SETTINGS)
+    assert err.value.status == 422
+    assert err.value.code == "ID_CONFLICT"
+    # The same material (same nodeId) or one without nodeId is not a conflict.
+    check_request(parse(_refine_with_placed({**other, "nodeId": "n-1"})), SETTINGS)
+    check_request(parse(_refine_with_placed({"id": "c1", "properties": {"cm:title": ["X"]}})), SETTINGS)
+
+
+@pytest.mark.parametrize(
+    ("use", "expected"),
+    [
+        (None, {ItemUse.content}),
+        (["structure"], {ItemUse.structure}),
+        (["content"], {ItemUse.content}),
+        (["structure", "content"], {ItemUse.structure, ItemUse.content}),
+        ([], set()),
+    ],
+)
+def test_each_item_carries_one_of_four_roles(use: list[str] | None, expected: set[ItemUse]) -> None:
+    item = {"id": "x", "properties": {"cm:title": ["X"]}}
+    if use is not None:
+        item["use"] = use
+    request = parse({**ex.TOPIC, "items": [item]})
+    assert request.effective_use(request.items[0]) == expected
+
+
+def test_document_may_be_structure_and_content_at_once() -> None:
+    doc = {
+        "id": "lp",
+        "use": ["structure", "content"],
+        "properties": {"cm:title": ["Lehrplan"]},
+        "fulltext": {"format": "markdown", "text": "# A\n## B"},
+    }
+    request = parse({"mode": "create", "use_case": "document", "frame": ex.FRAME, "items": [doc]})
+    check_request(request, SETTINGS)
+    assert request.effective_use(request.items[0]) == {ItemUse.structure, ItemUse.content}

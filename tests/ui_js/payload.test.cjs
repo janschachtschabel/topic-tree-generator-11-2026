@@ -212,3 +212,12 @@ test("change rows keep extra merge keys and other edited properties", () => {
   assert.deepEqual(changes[0].keys, ["a", "b", "c"]);
   assert.deepEqual(changes[1].properties, { "cclom:general_keyword": ["k"], "cm:description": ["D"] });
 });
+
+test("document can be structure and content at once", () => {
+  const p = B.build(form({ task: "document", documentMarkdown: "# A", extras: { documentContent: true } }));
+  assert.deepEqual(p.items[0].use, ["structure", "content"]);
+  assert.throws(
+    () => B.build(form({ extras: { contentMaterials: true }, materialsB: "ok\n[Q] x" })),
+    (err) => err.message === "err.roleMarker" && err.vars.line === 2 && err.vars.field === "materialsB",
+  );
+});
