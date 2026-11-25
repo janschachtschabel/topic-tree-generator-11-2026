@@ -49,7 +49,8 @@ async def test_prompt_contains_context_block_then_shape_instruction() -> None:
     await plan_structure(req(ex.TOPIC), rc(llm), context="## Anfragekontext\nThema: Optik")
     (prompt,) = llm.prompts("plan_structure")
     assert prompt.startswith("## Anfragekontext\nThema: Optik")
-    assert "6 bis 12 reguläre Hauptthemen" in prompt
+    assert "6 bis 12 Hauptthemen" in prompt
+    assert "Korridor" in prompt
     assert "3 bis 8" in prompt
     assert "3 Ebenen" in prompt
     assert "duplikate" in prompt.lower()
@@ -116,11 +117,11 @@ async def test_three_level_skeleton_keeps_grandchildren_and_cuts_excess_depth() 
     assert "SHAPE_DEPTH" in [w.code for w in context.warnings]
 
 
-async def test_extra_topics_do_not_count_against_main_max() -> None:
+async def test_extra_topics_count_toward_total_main_topics_and_spell_out_split() -> None:
     data = copy.deepcopy(ex.TOPIC)
-    data["shape"]["main_topics"] = {"min": 6, "max": 6}
+    data["shape"]["main_topics"] = {"min": 10, "max": 12}
     data["shape"]["extra_topics"] = ["general"]
-    payload = answer(6, 3, n_grand=2)
+    payload = answer(9, 3, n_grand=2)
     payload["main_topics"].insert(
         0,
         {
@@ -130,10 +131,25 @@ async def test_extra_topics_do_not_count_against_main_max() -> None:
             "children": [{"title": "Grundlagen", "shorttitle": "Grundlagen", "children": []}],
         },
     )
-    context = rc(FakeLLM({"plan_structure": payload}))
+    llm = FakeLLM({"plan_structure": payload})
+    context = rc(llm)
     result = await plan_structure(req(data), context, context="CTX")
-    assert len(result.roots) == 7
+    assert len(result.roots) == 10
     assert context.warnings == []
+    prompt = llm.prompts("plan_structure")[0]
+    assert "9 bis 11 fachliche Hauptthemen" in prompt
+    assert "10 bis 12" in prompt
+
+    # If LLM returns 12 regular + 1 Allgemeines = 13 (> max 12), regular topics are trimmed to 11 so total is 12.
+    overflow = answer(12, 3, n_grand=2)
+    overflow["main_topics"].insert(
+        0,
+        {"title": "Allgemeines", "shorttitle": "Allgemeines", "from_inputs": False, "children": []},
+    )
+    ctx_over = rc(FakeLLM({"plan_structure": overflow}))
+    trimmed = await plan_structure(req(data), ctx_over, context="CTX")
+    assert len(trimmed.roots) == 12
+    assert [w.code for w in ctx_over.warnings] == ["SHAPE_WIDTH"]
 
 
 def test_token_budget_scales_with_shape_and_respects_bounds() -> None:

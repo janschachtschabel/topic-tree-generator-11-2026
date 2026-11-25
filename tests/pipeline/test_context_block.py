@@ -37,3 +37,18 @@ def test_unknown_vocab_uris_are_reported_and_shown_by_their_tail() -> None:
 def test_without_order_hint_the_block_asks_for_detection() -> None:
     block, _ = build_context_block(req(ex.TOPIC))
     assert "Ordnungsprinzip: keine Vorgabe" in block
+
+
+def test_context_block_differentiates_explicit_vs_omitted_shape() -> None:
+    omitted_topic = req({"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}})
+    block_omitted, _ = build_context_block(omitted_topic)
+    assert "Empfehlungsrahmen" in block_omitted
+    assert "höchstens 3 Ebenen" in block_omitted
+
+    omitted_doc = req(ex.DOCUMENT)
+    block_doc, _ = build_context_block(omitted_doc)
+    assert "nach Struktur der Eingaben" in block_doc
+
+    explicit_topic = req(ex.TOPIC)
+    block_explicit, _ = build_context_block(explicit_topic)
+    assert "(Vorgabe)" in block_explicit

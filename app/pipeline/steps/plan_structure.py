@@ -4,16 +4,17 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
 
-from app.domain.shape_rules import extra_kind
+from app.domain.shape_rules import EXTRA_TITLES, extra_kind
 from app.domain.tree import Node
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.node_conversion import Cut
 from app.prompts import render
-from app.schemas.common import NodeStatus, OriginType
+from app.schemas.common import ExtraTopic, NodeStatus, OriginType
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import Origin, StructureInfo
 
 STEP = "plan_structure"
+_EXTRA_POS = {ExtraTopic.general: "vorn", ExtraTopic.methodology: "hinten"}
 
 
 class PlannedChild(BaseModel):
@@ -53,19 +54,56 @@ def _order_instruction(req: TopicTreeRequestV2) -> str:
     return "Es ist keines vorgegeben. Wähle es nach den Regeln für Ordnungsprinzipien im Systemprompt."
 
 
-def _children_instruction(req: TopicTreeRequestV2) -> str:
+def _main_instruction(req: TopicTreeRequestV2, rc: RunContext, *, has_inputs: bool) -> str:
+    lo, hi = req.shape.main_topics.min, req.shape.main_topics.max
+    extras = req.shape.extra_topics
+    n_extra = len(extras)
+    explicit = rc.explicit_shape.main_topics
+    extra_names = ", ".join(f"„{EXTRA_TITLES[e]}“ ({_EXTRA_POS[e]})" for e in extras)
+
+    if not explicit and has_inputs:
+        extra_clause = f" einschließlich {extra_names}" if extras else ""
+        return (
+            f"Es ist keine feste Breite vorgegeben: Richte die Hauptthemen stark an den ergänzenden Eingaben aus "
+            f"(bis höchstens {hi} Hauptthemen insgesamt{extra_clause}); geben die Eingaben keinen klaren Umfang vor, "
+            "bewege dich im Empfehlungsrahmen von 5 bis 15 fachlich trennscharfen Hauptthemen."
+        )
+
+    if extras:
+        reg_lo, reg_hi = max(0, lo - n_extra), max(0, hi - n_extra)
+        return (
+            f"Die Hauptebene umfasst insgesamt {lo} bis {hi} Hauptthemen einschließlich {extra_names}: "
+            f"Erzeuge {reg_lo} bis {reg_hi} fachliche Hauptthemen plus {extra_names} (jeweils mit passenden "
+            f"Unterthemen), sodass `main_topics` insgesamt {lo} bis {hi} Einträge hat. "
+            f"Bewege dich in diesem Korridor ({lo}–{hi}); wähle innerhalb der Spanne nur so viele Knoten, "
+            "wie fachlich trennscharf sind."
+        )
+
+    frame_kind = "verbindlichen Korridor" if explicit else "Empfehlungsrahmen"
+    return (
+        f"Erzeuge {lo} bis {hi} Hauptthemen. Bewege dich in diesem {frame_kind} ({lo}–{hi}) und wähle innerhalb "
+        "der Spanne nur so viele Knoten, wie fachlich trennscharf sind."
+    )
+
+
+def _children_instruction(req: TopicTreeRequestV2, rc: RunContext, *, has_inputs: bool) -> str:
     depth = req.shape.depth
     if depth < 2:
         return "Erzeuge keine Unterthemen; der Baum hat nur eine Ebene."
     c = req.shape.children
+    span = (
+        f"nach Struktur der Eingaben (2 bis höchstens {c.max})"
+        if (not rc.explicit_shape.children and has_inputs)
+        else f"{c.min} bis {c.max}"
+    )
     if depth == 2:
         return (
-            f"Erzeuge je Hauptthema {c.min} bis {c.max} Unterthemen (2 Ebenen gesamt, nur Titel und Kurztitel), "
+            f"Erzeuge je Hauptthema {span} Unterthemen (2 Ebenen gesamt, nur Titel und Kurztitel), "
             "trenn- und fachlich scharf ohne Überschneidung."
         )
     return (
         f"Erzeuge den gesamten Baum über alle {depth} Ebenen (nur Titel und Kurztitel): "
-        f"je Elternknoten {c.min} bis {c.max} Kinder auf jeder Unterebene, auf Ebene {depth} ohne weitere Kinder."
+        f"je Elternknoten {span} Kinder auf jeder Unterebene, auf Ebene {depth} ohne weitere Kinder."
     )
 
 
@@ -76,7 +114,7 @@ _MAX_PLAN_TOKENS = 32000  # same ceiling as the other tree-producing steps
 def _max_tokens(req: TopicTreeRequestV2) -> int:
     """Output budget for the worst case the shape allows; a truncated skeleton would fail the whole request."""
     shape = req.shape
-    mains = shape.main_topics.max + len(shape.extra_topics)
+    mains = max(shape.main_topics.max, len(shape.extra_topics))
     width = shape.children.max
     estimated_nodes = sum(mains * (width**level) for level in range(shape.depth))
     return max(4000, min(_MAX_PLAN_TOKENS, 1000 + estimated_nodes * _TOKENS_PER_NODE))
@@ -106,18 +144,25 @@ def _convert_children(items: list[PlannedChild], levels_left: int, width: int, c
 
 def _limit_mains(mains: list[PlannedMain], req: TopicTreeRequestV2, rc: RunContext) -> list[PlannedMain]:
     extras = set(req.shape.extra_topics)
-    max_regular = req.shape.main_topics.max
+    max_regular = max(0, req.shape.main_topics.max - len(extras))
     kept: list[PlannedMain] = []
     regular_count = 0
+    seen_extras: set[ExtraTopic] = set()
     for item in mains:
-        if extra_kind(item.title) in extras:
+        kind = extra_kind(item.title)
+        if kind in extras and kind not in seen_extras:
+            seen_extras.add(kind)
             kept.append(item)
         else:
             regular_count += 1
             if regular_count <= max_regular:
                 kept.append(item)
     if regular_count > max_regular:
-        rc.warn("SHAPE_WIDTH", f"{regular_count} Hauptthemen geplant, auf {max_regular} gekürzt.", step=STEP)
+        rc.warn(
+            "SHAPE_WIDTH",
+            f"Hauptthemen auf insgesamt höchstens {max(req.shape.main_topics.max, len(extras))} gekürzt.",
+            step=STEP,
+        )
     return kept
 
 
@@ -125,14 +170,14 @@ async def plan_structure(
     req: TopicTreeRequestV2, rc: RunContext, *, context: str, inputs_block: str = ""
 ) -> PlanResult:
     shape = req.shape
+    has_inputs = bool(inputs_block.strip())
     prompt = render(
         STEP,
         context=context,
         inputs=inputs_block,
         order_instruction=_order_instruction(req),
-        main_min=str(shape.main_topics.min),
-        main_max=str(shape.main_topics.max),
-        children_instruction=_children_instruction(req),
+        main_instruction=_main_instruction(req, rc, has_inputs=has_inputs),
+        children_instruction=_children_instruction(req, rc, has_inputs=has_inputs),
     )
     plan = await rc.llm.complete_json(STEP, prompt, StructurePlan, max_tokens=_max_tokens(req))
 

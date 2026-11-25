@@ -21,6 +21,13 @@ class LLM(Protocol):
     ) -> M: ...
 
 
+@dataclass(frozen=True)
+class ExplicitShape:
+    depth: bool = False
+    main_topics: bool = False
+    children: bool = False
+
+
 @dataclass
 class RunContext:
     llm: LLM
@@ -29,6 +36,7 @@ class RunContext:
     # Request context block (identical prefix of every prompt in this request); set by the orchestrator.
     context: str = ""
     mode: Literal["bapi", "standalone"] = "standalone"
+    explicit_shape: ExplicitShape = field(default_factory=lambda: ExplicitShape(True, True, True))
     warnings: list[ServiceWarning] = field(default_factory=list)
 
     def remaining(self) -> float:

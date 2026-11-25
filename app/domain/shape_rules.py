@@ -56,13 +56,15 @@ def _warning(code: str, message: str, key: str | None = None) -> ServiceWarning:
     return ServiceWarning(code=code, message=message, key=key, step="shape_rules")
 
 
-def check_shape(roots: list[Node], plan: ShapePlan, extra: int = 0) -> list[ServiceWarning]:
+def check_shape(
+    roots: list[Node], plan: ShapePlan, extra: int = 0, *, check_main_min: bool = True
+) -> list[ServiceWarning]:
     warnings: list[ServiceWarning] = []
-    regular = len(roots) - extra
-    if not plan.main.min <= regular <= plan.main.max:
-        warnings.append(
-            _warning("SHAPE_WIDTH", f"Hauptebene hat {regular} Knoten, vorgesehen {plan.main.min}–{plan.main.max}.")
-        )
+    total = len(roots)
+    upper = max(plan.main.max, extra)
+    lower = plan.main.min if check_main_min else 1
+    if not lower <= total <= upper:
+        warnings.append(_warning("SHAPE_WIDTH", f"Hauptebene hat {total} Knoten, vorgesehen {plan.main.min}–{upper}."))
     deepest = max((depth for _, _, depth in walk(roots)), default=0)
     if deepest > plan.depth:
         warnings.append(_warning("SHAPE_DEPTH", f"Baum hat {deepest} Ebenen, vorgesehen {plan.depth}."))

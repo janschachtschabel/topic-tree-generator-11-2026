@@ -25,4 +25,6 @@ class OutlineMapping(BaseModel):
 
 async def map_outline(outline: str, rc: RunContext) -> OutlineMapping:
     prompt = render(STEP, context=rc.context, outline=outline)
-    return await rc.llm.complete_json(STEP, prompt, OutlineMapping, max_tokens=8000)
+    line_count = outline.count("\n") + 1
+    budget = max(8000, min(32000, 1500 + line_count * 45))
+    return await rc.llm.complete_json(STEP, prompt, OutlineMapping, max_tokens=budget)

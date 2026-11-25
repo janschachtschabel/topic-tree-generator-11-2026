@@ -1,12 +1,17 @@
-"""Fill omitted request settings from `current_tree.generation` (refine) and target-group guidelines.
+"""Fill omitted request settings from `current_tree.generation` (refine) and target-group or input guidelines.
 
-Guidelines ("Gestaltungs- und Ordnungskriterien für Themenbäume", Empfehlungen je Zielgruppe):
-- Elementarbereich / Kita: 2 levels, 5–10 main topics, 3–8 children
-- Fort-/Erwachsenenbildung, Unternehmen/Behörden, Redaktionen/Communities: 2 levels, 5–12 main topics, 3–8 children
-- Schule / Berufliche Bildung / Hochschule / default: 3 levels, 6–12 main topics, 3–8 children
+Guidelines ("Gestaltungs- und Ordnungskriterien für Themenbäume"):
+- Without explicit width on input-driven requests (`document`, `contents`, `folders`, or `topic` with structure items),
+  width follows the input up to the operator's cap (`2..MAX_NODES_PER_LEVEL`, default `20`).
+- Pure `topic` without explicit `shape`:
+  - Elementarbereich / Kita: max 2 levels, 5–10 main topics, 3–8 children
+  - Fort-/Erwachsenenbildung, Unternehmen/Behörden, Redaktionen/Communities: max 2 levels, 5–12 main topics, 3–8 children
+  - Schule / Berufliche Bildung / Hochschule / default: max 3 levels, 5–15 main topics, 3–8 children
 Every recommended default is clamped to the operator's hard caps (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`).
 """
 
+from app.pipeline.run_context import ExplicitShape
+from app.schemas.common import ItemUse, UseCase
 from app.schemas.request_v2 import ChildRange, MainRange, Shape, TopicTreeRequestV2
 from app.settings import Settings
 
@@ -24,8 +29,29 @@ def _clamp_children(low: int, high: int, cap: int) -> ChildRange:
     return ChildRange(min=max(2, min(low, capped_max)), max=capped_max)
 
 
+def has_structure_inputs(req: TopicTreeRequestV2) -> bool:
+    """True when structure is anchored in supplied documents, folders, or content items."""
+    if req.use_case in {UseCase.document, UseCase.contents, UseCase.folders}:
+        return True
+    return any(ItemUse.structure in req.effective_use(item) for item in (req.items or []))
+
+
+def explicit_shape(req: TopicTreeRequestV2) -> ExplicitShape:
+    """Which shape dimensions were explicitly supplied by the caller (or inherited from generation)."""
+    has_shape = "shape" in req.model_fields_set
+    sent = req.shape.model_fields_set if has_shape else set()
+    gen = req.current_tree.generation if req.current_tree else None
+    gen_sent = gen.shape.model_fields_set if (gen and gen.shape is not None) else set()
+    active = sent | gen_sent
+    return ExplicitShape(
+        depth="depth" in active,
+        main_topics="main_topics" in active,
+        children="children" in active,
+    )
+
+
 def recommended_shape(req: TopicTreeRequestV2, settings: Settings | None = None) -> Shape:
-    """Recommended shape derived from educational context / target-group hints, clamped to operator limits."""
+    """Recommended shape derived from input kind and educational context, clamped to operator limits."""
     max_depth = settings.max_tree_depth if settings else 3
     max_width = settings.max_nodes_per_level if settings else 20
 
@@ -37,7 +63,12 @@ def recommended_shape(req: TopicTreeRequestV2, settings: Settings | None = None)
     elif any(k in contexts for k in _ADULT_URIS) or any(k in hint_ctx for k in _ORG_HINTS):
         depth, main_lo, main_hi, child_lo, child_hi = 2, 5, 12, 3, 8
     else:
-        depth, main_lo, main_hi, child_lo, child_hi = 3, 6, 12, 3, 8
+        depth, main_lo, main_hi, child_lo, child_hi = 3, 5, 15, 3, 8
+
+    if has_structure_inputs(req):
+        # Input-driven requests (e.g. a curriculum with 20 main areas) may use the full operator width ceiling.
+        main_lo, main_hi = 2, max_width
+        child_lo, child_hi = 2, max_width
 
     return Shape(
         depth=min(depth, max_depth),

@@ -193,7 +193,7 @@ async def test_assignment_can_be_switched_off() -> None:
 
 
 async def test_extra_topic_variants_are_recognised_and_renamed() -> None:
-    payload = plan_answer(6, 2)
+    payload = plan_answer(5, 2)
     payload["main_topics"].append(
         {
             "title": "Methodik & Didaktik",
@@ -212,7 +212,7 @@ async def test_extra_topic_variants_are_recognised_and_renamed() -> None:
     titles = [r.title for r in result.roots]
     assert titles.count("Methodik und Didaktik") == 1 and titles[-1] == "Methodik und Didaktik"
     assert "Methodik & Didaktik" not in titles
-    assert len(result.roots) == 7
+    assert len(result.roots) == 6
     assert [c.title for c in result.roots[-1].children] == ["Experimente planen", "Lernstand erheben"]
     assert not any(w.code == "SHAPE_WIDTH" for w in run.warnings)
 

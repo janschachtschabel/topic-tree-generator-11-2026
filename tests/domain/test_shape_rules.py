@@ -42,10 +42,13 @@ def test_depth_and_main_width_are_reported() -> None:
     assert set(codes(warnings)) == {"SHAPE_DEPTH", "SHAPE_WIDTH"}
 
 
-def test_extra_topics_do_not_count_against_main_width() -> None:
-    roots = [n(f"k-{i}", str(i)) for i in range(4)]
-    plan = ShapePlan.from_shape(Shape(depth=1, main_topics={"min": 3, "max": 3}))
+def test_extra_topics_count_toward_total_main_width() -> None:
+    roots = [n("k-allg", "Allgemeines"), *(n(f"k-{i}", f"T{i}") for i in range(9))]
+    plan = ShapePlan.from_shape(Shape(depth=1, main_topics={"min": 10, "max": 12}))
     assert codes(check_shape(roots, plan, extra=1)) == []
+
+    too_few = [n("k-allg", "Allgemeines"), *(n(f"k-{i}", f"T{i}") for i in range(8))]
+    assert codes(check_shape(too_few, plan, extra=1)) == ["SHAPE_WIDTH"]
 
 
 def test_too_many_children_are_reported() -> None:

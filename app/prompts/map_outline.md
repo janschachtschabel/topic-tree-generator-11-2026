@@ -12,6 +12,9 @@ Leite den Themenbaum aus der Gliederung ab. Die Gliederung gibt die Struktur vor
 2. Formuliere Titel nach den Benennungsregeln, aber so, dass sie im Dokument wiedererkennbar bleiben.
 3. Nenne in `section_ids` die Abschnitte, auf denen ein Knoten beruht (nur ids aus der Gliederung).
    Bei einem Dokument ohne Gliederung bleibt `section_ids` leer.
-4. Halte die Form aus dem Anfragekontext ein (Ebenen, Zahl der Knoten je Ebene). Die Hauptknoten entsprechen in der
-   Regel den Abschnitten der Ebene 1; verschachtle Abschnitte derselben Ebene nicht ineinander.
+4. Richte Breite und Tiefe nach dem Anfragekontext: Ist kein fester Zahlenkorridor vorgegeben, übernimm alle tragenden
+   fachlichen Hauptbereiche der Vorlage vollständig (bis zur genannten Obergrenze, z. B. alle 15–20 Themenfelder eines
+   Lehrplans) unter Einhaltung der maximalen Ebenentiefe; ist ein expliziter Korridor vorgegeben, fasse passend
+   zusammen. Die Hauptknoten entsprechen den Abschnitten der Ebene 1; verschachtle Abschnitte derselben Ebene nicht
+   ineinander.
 5. `order` und `levels`: das Ordnungsprinzip des Dokuments, `description`: Beschreibung des ganzen Baums.

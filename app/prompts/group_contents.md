@@ -11,5 +11,7 @@ Gruppen, sodass jeder thematisch passende Inhalt klar unterkommt). Sehr große G
 trennscharfe Unterthemen teilen. Ein Thema im Anfragekontext grenzt ein; fachfremde Inhalte bekommen keine eigene
 Gruppe.
 Schreibe für jede Gruppe Titel, Kurztitel, Beschreibung (innerhalb der Wortspanne aus dem Anfragekontext) und
-Schlagworte; halte die Form aus dem Anfragekontext ein.
+Schlagworte; halte die Form aus dem Anfragekontext ein (ohne explizite Breitenvorgabe richtet sich die Zahl der
+Haupt- und Untergruppen nach den inhaltlichen Clustern im Bestand bis zur genannten Obergrenze, unter Einhaltung der
+maximalen Ebenentiefe).
 `order` und `levels`: das gewählte Ordnungsprinzip, `description`: Beschreibung des ganzen Baums.
