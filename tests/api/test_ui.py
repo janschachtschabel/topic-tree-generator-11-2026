@@ -44,8 +44,14 @@ def test_ui_enabled_serves_self_hosted_html_and_assets_without_exposing_in_opena
     for name, mime in (
         ("styles.css", "text/css"),
         ("i18n.js", "javascript"),
+        ("parsers.js", "javascript"),
+        ("payload.js", "javascript"),
         ("tree.js", "javascript"),
+        ("changes.js", "javascript"),
+        ("result.js", "javascript"),
+        ("form.js", "javascript"),
         ("app.js", "javascript"),
+        ("boot.js", "javascript"),
     ):
         asset = client.get(f"/ui/assets/{name}")
         assert asset.status_code == 200, name
@@ -106,27 +112,47 @@ def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
     assert html.count("<summary>") == html.count("<summary><span")
 
 
-def test_ui_exposes_compact_preset_selector_and_all_manual_v2_inputs() -> None:
+def test_ui_navigates_by_task_and_exposes_every_request_input() -> None:
     client = _client(ui_enabled=True)
     html = client.get("/ui/").text
-    # Compact dropdown in sidebar instead of a tall preset button wall.
-    assert 'id="f-preset"' in html
-    assert 'id="btn-reset"' in html
-    assert 'id="preset-list"' not in html
-    # Full manual input coverage for v2 request fields.
+    for task in ("topic", "document", "folders", "contents", "refine"):
+        assert f'data-task="{task}"' in html, task
+    # Example picker in the sidebar, filtered by task in the browser.
+    assert 'id="f-preset"' in html and 'id="btn-reset"' in html
     for field_id in (
+        "f-topic",
         "discipline-chips",
-        "f-hint-lang",
-        "f-items-ref",
+        "f-context",
+        "f-role",
+        "f-materials-a",
+        "f-materials-b",
+        "f-folder-outline",
+        "f-opt-improve",
         "f-doc-markdown",
-        "f-items",
-        "f-folders",
+        "f-doc-ref",
+        "f-items-ref",
         "f-current-tree",
+        "changes-editor",
+        "btn-add-change",
         "f-fb-text",
         "f-fb-locked",
-        "f-fb-changes",
+        "f-opt-assign-only",
+        "f-opt-auto-meta",
+        "f-extra-general",
+        "f-extra-methodology",
+        "f-hint-lang",
+        "f-desc-len",
+        "f-json",
+        "btn-json-edit",
+        "x-structure-materials",
+        "x-content-materials",
+        "x-document",
     ):
         assert f'id="{field_id}"' in html, f"missing UI control #{field_id}"
+    # Result view: metrics card, adopt-as-base action and the base tree for targeted changes.
+    for field_id in ("metrics", "btn-use-refine", "base-tree", "btn-copy-json", "btn-download-json"):
+        assert f'id="{field_id}"' in html, field_id
+    assert "onEditNode" in client.get("/ui/assets/tree.js").text
 
 
 def test_ui_tree_defaults_to_titles_only_with_details_toggle() -> None:
@@ -157,14 +183,24 @@ def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
     i18n_js = client.get("/ui/assets/i18n.js").text
 
     assert 'id="lang-de"' in html and 'id="lang-en"' in html
-    assert html.index("/ui/assets/i18n.js") < html.index("/ui/assets/tree.js") < html.index("/ui/assets/app.js")
+    order = [
+        "i18n.js",
+        "parsers.js",
+        "payload.js",
+        "tree.js",
+        "changes.js",
+        "result.js",
+        "form.js",
+        "app.js",
+        "boot.js",
+    ]
+    positions = [html.index(f"/ui/assets/{name}") for name in order]
+    assert positions == sorted(positions)
     assert ".tree-node.is-duplicate" in css
     assert ".status-badge.duplicate" in css
     assert "is-duplicate" in tree_js
     assert "tree.badge.duplicate" in tree_js
     assert '"Duplikat"' in i18n_js and '"Duplicate"' in i18n_js
-    app_js = client.get("/ui/assets/app.js").text
-    assert "doc-manual-" in app_js
 
 
 def test_refine_presets_start_from_a_fully_described_tree() -> None:

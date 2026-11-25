@@ -14,8 +14,14 @@ _STATIC = Path(__file__).parent / "static"
 _ASSETS: dict[str, str] = {
     "styles.css": "text/css; charset=utf-8",
     "i18n.js": "application/javascript; charset=utf-8",
+    "parsers.js": "application/javascript; charset=utf-8",
+    "payload.js": "application/javascript; charset=utf-8",
     "tree.js": "application/javascript; charset=utf-8",
+    "changes.js": "application/javascript; charset=utf-8",
+    "result.js": "application/javascript; charset=utf-8",
+    "form.js": "application/javascript; charset=utf-8",
     "app.js": "application/javascript; charset=utf-8",
+    "boot.js": "application/javascript; charset=utf-8",
 }
 
 router = APIRouter(include_in_schema=False)

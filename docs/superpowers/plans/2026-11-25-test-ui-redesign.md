@@ -93,10 +93,10 @@ them; DOM code lives in `changes.js`, `result.js`, `app.js`. Python serves the f
 - Produces: every preset has `task` ∈ {topic, document, folders, contents, refine}; plus existing `id`, `title`,
   `summary`, `payload`.
 
-- [ ] Step 1: tests: every task has ≥2 presets; every `ChangeOp` appears in some preset's `feedback.changes`; a
+- [x] Step 1: tests: every task has ≥2 presets; every `ChangeOp` appears in some preset's `feedback.changes`; a
   preset with `educationalContext/elementarbereich` and one with `hochschule`; existing schema/`check_request`/
   vocab/fully-described checks keep passing; change keys reference existing nodes of `current_tree`.
-- [ ] Step 2: run → FAIL. Step 3: add presets per spec table (Kita Jahreszeiten, Hochschule Statistik, Dokument +
+- [x] Step 2: run → FAIL. Step 3: add presets per spec table (Kita Jahreszeiten, Hochschule Statistik, Dokument +
   Thema, Ordner + lose Dateien, Inhalte teils nur einsortieren, Gezielte Änderungen, Änderung + neue Materialien,
   Rahmen ändern), refresh summaries. Step 4: PASS. Step 5: commit `feat(ui): add task-grouped presets incl. targeted
   changes`.
@@ -115,20 +115,20 @@ them; DOM code lives in `changes.js`, `result.js`, `app.js`. Python serves the f
   `selectTask(task)`. `changes.js` exposes `TopicTreeChanges.mount(container, {getNodes}) -> {rows(), setRows(rows),
   addRow(row)}`. `result.js` exposes `TopicTreeResult.render(resp, clientSeconds, handlers)`.
 
-- [ ] Step 1: update `test_ui.py`: nav buttons `data-task` for the 5 tasks; ids `f-preset`, `f-topic`,
+- [x] Step 1: update `test_ui.py`: nav buttons `data-task` for the 5 tasks; ids `f-preset`, `f-topic`,
   `f-materials-a`, `f-materials-b`, `f-folder-outline`, `f-doc-markdown`, `f-doc-ref`, `f-items-ref`,
   `changes-editor`, `f-fb-text`, `f-fb-locked`, `f-current-tree`, `f-json`, `btn-json-edit`, `shape-limits-note`,
   `opt-show-details`; extras checkboxes `x-structure-materials`, `x-content-materials`, `x-document`,
-  `x-topic-frame`; all scripts served; no CDNs; DE/EN; duplicate highlighting kept.
-- [ ] Step 2: run → FAIL. Step 3: implement layout per spec (sidebar nav, preset dropdown filtered by task, task
+  (the topic field doubles as frame for document/contents, so no `x-topic-frame`); all scripts served; no CDNs; DE/EN; duplicate highlighting kept.
+- [x] Step 2: run → FAIL. Step 3: implement layout per spec (sidebar nav, preset dropdown filtered by task, task
   fields, Rahmen, Zusätze, collapsible Form/Hinweise/Zuordnung/Anmeldung/JSON, sticky primary button; right: status
   line, loading card, result head with actions, metrics QUALITÄT/KOSTEN/ZEIT, collapsible diagnostics, tree).
-- [ ] Step 4: run full `uv run pytest -q`, `uv run ruff check`, `uv run ruff format --check` → PASS.
-- [ ] Step 5: commit `feat(ui): task navigation, change editor and result card layout`.
+- [x] Step 4: run full `uv run pytest -q`, `uv run ruff check`, `uv run ruff format --check` → PASS.
+- [x] Step 5: commit `feat(ui): task navigation, change editor and result card layout`.
 
 ### Task 5: Browser verification and docs
 
-- [ ] Run the app against `tests/stub_openai.py`; with Playwright load each task's presets, submit, check the request
+- [x] Run the app against `tests/stub_openai.py`; with Playwright load each task's presets, submit, check the request
   JSON and the rendered result; run "Als Basis für Änderungen" → add rename/move via node action → submit.
   Screenshots at deviceScaleFactor 2 into `/mnt/project-files/ui-redesign/`.
-- [ ] Update `docs/api.md` (UI paragraph), CHANGELOG; tick plan boxes; commit `docs: describe the new test UI`.
+- [x] Update `docs/api.md` (UI paragraph), CHANGELOG; tick plan boxes; commit `docs: describe the new test UI`.
