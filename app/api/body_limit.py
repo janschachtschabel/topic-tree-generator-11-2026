@@ -9,7 +9,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.api.errors import V2_PREFIX, error_response
 
-_MESSAGE = "Die Anfrage ist zu groß."
+_MESSAGE = "Die Anfrage ist zu groß; große Dokumente oder Itemlisten bitte über fulltext.ref bzw. items_ref übergeben."
 
 
 class _TooLarge(Exception):
@@ -64,6 +64,7 @@ class BodyLimitMiddleware:
         try:
             await self.app(scope, limited_receive, guarded_send)
         except _TooLarge:
-            pass
+            if started:
+                raise  # the app already answered; a second response is impossible
         if too_large and not started:
             await _response(scope["path"])(scope, receive, send)

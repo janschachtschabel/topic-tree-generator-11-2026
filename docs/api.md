@@ -55,7 +55,7 @@ Vokabular-Bezeichnungen, die deterministisch auf kanonische SkoHub-URIs abgebild
 `collection` als `current_tree.collection`, `metadata.generation` als `current_tree.generation`, `metadata.version`
 als `current_tree.version` sowie (optional) `metadata.title`/`metadata.description` als `current_tree.title`/
 `current_tree.description` zurückgeben und nur das neue `feedback` ergänzen. Fehlende Vorgaben übernimmt der Dienst
-aus `generation`.
+aus `generation` (außer `options.assign_only`, das nur für den einen Aufruf gilt).
 
 ## Seitenmarken im Markdown (use_case document)
 
@@ -67,7 +67,7 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
-  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `FEEDBACK_IGNORED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 
