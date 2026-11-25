@@ -129,7 +129,7 @@ def _skip_description_keys(req: TopicTreeRequestV2, roots: list[Node], previous:
 
 
 def _post_process(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResult) -> None:
-    for warning in dedup_titles(result.roots):
+    for warning in dedup_titles(result.roots, merge=req.mode != Mode.refine):
         rc.warn(warning.code, warning.message, warning.key, warning.step)
     normalize_shorttitles(result.roots)
     previous = from_tree_in(req.current_tree.collection) if req.current_tree else None

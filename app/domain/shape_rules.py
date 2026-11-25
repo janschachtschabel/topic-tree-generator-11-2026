@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from app.domain.tree import Node, walk
 from app.schemas.common import ExtraTopic, OriginType
 from app.schemas.request_v2 import ChildRange, MainRange, Shape
-from app.schemas.response_v2 import ServiceWarning
+from app.schemas.response_v2 import ContentRef, ServiceWarning
 
 SHORTTITLE_MAX = 20
 EXTRA_TITLES = {ExtraTopic.general: "Allgemeines", ExtraTopic.methodology: "Methodik und Didaktik"}
@@ -134,13 +134,23 @@ def _merge_generated_siblings(nodes: list[Node], warnings: list[ServiceWarning])
             continue
         if _is_generated(first) and _is_generated(node):
             first.children.extend(node.children)
-            first.contents.extend(node.contents)
+            first.contents = _merged_contents(first.contents, node.contents)
             warnings.append(_warning("DUPLICATE_TITLE", f"Doppelte „{node.title}“ zusammengelegt.", first.key))
         else:
             result.append(node)
     nodes[:] = result
     for node in nodes:
         _merge_generated_siblings(node.children, warnings)
+
+
+def _merged_contents(first: list[ContentRef], other: list[ContentRef]) -> list[ContentRef]:
+    """Each content id once, with the higher confidence (order of first appearance)."""
+    by_id: dict[str, ContentRef] = {}
+    for ref in [*first, *other]:
+        existing = by_id.get(ref.id)
+        if existing is None or ref.confidence > existing.confidence:
+            by_id[ref.id] = ref
+    return list(by_id.values())
 
 
 def _is_generated(node: Node) -> bool:
@@ -199,9 +209,14 @@ def eliminate_generated_duplicates(roots: list[Node]) -> int:
     return changed
 
 
-def dedup_titles(roots: list[Node]) -> list[ServiceWarning]:
+def dedup_titles(roots: list[Node], *, merge: bool = True) -> list[ServiceWarning]:
+    """Merge duplicate generated siblings (unless `merge=False`) and report every remaining duplicate title.
+
+    Refine passes `merge=False`: carried-over nodes belong to the caller (keys, locks), so they are only reported.
+    """
     warnings: list[ServiceWarning] = []
-    _merge_generated_siblings(roots, warnings)
+    if merge:
+        _merge_generated_siblings(roots, warnings)
     counts = Counter(node.title.casefold() for node, _, _ in walk(roots))
     reported = set()
     for node, _, _ in walk(roots):

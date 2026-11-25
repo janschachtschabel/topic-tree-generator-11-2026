@@ -10,7 +10,7 @@ from app.domain.shape_rules import (
 from app.domain.tree import Node
 from app.schemas.common import ExtraTopic, NodeStatus, OriginType
 from app.schemas.request_v2 import Shape
-from app.schemas.response_v2 import Origin
+from app.schemas.response_v2 import ContentRef, Origin
 
 
 def n(key: str, title: str, *children: Node, generated: bool = True) -> Node:
@@ -77,6 +77,23 @@ def test_duplicate_generated_siblings_are_merged() -> None:
     warnings = dedup_titles(roots)
     assert [r.key for r in roots] == ["k-a"]
     assert [c.key for c in a.children] == ["k-x", "k-y"]
+    assert codes(warnings) == ["DUPLICATE_TITLE"]
+
+
+def test_merging_duplicate_siblings_keeps_each_content_once_with_best_confidence() -> None:
+    a = n("k-a", "Linsen")
+    b = n("k-b", "Linsen")
+    a.contents = [ContentRef(id="c1", confidence=0.6)]
+    b.contents = [ContentRef(id="c1", confidence=0.9), ContentRef(id="c2", confidence=0.7)]
+    roots = [a, b]
+    dedup_titles(roots)
+    assert [(r.id, r.confidence) for r in a.contents] == [("c1", 0.9), ("c2", 0.7)]
+
+
+def test_duplicate_siblings_are_only_reported_when_merging_is_off() -> None:
+    roots = [n("k-a", "Linsen"), n("k-b", "Linsen")]
+    warnings = dedup_titles(roots, merge=False)
+    assert [r.key for r in roots] == ["k-a", "k-b"]
     assert codes(warnings) == ["DUPLICATE_TITLE"]
 
 
