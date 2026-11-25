@@ -281,15 +281,3 @@ def test_presets_include_elementary_and_higher_education_and_combinations() -> N
     assert any({("structure", "content"), ("content",)} <= uses(p) for p in by_task["contents"])
     assert any(p["payload"].get("items") and p["payload"]["feedback"].get("changes") for p in by_task["refine"])
     assert any(p["payload"]["frame"] != p["payload"]["current_tree"]["generation"]["frame"] for p in by_task["refine"])
-
-
-def test_presets_show_all_four_item_roles_including_a_document_that_is_also_content() -> None:
-    from app.ui.presets import PRESETS
-
-    roles = {tuple(sorted(item["use"])) for p in PRESETS for item in p["payload"].get("items", []) if "use" in item}
-    assert {("structure",), ("content",), ("content", "structure"), ()} <= roles
-    assert any(
-        item.get("fulltext") and sorted(item["use"]) == ["content", "structure"]
-        for p in PRESETS
-        for item in p["payload"].get("items", [])
-    )

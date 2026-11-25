@@ -85,25 +85,6 @@ DOCUMENT_PRESETS: list[dict[str, Any]] = [
             "frame": FRAME_PHYS_SEK1,
         },
     },
-    {
-        "id": "document_roles",
-        "task": "document",
-        "title": "Rollen je Eintrag: Lehrplan zugleich Inhalt, Notiz bleibt draußen",
-        "summary": "Der Lehrplan gliedert und wird selbst einsortiert; ein Arbeitsblatt prägt mit [GI], die Notiz [-] "
-        "wird weder genutzt noch einsortiert.",
-        "payload": {
-            "mode": "create",
-            "use_case": "document",
-            "items": [
-                {**LEHRPLAN_DOC, "use": ["structure", "content"]},
-                material("b1", "Arbeitsblatt: Lichtleiter im Alltag", ["Totalreflexion"], use=STRUCT),
-                material("b2", "Schattenbilder mit der Taschenlampe", ["Schatten"]),
-                material("b3", "Notiz: Raum 104 für Versuche reservieren", [], use=()),
-            ],
-            "frame": FRAME_PHYS_SEK1,
-            "hints": {"exclude": ["Wahlpflicht"]},
-        },
-    },
 ]
 
 _UPLOAD_FILES = [
