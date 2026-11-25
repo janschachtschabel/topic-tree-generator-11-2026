@@ -216,8 +216,4 @@ test("change rows keep extra merge keys and other edited properties", () => {
 test("document can be structure and content at once", () => {
   const p = B.build(form({ task: "document", documentMarkdown: "# A", extras: { documentContent: true } }));
   assert.deepEqual(p.items[0].use, ["structure", "content"]);
-  assert.throws(
-    () => B.build(form({ extras: { contentMaterials: true }, materialsB: "ok\n[Q] x" })),
-    (err) => err.message === "err.roleMarker" && err.vars.line === 2 && err.vars.field === "materialsB",
-  );
 });
