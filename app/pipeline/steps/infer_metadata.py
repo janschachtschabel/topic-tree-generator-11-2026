@@ -13,7 +13,7 @@ import asyncio
 from pydantic import BaseModel, Field
 
 from app.domain.keys import assign_missing_keys
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.domain.tree import Node, path, walk
 from app.llm.client import LLMStepError
 from app.pipeline.key_matching import match_keys
@@ -125,7 +125,7 @@ def _needs_llm(node: Node, pools: dict[str, list[tuple[str, str]]]) -> bool:
 def _node_line(node: Node, roots: list[Node]) -> str:
     line = f"- key: {node.key} | Pfad: {' > '.join(path(roots, node.key))}"
     if node.description:
-        line += f" | {truncate_sentences(node.description, DESCRIPTION_EXCERPT)}"
+        line += f" | {one_line(truncate_sentences(node.description, DESCRIPTION_EXCERPT))}"
     return line
 
 

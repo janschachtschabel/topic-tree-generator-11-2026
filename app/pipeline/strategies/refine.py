@@ -28,6 +28,7 @@ from app.schemas.request_v2 import Change, Frame, TopicTreeRequestV2
 from app.schemas.response_v2 import ChangeRecord, Question, StructureInfo, Unassigned
 
 _REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge, ChangeOp.describe}
+_STRUCTURE_OPS = {ChangeOp.add, ChangeOp.remove, ChangeOp.move, ChangeOp.merge, ChangeOp.split}
 
 
 def _structure(req: TopicTreeRequestV2) -> StructureInfo | None:
@@ -230,4 +231,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     )
     restore_edited_texts(roots, saved)
     warn_not_described(roots, before, failed, rc)
+    if not rc.shape_sent and not any(r.op in _STRUCTURE_OPS for r in result.changes):
+        # Texts changed, the structure did not: its shape was checked when it was made (or is the caller's own,
+        # e.g. a single collection to describe), so repeating SHAPE_* warnings would only be noise.
+        result.shape_checked = False
     return result

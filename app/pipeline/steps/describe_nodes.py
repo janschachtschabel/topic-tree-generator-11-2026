@@ -47,7 +47,7 @@ def _line(node: Node, roots: list[Node], extra: dict[str, str]) -> str:
     line = f"- key: {node.key} | Pfad: {' > '.join(path(roots, node.key))}"
     info = extra.get(node.key)
     if info:
-        line += f"\n  {truncate_sentences(info, EXTRA_LIMIT)}"
+        line += f"\n  {one_line(truncate_sentences(info, EXTRA_LIMIT))}"  # excerpts must not fake node lines
     return line
 
 

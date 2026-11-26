@@ -37,6 +37,7 @@ class RunContext:
     context: str = ""
     mode: Literal["bapi", "standalone"] = "standalone"
     explicit_shape: ExplicitShape = field(default_factory=lambda: ExplicitShape(True, True, True))
+    shape_sent: bool = True  # the caller sent `shape` in this request (not inherited from generation)
     warnings: list[ServiceWarning] = field(default_factory=list)
 
     def remaining(self) -> float:

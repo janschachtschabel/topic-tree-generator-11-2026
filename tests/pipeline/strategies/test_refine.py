@@ -699,3 +699,17 @@ async def test_a_failed_describe_batch_is_reported_once() -> None:
     resp, _ = await run(req, {"describe_nodes": LLMStepError("describe_nodes", "invalid")})
     failed = [w for w in resp.warnings if w.code == "DESCRIBE_FAILED"]
     assert len(failed) == 1 and failed[0].step == "describe_nodes"
+
+
+async def test_describing_a_single_collection_gives_no_shape_warnings() -> None:
+    # Final audit: the Swagger example "describe" always returned SHAPE_WIDTH for its one-node tree.
+    tree = {"collection": [node("k-optik", "Optik")]}
+    req = request({"changes": [{"op": "describe", "key": "k-optik"}]}, current_tree=tree)
+    resp, _ = await run(req, {})
+    assert not [w for w in resp.warnings if w.code.startswith("SHAPE_")]
+
+
+async def test_structural_changes_are_still_shape_checked() -> None:
+    req = request({"changes": [{"op": "remove", "key": "k-akustik"}, {"op": "remove", "key": "k-mechanik"}]})
+    resp, _ = await run(req, {})
+    assert any(w.code.startswith("SHAPE_") for w in resp.warnings)

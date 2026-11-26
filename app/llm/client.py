@@ -124,12 +124,13 @@ class LLMClient:
                 api_key=self.backend.api_key,
                 base_url=self.backend.base_url,
                 max_retries=self.settings.llm_max_retries,
-                default_headers=self._trace_headers(),
             )
         return self._client
 
     def _trace_headers(self) -> dict[str, str]:
-        """Trace headers only for our own dependency (the b-api); a provider called directly is a third party."""
+        """Trace headers only for our own dependency (the b-api); a provider called directly is a third party.
+
+        Built per call: each LLM call is its own span (X-B3-SpanId) under the request's span."""
         if self.backend.kind == "openai":
             return {}
         return outgoing_headers(self.trace or get_trace())
@@ -196,7 +197,9 @@ class LLMClient:
             # The SDK applies `timeout` per attempt; the outer bound keeps retries and slot waits within the deadline.
             async with asyncio.timeout(budget), acquire_llm_slot(self.settings.llm_max_concurrency):
                 timeout = self._timeout(step)  # recomputed: waiting for the slot used up part of the budget
-                response = await self._openai().chat.completions.create(**body, timeout=timeout)
+                headers = self._trace_headers()
+                extra = {"extra_headers": headers} if headers else {}
+                response = await self._openai().chat.completions.create(**body, timeout=timeout, **extra)
         except (TimeoutError, LLMStepError) as exc:
             outcome = "deadline"
             raise LLMStepError(step, "deadline") from exc

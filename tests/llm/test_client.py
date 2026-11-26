@@ -142,7 +142,7 @@ async def test_client_is_built_with_token_retries_and_trace_headers_only() -> No
     assert built["api_key"] == "bdt_tok"
     assert built["base_url"] == "https://b/api/v1/llm/router/"
     assert built["max_retries"] == 5
-    headers = {k.lower() for k in built["default_headers"]}
+    headers = {k.lower() for k in fake.calls[0]["extra_headers"]}
     assert "x-b3-traceid" in headers
     assert not any(h.startswith("x-edu") or h == "x-api-key" for h in headers)
 
@@ -152,7 +152,7 @@ async def test_no_trace_headers_go_to_a_third_party_llm() -> None:
     direct = LLMBackend(kind="openai", base_url=None, model="m", send_cache_key=True, api_key="k")
     fake = FakeOpenAI([GOOD])
     await make_client(fake, backend=direct).complete_json("plan", "U", Answer)
-    headers = {k.lower() for k in fake.constructed[0].get("default_headers") or {}}
+    headers = {k.lower() for k in fake.calls[0].get("extra_headers") or {}}
     assert not any(h.startswith("x-b3") or h in {"b3", "x-client-trace-id"} for h in headers)
 
 
@@ -258,3 +258,21 @@ async def test_shared_http_client_never_keeps_cookies_between_callers() -> None:
         await client.post("https://b-api.example.org/v1/chat", headers={"Authorization": "Bearer bdt_a"})
         await client.post("https://b-api.example.org/v1/chat", headers={"Authorization": "Bearer bdt_b"})
     assert seen == [None, None]
+
+
+async def test_every_llm_call_gets_its_own_span_id() -> None:
+    # Final audit: default_headers were built once, so all calls of a request shared one X-B3-SpanId.
+    fake = FakeOpenAI([GOOD])
+    client = make_client(fake)
+    await client.complete_json("plan", "U1", Answer)
+    await client.complete_json("plan", "U2", Answer)
+    spans = [call["extra_headers"]["X-B3-SpanId"] for call in fake.calls]
+    assert len(spans) == 2 and spans[0] != spans[1]
+    assert "X-B3-SpanId" not in (fake.constructed[0].get("default_headers") or {})
+
+
+async def test_a_third_party_llm_gets_no_per_call_trace_headers() -> None:
+    direct = LLMBackend(kind="openai", base_url=None, model="m", send_cache_key=True, api_key="k")
+    fake = FakeOpenAI([GOOD])
+    await make_client(fake, backend=direct).complete_json("plan", "U", Answer)
+    assert not fake.calls[0].get("extra_headers")

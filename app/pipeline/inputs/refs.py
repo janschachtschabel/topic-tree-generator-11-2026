@@ -40,7 +40,12 @@ def _host_allowed(host: str, rules: list[str]) -> bool:
 def _check_url(url: str, settings: Settings) -> str:
     parts = urlsplit(url)
     host = parts.hostname or ""
-    if parts.scheme != "https" or not _host_allowed(host, settings.ref_allowed_hosts):
+    try:
+        port = parts.port
+    except ValueError:
+        port = -1
+    # Only the HTTPS port: an allowed host must not open its other TLS services to callers.
+    if parts.scheme != "https" or port not in (None, 443) or not _host_allowed(host, settings.ref_allowed_hosts):
         raise ApiError(422, "REF_NOT_ALLOWED", "Verweis auf diesen Host ist nicht erlaubt.", details={"host": host})
     return host
 
