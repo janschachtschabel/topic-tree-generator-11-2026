@@ -11,7 +11,7 @@ from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.group_contents import group_contents
-from app.pipeline.steps.node_conversion import Cut, to_nodes
+from app.pipeline.steps.node_conversion import BranchNode, Cut, to_nodes
 from app.schemas.common import ItemUse, OriginType
 from app.schemas.request_v2 import Item, TopicTreeRequestV2
 from app.schemas.response_v2 import StructureInfo
@@ -106,6 +106,13 @@ def items_block(items: list[Item], rc: RunContext) -> str:
     return "\n".join(lines)
 
 
+def _dissolve_single_subgroups(groups: list[BranchNode]) -> None:
+    for group in groups:
+        while len(group.children) == 1:
+            group.children = group.children[0].children
+        _dissolve_single_subgroups(group.children)
+
+
 def _max_tokens(req: TopicTreeRequestV2) -> int:
     """Output budget for the largest grouping the shape allows, summed over every level."""
     groups = sum(req.shape.main_topics.max * req.shape.children.max**level for level in range(req.shape.depth))
@@ -119,6 +126,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     inputs = structure_inputs_block(req, rc, items=with_text)
     grouping = await group_contents(items_block(shaping, rc), rc, max_tokens=_max_tokens(req), inputs_block=inputs)
 
+    # Dissolve lone subgroups before the depth cut, so a level they hid is not cut away.
+    _dissolve_single_subgroups(grouping.groups)
     cut = Cut()
     shape = req.shape
     roots = to_nodes(
