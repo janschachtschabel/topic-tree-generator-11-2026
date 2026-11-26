@@ -1,17 +1,18 @@
 """OpenAPI request examples for POST /v2/topic-tree, from the shortest to the complete call (Leitfaden Kap. 1)."""
 
-_DISC = "http://w3id.org/openeduhub/vocabs/discipline/460"
-_SEK1 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
-_TEACHER = "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
-_FRAME = {"discipline_uri": [_DISC], "educational_context_uri": [_SEK1], "intended_end_user_role_uri": [_TEACHER]}
+from app.api.examples_combos import COMBO_EXAMPLES, REFINE_EXAMPLES
+from app.api.examples_values import DISC as _DISC
+from app.api.examples_values import FRAME as _FRAME
 
-REQUEST_EXAMPLES = {
+_EXAMPLES = {
     "topic_minimal": {
         "summary": "Thema, kürzester Aufruf",
+        "description": "Nur `topic` und ein Fach. Form (Ebenen, Breite) und Beschreibungslänge wählt der Dienst nach der Zielgruppe; alle übrigen Felder haben Standardwerte.",
         "value": {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {"discipline_uri": [_DISC]}},
     },
     "topic_full": {
         "summary": "Thema mit Rahmen, Form, Hinweisen und Optionen",
+        "description": "Alle Stellschrauben eines Themenbaums: `frame` (Fach, Stufe, Zielgruppe als SkoHub-URIs), `shape` (Ebenen, Haupt- und Unterthemen, Zusatzthema „Allgemeines“) und `hints` (Kontext, Ein- und Ausschluss, Wortzahl der Beschreibungen).",
         "value": {
             "mode": "create",
             "use_case": "topic",
@@ -33,6 +34,7 @@ REQUEST_EXAMPLES = {
     },
     "document": {
         "summary": "Strukturdokument (Lehrplan) plus eigene Inhalte",
+        "description": '`use_case: document`: Die Überschriften des Lehrplans (Eintrag mit `use: ["structure"]` und Volltext) werden zum Baum, Abschnitt und Seite stehen in `origin`. Der Eintrag mit `use: ["content"]` wird nur einsortiert; seine `nodeId` kommt unverändert zurück.',
         "value": {
             "mode": "create",
             "use_case": "document",
@@ -59,6 +61,7 @@ REQUEST_EXAMPLES = {
     },
     "folders": {
         "summary": "Ordner und Dateien übernehmen und verbessern",
+        "description": "`use_case: folders`: Die Ordner bleiben das Gerüst, die Dateien bleiben in ihren Ordnern (`confidence` 1). Mit `options.improve` schlägt der Dienst Umbenennungen und Umstellungen vor; sie stehen in `changes`.",
         "value": {
             "mode": "create",
             "use_case": "folders",
@@ -76,6 +79,7 @@ REQUEST_EXAMPLES = {
     },
     "contents": {
         "summary": "Unstrukturierte Inhalte gruppieren",
+        "description": "`use_case: contents`: Gruppen entstehen aus den Inhalten selbst; `topic` grenzt nur ein. Fachfremdes landet mit `off_topic` in `unassigned`.",
         "value": {
             "mode": "create",
             "use_case": "contents",
@@ -89,6 +93,7 @@ REQUEST_EXAMPLES = {
     },
     "refine_feedback": {
         "summary": "Entwurf mit Rückmeldung weiterentwickeln",
+        "description": "`mode: refine`: das letzte Ergebnis als `current_tree`, der Wunsch als Freitext (`feedback.text`). `locked` schützt Äste. Unklares kommt als `questions` zurück und wird nicht umgesetzt.",
         "value": {
             "mode": "refine",
             "use_case": "topic",
@@ -105,6 +110,7 @@ REQUEST_EXAMPLES = {
     },
     "assign_only": {
         "summary": "Inhalte in einen bestehenden (auch fremden) Baum einsortieren; Knoten bleiben unverändert",
+        "description": "Nur einsortieren: Struktur, Titel, `properties` und `nodeId` jedes Knotens bleiben, es kommen nur `contents` hinzu. Der Baum darf aus dem Repository stammen (ohne `key`, ohne `generation`); `use_case` spielt keine Rolle.",
         "value": {
             "mode": "refine",
             "use_case": "topic",
@@ -124,6 +130,7 @@ REQUEST_EXAMPLES = {
     },
     "describe": {
         "summary": "Beschreibung eines Knotens mit Baum-Kontext neu schreiben (statt /generate-collection-description)",
+        "description": "Die Änderung `describe` schreibt Beschreibung und Schlagworte eines Knotens neu. Das Modell kennt Pfad, Geschwister und den ganzen Baum; `hint` ist Grundlage oder Wunsch (früher `text_context` des alten Endpunkts). Für eine einzelne Sammlung genügt ein Baum mit einem Knoten.",
         "value": {
             "mode": "refine",
             "use_case": "topic",
@@ -138,4 +145,13 @@ REQUEST_EXAMPLES = {
             "frame": _FRAME,
         },
     },
+}
+
+
+_REFINE = ("refine_feedback", "refine_changes_items", "assign_only", "describe")
+# Order of the Swagger drop-down: single use cases, combinations, then the calls on an existing tree.
+REQUEST_EXAMPLES = {
+    **{k: v for k, v in _EXAMPLES.items() if k not in _REFINE},
+    **COMBO_EXAMPLES,
+    **{k: ({**_EXAMPLES, **REFINE_EXAMPLES})[k] for k in _REFINE},
 }

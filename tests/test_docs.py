@@ -61,7 +61,7 @@ def test_changelog_mentions_the_current_version() -> None:
 
 def test_steckbrief_short_description_equals_openapi_description() -> None:
     # Leitfaden Kap. 6: the Kurzbeschreibung row of the Steckbrief equals info.description.
-    from app.main import DESCRIPTION
+    from app.api.v2_description import APP_DESCRIPTION as DESCRIPTION
 
     steckbrief = (ROOT / "docs" / "steckbrief.md").read_text(encoding="utf-8")
     row = next(line for line in steckbrief.splitlines() if line.startswith("| **Funktionalität / Kurzbeschreibung**"))

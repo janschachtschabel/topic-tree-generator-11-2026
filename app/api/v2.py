@@ -8,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.deps import run_context
 from app.api.examples import REQUEST_EXAMPLES
+from app.api.v2_description import V2_DESCRIPTION
 from app.pipeline import orchestrator
 from app.pipeline.run_context import RunContext
 from app.schemas.request_v2 import TopicTreeRequestV2
@@ -20,22 +21,11 @@ _bearer = HTTPBearer(auto_error=False, description="Delegations-Token der b-api 
 
 _ERROR = {"content": {"application/json": {"example": {"error": {"code": "…", "message": "…", "trace_id": "…"}}}}}
 
-DESCRIPTION = """
-Erzeugt einen Themenbaum für einen von vier Use Cases (`use_case`) oder entwickelt einen bestehenden Entwurf
-weiter (`mode: refine`). Inhalte (`items`) werden den Knoten zugeordnet; ihre `nodeId` wird nur durchgereicht.
-
-Was nicht gelingt, steht unter `warnings`, was unklar ist unter `questions`. Die Antwort enthält in
-`metadata.generation` alle Vorgaben; für den nächsten Durchlauf `collection` und `metadata.generation` als
-`current_tree` zurückgeben.
-
-Laufzeit: synchron, je nach Baumgröße 10 bis 120 Sekunden.
-"""
-
 
 @router.post(
     "/v2/topic-tree",
     summary="Themenbaum erzeugen oder weiterentwickeln",
-    description=DESCRIPTION,
+    description=V2_DESCRIPTION,
     tags=["Themenbaum v2"],
     response_class=JSONResponse,
     responses={

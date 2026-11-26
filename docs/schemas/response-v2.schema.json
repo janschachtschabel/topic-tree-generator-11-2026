@@ -662,31 +662,31 @@
       "properties": {
         "improve": {
           "default": false,
-          "description": "folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück",
+          "description": "Nur use_case folders: Umbenennen, Zusammenlegen und Umstellen der Ordner vorschlagen (auch nach einem Gliederungsdokument in items). Die Vorschläge sind im Baum umgesetzt und stehen als changes mit from service in der Antwort; ohne improve bleiben die Ordner wie gesendet.",
           "title": "Improve",
           "type": "boolean"
         },
         "assign_contents": {
           "default": true,
-          "description": "Inhalte aus items den Knoten zuordnen",
+          "description": "Einträge mit Rolle content den Knoten zuordnen (mit Konfidenz). false: nur die Struktur erzeugen; gesendete Inhalte meldet INPUT_IGNORED.",
           "title": "Assign Contents",
           "type": "boolean"
         },
         "assign_only": {
           "default": false,
-          "description": "refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf",
+          "description": "Nur mode refine: nur neue Inhalte in den current_tree einsortieren. Struktur, Titel, properties und nodeId jedes Knotens bleiben (auch bei einem Baum aus dem Repository); feedback wird nicht umgesetzt. Gilt nur für diesen Aufruf und wird nicht geerbt.",
           "title": "Assign Only",
           "type": "boolean"
         },
         "multi_assign": {
           "default": true,
-          "description": "Ein Inhalt darf mehreren Knoten zugeordnet werden",
+          "description": "true: Ein Inhalt darf an mehreren passenden Knoten hängen. false: nur am besten passenden Knoten.",
           "title": "Multi Assign",
           "type": "boolean"
         },
         "min_confidence": {
           "default": 0.6,
-          "description": "Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned",
+          "description": "Mindestkonfidenz (0 bis 1) einer Zuordnung. Darunter kommt der Inhalt mit Grund low_confidence nach unassigned; höher heißt strenger, weniger Zuordnungen.",
           "maximum": 1,
           "minimum": 0,
           "title": "Min Confidence",
@@ -694,7 +694,7 @@
         },
         "auto_metadata": {
           "default": false,
-          "description": "Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist",
+          "description": "Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Kostet zusätzliche Aufrufe des Sprachmodells.",
           "title": "Auto Metadata",
           "type": "boolean"
         }

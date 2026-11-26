@@ -6,6 +6,7 @@ from app.api.body_limit import BodyLimitMiddleware
 from app.api.errors import install_error_handlers
 from app.api.health import router as health_router
 from app.api.v2 import router as v2_router
+from app.api.v2_description import APP_DESCRIPTION, OPENAPI_TAGS
 from app.legacy.router import router as legacy_router
 from app.observability import metrics
 from app.observability.access_log import AccessLogMiddleware
@@ -28,17 +29,13 @@ ROUTE_CLASSES = {
     ("GET", "/ui/presets"): "ui",
 }
 
-DESCRIPTION = (
-    "Erzeugt Themenbäume (Sammlungsstrukturen) für Bildungsinhalte: aus einem Thema, einem Strukturdokument wie "
-    "einem Lehrplan, aus Ordnern und Dateien oder aus unstrukturierten Inhalten. Entwürfe lassen sich mit "
-    "Rückmeldungen weiterentwickeln, Inhalte werden den Knoten zugeordnet."
-)
-
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(service=settings.service_id, level=settings.log_level, fmt=settings.log_format)
-    app = FastAPI(title="Themenbaum-Generator", description=DESCRIPTION, version=service_version())
+    app = FastAPI(
+        title="Themenbaum-Generator", description=APP_DESCRIPTION, openapi_tags=OPENAPI_TAGS, version=service_version()
+    )
     app.state.settings = settings
     install_error_handlers(app)
     app.add_middleware(BodyLimitMiddleware, max_bytes=settings.max_request_bytes)
