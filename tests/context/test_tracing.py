@@ -65,3 +65,11 @@ def test_outgoing_headers_omit_absent_optional_values() -> None:
     out = outgoing_headers(from_headers({}))
     assert "x-client-trace-id" not in out
     assert "X-B3-Sampled" not in out
+
+
+def test_debug_flag_is_forwarded_as_x_b3_flags() -> None:
+    # Regression: the single-header debug flag `d` went out as the invalid `X-B3-Sampled: d`; `X-B3-Flags` was dropped.
+    for incoming in ({"b3": f"{TRACE}-{SPAN}-d"}, {"X-B3-TraceId": TRACE, "X-B3-SpanId": SPAN, "X-B3-Flags": "1"}):
+        out = outgoing_headers(from_headers(incoming))
+        assert out.get("X-B3-Flags") == "1"
+        assert "X-B3-Sampled" not in out

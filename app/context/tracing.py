@@ -66,7 +66,8 @@ def from_headers(headers: Mapping[str, str]) -> TraceContext:
 
     trace_id = _valid_trace_id(h.get("x-b3-traceid") or single_trace)
     parent = _valid_span_id(h.get("x-b3-spanid") or single_span) if trace_id else None
-    sampled = h.get("x-b3-sampled") or single_sampled
+    # Debug ("d" in the single header, `X-B3-Flags: 1` in the multi-header form) is kept as "d".
+    sampled = "d" if h.get("x-b3-flags") == "1" else h.get("x-b3-sampled") or single_sampled
     client = h.get("x-client-trace-id")
 
     return TraceContext(
@@ -81,7 +82,9 @@ def from_headers(headers: Mapping[str, str]) -> TraceContext:
 def outgoing_headers(tc: TraceContext) -> dict[str, str]:
     """Headers for a call to one of our own dependencies (b-api, LLM endpoint). Never send these to third parties."""
     headers = {"X-B3-TraceId": tc.trace_id, "X-B3-SpanId": new_span_id(), "X-B3-ParentSpanId": tc.span_id}
-    if tc.sampled:
+    if tc.sampled == "d":
+        headers["X-B3-Flags"] = "1"  # debug implies sampled; `X-B3-Sampled` only takes 0 or 1
+    elif tc.sampled:
         headers["X-B3-Sampled"] = tc.sampled
     if tc.client_trace_id:
         headers["x-client-trace-id"] = tc.client_trace_id
