@@ -73,3 +73,32 @@ def test_api_error_headers_are_sent() -> None:
     r = TestClient(app).get("/v2/auth")
     assert r.status_code == 401
     assert r.headers["www-authenticate"] == "Bearer"
+
+
+def test_an_unhandled_error_answers_with_the_trace_id_of_the_request() -> None:
+    from app.observability.access_log import AccessLogMiddleware
+
+    app = FastAPI()
+    install_error_handlers(app)
+    app.add_middleware(AccessLogMiddleware, route_classes={})
+
+    @app.get("/v2/boom")
+    async def boom() -> None:
+        raise RuntimeError("secret")
+
+    trace = "a" * 32
+    r = TestClient(app, raise_server_exceptions=False).get("/v2/boom", headers={"X-B3-TraceId": trace})
+    assert r.status_code == 500
+    assert r.json()["error"]["trace_id"] == trace
+    assert "secret" not in r.text
+
+
+def test_unknown_v2_paths_and_methods_answer_in_the_v2_error_format() -> None:
+    client = _client()
+    missing = client.post("/v2/things", json={})
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "NOT_FOUND"
+    wrong = client.get("/v2/thing")
+    assert wrong.status_code == 405
+    assert wrong.json()["error"]["code"] == "METHOD_NOT_ALLOWED"
+    assert client.get("/nirgends").json() == {"detail": "Not Found"}
