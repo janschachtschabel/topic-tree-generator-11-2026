@@ -81,6 +81,15 @@ def structure_inputs_block(
             f"Nur {MAX_ITEMS} von {len(items)} ergänzenden Struktur-Items flossen in die Strukturplanung ein.",
             step="inputs",
         )
+    with_text = [i.id for i in items[:MAX_ITEMS] if i.fulltext and i.fulltext.text and i.fulltext.text.strip()]
+    if len(with_text) > MAX_FULLTEXT and rc is not None:
+        rest = with_text[MAX_FULLTEXT:]
+        rc.warn(
+            "INPUTS_TRUNCATED",
+            f"Nur die Volltexte der ersten {MAX_FULLTEXT} Struktur-Items flossen als Auszug ein; von "
+            f"{', '.join(rest[:20])}{' …' if len(rest) > 20 else ''} nur Titel und Beschreibung.",
+            step="inputs",
+        )
     head = "\n".join([HEADING, *_item_lines(items[:MAX_ITEMS], MAX_FULLTEXT)]) + "\n" if items else HEADING + "\n"
     return head + folders
 

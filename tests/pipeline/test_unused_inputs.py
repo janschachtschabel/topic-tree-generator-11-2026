@@ -56,3 +56,23 @@ def test_folders_use_without_folders_is_reported() -> None:
 def test_refine_warning_says_folder_paths_still_help_the_assignment() -> None:
     found = messages({**ex.ASSIGN_ONLY, "options": {}, "folders": ex.FOLDERS_TREE, "items": ex.FOLDER_ITEMS})
     assert len(found) == 1 and "Zuordnungshinweis" in found[0]
+
+
+def test_full_texts_beyond_the_excerpt_limit_are_reported() -> None:
+    # Regression: only five structure items with text got an excerpt; the sixth dropped out without a warning.
+    from app.pipeline.inputs_block import MAX_FULLTEXT, structure_inputs_block
+
+    items = [
+        {
+            "id": f"l{i}",
+            "use": ["structure"],
+            "properties": {"cm:title": [f"Lehrplan {i}"]},
+            "fulltext": {"text": f"T{i}"},
+        }
+        for i in range(MAX_FULLTEXT + 1)
+    ]
+    req = TopicTreeRequestV2.model_validate({**copy.deepcopy(ex.TOPIC), "items": items})
+    rc = RunContext(llm=FakeLLM(), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    structure_inputs_block(req, rc)
+    found = [w.message for w in rc.warnings if w.code == "INPUTS_TRUNCATED"]
+    assert len(found) == 1 and "l5" in found[0]
