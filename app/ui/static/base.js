@@ -19,13 +19,13 @@
 
   // Actions on the result tree first make that result the base, so keys and locks refer to the tree on screen.
   function lockOnResult(key) {
-    adoptResult();
+    adoptResult("refine");
     return toggleLock(key);
   }
 
   function editNode(key) {
     const { $, state } = A();
-    if (resultShown()) adoptResult();
+    if (resultShown()) adoptResult("refine");
     state.changes.addRow({ op: "rename", key });
     $("changes-editor").scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -33,7 +33,10 @@
   function renderBase() {
     const { $, t, state } = A();
     const tree = ["refine", "assign"].includes(state.task) ? state.currentTree : null;
+    F().renderBaseSummary(state);
     $("base-area").hidden = !tree || !$("result-area").hidden;
+    // The view toggles apply to the base tree as well, not only to a result.
+    $("view-toggles").hidden = $("base-area").hidden && $("result-area").hidden;
     if (!tree) return;
     $("base-heading").textContent = t("base.heading", { title: tree.title || "–", version: tree.version || "–" });
     $("base-tree-label").textContent = t(state.task === "assign" ? "base.tree.assign" : "base.tree");
@@ -41,7 +44,8 @@
     else window.TopicTreeView.renderTree($("base-tree"), tree.collection, state.lockedKeys, toggleLock, {}, editNode);
   }
 
-  function adoptResult() {
+  /** `target` "refine" forces "Baum ändern" (locks, changes); otherwise "Inhalte einsortieren" stays where it is. */
+  function adoptResult(target) {
     const { $, state, setStatus, selectTask } = A();
     const resp = state.lastResponse;
     if (!resp) return;
@@ -61,8 +65,9 @@
     $("f-fb-locked").value = "";
     state.changes.setChanges([]);
     $("result-area").hidden = true;
-    selectTask("refine");
-    setStatus("status.adopted", { version: resp.metadata.version });
+    const next = target !== "refine" && state.task === "assign" ? "assign" : "refine";
+    selectTask(next);
+    setStatus(next === "assign" ? "status.adoptedAssign" : "status.adopted", { version: resp.metadata.version });
   }
 
   function readBaseJson() {

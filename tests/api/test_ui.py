@@ -345,3 +345,28 @@ def test_preset_picker_groups_basic_examples_and_combinations() -> None:
 
     js = (Path("app/ui/static") / "app.js").read_text(encoding="utf-8")
     assert "optgroup" in js and "preset.group.combo" in js
+
+
+def test_base_texts_are_rendered_from_state_not_static_i18n() -> None:
+    # Regression: data-i18n on the base summary/label reset them on a language switch ("No base yet").
+    import re
+    from pathlib import Path
+
+    static = Path("app/ui/static")
+    html = (static / "index.html").read_text(encoding="utf-8")
+    for ident in ("base-summary", "base-tree-label"):
+        tag = re.search(rf'<[^>]*\bid="{ident}"[^>]*>', html).group(0)
+        assert "data-i18n" not in tag, ident
+    base_tree = re.search(r'<[^>]*\bid="base-tree"[^>]*>', html).group(0)
+    assert 'aria-labelledby="base-tree-label"' in base_tree
+    assert 'id="keyless-hint"' in html
+    boot = (static / "boot.js").read_text(encoding="utf-8")
+    assert "renderBase()" in boot.split("function switchLanguage", 1)[1].split("\n  }\n", 1)[0]
+
+
+def test_assign_flow_says_inhalte_consistently() -> None:
+    from pathlib import Path
+
+    i18n = (Path("app/ui/static") / "i18n.js").read_text(encoding="utf-8")
+    assert "Nur Materialien einsortieren" not in i18n
+    assert '"opt.assignOnly": "Nur Inhalte einsortieren, Struktur nicht ändern"' in i18n

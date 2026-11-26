@@ -74,7 +74,7 @@
         <section id="sec-refine" class="task-section" data-tasks="refine assign">
           <div class="field">
             <span class="field-label" data-i18n="field.base">Basis (Ist-Stand)</span>
-            <p id="base-summary" class="base-summary" data-i18n="base.none">Noch keine Basis. Beispiel laden, ein Ergebnis übernehmen oder JSON einfügen.</p>
+            <p id="base-summary" class="base-summary">Noch keine Basis. Beispiel laden, ein Ergebnis übernehmen oder JSON einfügen.</p>
             <div class="inline-actions">
               <button type="button" id="btn-adopt" class="btn-outline" data-i18n="btn.adoptLast" disabled>Letztes Ergebnis übernehmen</button>
             </div>
@@ -86,6 +86,7 @@
           <div class="field" data-tasks="refine">
             <span class="field-label" data-i18n="field.changes">Gezielte Änderungen</span>
             <div id="changes-editor" class="changes-editor"></div>
+            <p id="keyless-hint" class="help-text keyless-hint" hidden></p>
             <button type="button" id="btn-add-change" class="btn-outline" data-i18n="btn.addChange">+ Änderung hinzufügen</button>
             <p class="help-text" data-i18n="help.changes">Wirken vor der Freitext-Rückmeldung. Knoten lassen sich auch im Baum rechts über „Ändern …“ wählen.</p>
           </div>
@@ -293,8 +294,9 @@
           <h2 id="base-heading" class="result-title"></h2>
         </div>
         <details class="card fold" open>
-          <summary><span id="base-tree-label" data-i18n="base.tree">Basis-Baum: sperren oder ändern</span></summary>
-          <div id="base-tree" class="tree-root compact-tree" role="tree"></div>
+          <summary><span id="base-tree-label">Basis-Baum: sperren oder ändern</span></summary>
+          <p id="base-keyless-hint" class="help-text keyless-hint" hidden></p>
+          <div id="base-tree" class="tree-root compact-tree" role="tree" aria-labelledby="base-tree-label"></div>
         </details>
       </section>
 

@@ -158,16 +158,26 @@
       $("f-extra-methodology").checked = false;
     }
     $("f-current-tree").value = tree ? JSON.stringify(tree, null, 2) : "";
-    const count = tree ? P().countNodes(tree.collection) : 0;
+    renderBaseSummary(state);
+    state.changes.refresh();
+  }
+
+  /** Summary line and keyless hint of the base, from state only (so a language switch can redraw them). */
+  function renderBaseSummary(state) {
+    const tree = state.currentTree;
     $("base-summary").textContent = tree
       ? t("base.summary", {
         title: tree.title || "–",
         version: tree.version || "–",
-        n: count,
+        n: P().countNodes(tree.collection),
         useCase: (tree.generation && tree.generation.use_case) || "topic",
       })
       : t("base.none");
-    state.changes.refresh();
+    const keyless = tree && state.task === "refine" ? P().countKeyless(tree.collection) : 0;
+    for (const id of ["keyless-hint", "base-keyless-hint"]) {
+      $(id).hidden = !keyless;
+      $(id).textContent = keyless ? t("base.keyless", { n: keyless }) : "";
+    }
   }
 
 
@@ -288,7 +298,11 @@
     const payload = preset.payload;
     resetFields(state);
     const slots = splitItems(preset.task, payload);
-    if (!slots) return false;
+    if (!slots) {
+      // The request goes out as JSON, but its base must still be on screen (form fields stay reset).
+      if (["assign", "refine"].includes(preset.task)) setBase(state, payload.current_tree || null);
+      return false;
+    }
     applySettings(state, payload, setSelectValue);
     applyItems(preset.task, payload, slots);
     if (preset.task === "assign") setBase(state, payload.current_tree);
@@ -303,5 +317,5 @@
     return true;
   }
 
-  window.TopicTreeForm = { syncVisibility, readForm, resetFields, setBase, applyPreset };
+  window.TopicTreeForm = { syncVisibility, readForm, resetFields, setBase, renderBaseSummary, applyPreset };
 })();
