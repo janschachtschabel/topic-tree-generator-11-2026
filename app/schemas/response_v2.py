@@ -33,6 +33,9 @@ class Origin(_Out):
 
 class NodeOut(_Out):
     key: str = Field(description="Stabiler Schlüssel des Knotens; bleibt über refine-Läufe erhalten")
+    node_id: str | None = Field(
+        None, alias="nodeId", description="Knoten-ID der Sammlung im Repository, unverändert aus current_tree"
+    )
     title: str = Field(description="Titel des Knotens")
     shorttitle: str = Field(description="Kurztitel, höchstens 20 Zeichen")
     status: NodeStatus = Field(

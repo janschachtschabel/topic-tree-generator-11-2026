@@ -75,6 +75,7 @@ def node_properties(node: Node, frame: Frame) -> Properties:
 def to_node_out(node: Node, frame: Frame) -> NodeOut:
     return NodeOut(
         key=node.key,
+        nodeId=node.node_id,
         title=node.title,
         shorttitle=node.shorttitle or node.title,
         status=node.status or NodeStatus.new,

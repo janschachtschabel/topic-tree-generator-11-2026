@@ -851,6 +851,20 @@
           "description": "Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen",
           "title": "Key"
         },
+        "nodeId": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Knoten-ID der Sammlung im Repository, unverändert durchgereicht",
+          "title": "Nodeid"
+        },
         "title": {
           "description": "Titel des Knotens",
           "maxLength": 200,

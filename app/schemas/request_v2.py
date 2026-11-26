@@ -100,6 +100,12 @@ class TreeNodeIn(RequestModel):
         max_length=200,
         description="Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen",
     )
+    node_id: str | None = Field(
+        None,
+        alias="nodeId",
+        max_length=200,
+        description="Knoten-ID der Sammlung im Repository, unverändert durchgereicht",
+    )
     title: ShortText = Field(description="Titel des Knotens")
     shorttitle: str | None = Field(None, max_length=200, description="Kurztitel (höchstens 20 Zeichen in der Antwort)")
     properties: Properties = Field(default_factory=Properties, description="edu-sharing-Properties des Knotens")

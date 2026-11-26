@@ -562,6 +562,19 @@
           "title": "Key",
           "type": "string"
         },
+        "nodeId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Knoten-ID der Sammlung im Repository, unverändert aus current_tree",
+          "title": "Nodeid"
+        },
         "title": {
           "description": "Titel des Knotens",
           "title": "Title",

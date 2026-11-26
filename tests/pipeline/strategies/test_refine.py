@@ -496,3 +496,24 @@ async def test_expanded_subtopics_do_not_reuse_a_key_removed_in_the_same_request
     farben = next(n for n in resp.collection if n.title == "Farben")
     assert "Echo" in [c.title for c in farben.subcollections]
     assert "k-echo" not in [c.key for c in farben.subcollections]
+
+
+def _with_node_ids(nodes: list[dict]) -> list[dict]:
+    for n in nodes:
+        n["nodeId"] = f"es-{n['key']}"
+        _with_node_ids(n["subcollections"])
+    return nodes
+
+
+async def test_node_ids_of_collection_nodes_pass_through_unchanged() -> None:
+    req = request(
+        {"changes": [{"op": "rename", "key": "k-echo", "title": "Nachhall"}, {"op": "add", "title": "Wärme"}]},
+        current_tree={**copy.deepcopy(CURRENT), "collection": _with_node_ids(copy.deepcopy(CURRENT["collection"]))},
+    )
+    resp, _ = await run(req, {})
+    for key in ("k-optik", "k-linsen", "k-echo", "k-akustik"):
+        assert by_key(resp.collection, key).node_id == f"es-{key}"
+    added = next(n for n in resp.collection if n.title == "Wärme")
+    assert added.node_id is None
+    dumped = resp.model_dump(by_alias=True, exclude_none=True)
+    assert dumped["collection"][0]["nodeId"] == "es-k-optik"

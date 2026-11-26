@@ -199,6 +199,7 @@ A node of an earlier answer (v2 or legacy format), possibly edited by hand.
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
 | `key` | Text oder null (max. Länge 200) |  | – | Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen |
+| `nodeId` | Text oder null (max. Länge 200) |  | – | Knoten-ID der Sammlung im Repository, unverändert durchgereicht |
 | `title` | Text (min. Länge 1, max. Länge 200) | ja |  | Titel des Knotens |
 | `shorttitle` | Text oder null (max. Länge 200) |  | – | Kurztitel (höchstens 20 Zeichen in der Antwort) |
 | `properties` | [`Properties`](#properties) |  |  | edu-sharing-Properties des Knotens |
@@ -351,6 +352,7 @@ Werte: `create`, `refine`
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
 | `key` | Text | ja |  | Stabiler Schlüssel des Knotens; bleibt über refine-Läufe erhalten |
+| `nodeId` | Text oder null |  | – | Knoten-ID der Sammlung im Repository, unverändert aus current_tree |
 | `title` | Text | ja |  | Titel des Knotens |
 | `shorttitle` | Text | ja |  | Kurztitel, höchstens 20 Zeichen |
 | `status` | [`NodeStatus`](#nodestatus-antwort) | ja |  | Änderungsstand gegenüber current_tree: new, unchanged, changed, moved oder suggested |

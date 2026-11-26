@@ -24,6 +24,7 @@ class Node:
     confidence: float | None = None
     contents: list[ContentRef] = field(default_factory=list)
     children: list["Node"] = field(default_factory=list)
+    node_id: str | None = None  # repository id of the collection, passed through unchanged
 
 
 def walk(roots: list[Node]) -> Iterator[tuple[Node, Node | None, int]]:
@@ -92,6 +93,7 @@ def from_tree_in(nodes: list[TreeNodeIn]) -> list[Node]:
                     for c in item.contents
                 ],
                 children=from_tree_in(item.subcollections),
+                node_id=item.node_id,
             )
         )
     return result
