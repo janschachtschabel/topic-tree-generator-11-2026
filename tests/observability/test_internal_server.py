@@ -96,3 +96,16 @@ def test_metrics_are_exposed_in_prometheus_format(serve) -> None:
 
 def test_unknown_internal_path_is_404(serve) -> None:
     assert get(serve(Settings(_env_file=None)) + "/nope")[0] == 404
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "HEAD"])
+def test_other_methods_get_a_json_405_instead_of_an_html_page(serve, method: str) -> None:
+    # Final audit: the stdlib answered 501 with an HTML error page.
+    request = urllib.request.Request(serve(Settings(_env_file=None)) + "/metrics", method=method, data=b"")
+    with pytest.raises(urllib.error.HTTPError) as err:
+        urllib.request.urlopen(request, timeout=5)
+    assert err.value.code == 405
+    assert err.value.headers["Content-Type"] == "application/json"
+    assert err.value.headers["Allow"] == "GET"
+    if method != "HEAD":
+        assert json.loads(err.value.read()) == {"status": "method_not_allowed"}

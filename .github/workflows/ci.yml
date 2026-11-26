@@ -54,10 +54,15 @@ jobs:
           helm template t deploy/helm/topic-tree \
             --set networkPolicy.enabled=true --set autoscaling.enabled=true --set ingress.enabled=true \
             | docker run --rm -i ghcr.io/yannh/kubeconform:v0.6.7 -strict -summary -ignore-missing-schemas -
+          mkdir -p /tmp/alerts
           helm template t deploy/helm/topic-tree --set prometheusRule.enabled=true -s templates/prometheusrule.yaml \
             | uv run python -c 'import sys, yaml; d = yaml.safe_load(sys.stdin); print(yaml.safe_dump(d["spec"]))' \
-            > /tmp/alerts.yaml
-          docker run --rm --entrypoint promtool -v /tmp/alerts.yaml:/alerts.yaml:ro prom/prometheus:v2.55.1 check rules /alerts.yaml
+            > /tmp/alerts/alerts.yaml
+          cp tests/alerts/topic-tree.test.yml /tmp/alerts/
+          docker run --rm --entrypoint promtool -v /tmp/alerts:/alerts:ro -w /alerts prom/prometheus:v2.55.1 \
+            check rules alerts.yaml
+          docker run --rm --entrypoint promtool -v /tmp/alerts:/alerts:ro -w /alerts prom/prometheus:v2.55.1 \
+            test rules topic-tree.test.yml
 
   # Known vulnerabilities in the locked runtime dependencies. Reports only: it does not block publishing.
   # pip-audit runs via uvx and is not a project dependency (no new entry in pyproject.toml).

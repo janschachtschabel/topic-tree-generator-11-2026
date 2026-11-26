@@ -1,21 +1,51 @@
 {{- if .Values.prometheusRule.enabled }}
+{{- $job := include "topic-tree.fullname" . }}
+{{- $runbook := .Values.prometheusRule.runbookUrl }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ include "topic-tree.fullname" . }}
-  labels: {{- include "topic-tree.labels" . | nindent 4 }}
+  labels:
+    {{- include "topic-tree.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   groups:
     - name: topic-tree
       rules:
-        - alert: TopicTreeLLMErrors
+        - alert: TopicTreeDown
+          expr: sum(up{job="{{ $job }}"}) == 0 or absent(up{job="{{ $job }}"})
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: "Themenbaum-Dienst: kein Pod erreichbar"
+            description: "Prometheus erreicht seit 5 Minuten keinen Pod des Dienstes (Port internal, /metrics)."
+            runbook_url: "{{ $runbook }}#topictreedown"
+        - alert: TopicTreeServerErrors
           expr: |
-            sum(rate(topic_tree_llm_calls_total{outcome!="ok"}[10m]))
+            sum(rate(topic_tree_requests_total{status=~"5.."}[10m]))
+              / clamp_min(sum(rate(topic_tree_requests_total{route!="health"}[10m])), 1e-9)
+              > {{ .Values.prometheusRule.serverErrorRatio }}
+            and sum(increase(topic_tree_requests_total{route!="health"}[10m])) >= {{ .Values.prometheusRule.minRequests }}
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Themenbaum-Dienst: viele Antworten mit 5xx"
+            description: "Mehr als {{ .Values.prometheusRule.serverErrorRatio }} der Anfragen endeten in 10 Minuten mit einem Serverfehler."
+            runbook_url: "{{ $runbook }}#topictreeservererrors"
+        - alert: TopicTreeLLMErrors
+          # 401/403 come from callers without LLM rights at the b-api, not from the service.
+          expr: |
+            sum(rate(topic_tree_llm_calls_total{outcome!~"ok|http_401|http_403"}[10m]))
               / clamp_min(sum(rate(topic_tree_llm_calls_total[10m])), 1e-9) > {{ .Values.prometheusRule.llmErrorRatio }}
+            and sum(increase(topic_tree_llm_calls_total[10m])) >= {{ .Values.prometheusRule.minRequests }}
           for: 10m
           labels: { severity: warning }
           annotations:
             summary: "Themenbaum-Dienst: viele fehlgeschlagene LLM-Aufrufe"
+            description: "Mehr als {{ .Values.prometheusRule.llmErrorRatio }} der LLM-Aufrufe schlugen in 10 Minuten fehl (Zeitüberschreitung, Verbindung, 429 oder 5xx der b-api)."
+            runbook_url: "{{ $runbook }}#topictreellmerrors"
         - alert: TopicTreeSlowRequests
           expr: |
             histogram_quantile(0.9, sum by (le) (rate(topic_tree_request_seconds_bucket{route="v2.topic_tree"}[15m])))
@@ -24,9 +54,13 @@ spec:
           labels: { severity: warning }
           annotations:
             summary: "Themenbaum-Dienst: P90 der Antwortzeit nahe der Frist"
+            description: "Das 90. Perzentil der Antwortzeit von /v2/topic-tree liegt seit 15 Minuten über {{ .Values.prometheusRule.slowRequestSeconds }} s."
+            runbook_url: "{{ $runbook }}#topictreeslowrequests"
         - alert: TopicTreeDescribeFailures
           expr: sum(increase(topic_tree_warnings_total{code="DESCRIBE_FAILED"}[1h])) > {{ .Values.prometheusRule.describeFailuresPerHour }}
           labels: { severity: info }
           annotations:
             summary: "Themenbaum-Dienst: viele Beschreibungs-Batches sind fehlgeschlagen"
+            description: "Mehr als {{ .Values.prometheusRule.describeFailuresPerHour }} Warnungen DESCRIBE_FAILED in einer Stunde."
+            runbook_url: "{{ $runbook }}#topictreedescribefailures"
 {{- end }}

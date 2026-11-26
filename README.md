@@ -1,11 +1,14 @@
 # topic-tree (Themenbaum-Dienst)
 
+> 🇩🇪 Deutsche Fassung: [README.de.md](README.de.md) · Documentation index: [docs/README.md](docs/README.md)
+
 FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores. An existing tree, also one taken from the repository, can be filled with contents only (structure, properties and `nodeId` stay as they are), and single nodes can get a fresh description with the whole tree as context.
 
-- **`POST /v2/topic-tree`** – current v2 API; `/docs` explains use cases, combinations and options and offers an example for each in the "Examples" drop-down ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
+- **`POST /v2/topic-tree`** – current v2 API; `/docs` explains use cases, combinations and options and offers an example for each in the "Examples" drop-down ([API guide](docs/en/api.md), [data format](docs/en/data-format.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
 - **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2); new callers describe collections with the `describe` change of v2 (see use case 7)
 - **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
-- **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [v1 vs. v2 comparison](docs/measurements/2026-11-25-v1-vs-v2-comparison.md) · [v2 load & token benchmark](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
+- **Operations & handover**: [operations guide with runbook](docs/en/operations.md) · [service profile](docs/en/service-profile.md) (German original: [Steckbrief](docs/de/steckbrief.md))
+- **Benchmarks & design**: [v1 vs. v2 comparison](docs/measurements/2026-11-25-v1-vs-v2-comparison.md) · [v2 load & token benchmark](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
 
 ## How it works
 
@@ -91,26 +94,30 @@ Uses [`docker-compose.yml`](docker-compose.yml) with Traefik HTTPS labels and ze
 To pin a specific release tag (recommended for staging/production) instead of `:latest`:
 
 ```shell
-IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:2.1.0 docker compose up -d
+IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:2.2.0 docker compose up -d
 ```
 
 ### Option C: Kubernetes / Helm Chart (`deploy/helm/topic-tree`)
 
-A production-ready Helm chart template (`version` = `appVersion` = `2.1.0`, non-root `uid=10001`, `readOnlyRootFilesystem: true`, two-port `Service` `:8000` / `:9000`, `NetworkPolicy`, `ServiceMonitor`, `PrometheusRule`, `HPA`) is included in [`deploy/helm/topic-tree/`](deploy/helm/topic-tree/) and published as an OCI artifact on every `vX.Y.Z` release tag (reference b-api route template: [`deploy/b-api/route-topic-tree-generator.json`](deploy/b-api/route-topic-tree-generator.json)):
+A production-ready Helm chart template (`version` = `appVersion` = `2.2.0`, non-root `uid=10001`, `readOnlyRootFilesystem: true`, two-port `Service` `:8000` / `:9000`, `NetworkPolicy`, `ServiceMonitor`, `PrometheusRule`, `HPA`, `PodDisruptionBudget`) is included in [`deploy/helm/topic-tree/`](deploy/helm/topic-tree/) and published as an OCI artifact on every `vX.Y.Z` release tag (reference b-api route template: [`deploy/b-api/route-topic-tree-generator.json`](deploy/b-api/route-topic-tree-generator.json)):
 
 ```shell
-# Install from the published OCI Helm chart (tag v2.1.0)
+# Install from the published OCI Helm chart (tag v2.2.0)
 helm upgrade --install topic-tree \
   oci://ghcr.io/janschachtschabel/topic-tree-generator-11-2026/charts/topic-tree \
-  --version 2.1.0 \
+  --version 2.2.0 \
   --set image.repository=ghcr.io/janschachtschabel/topic-tree-generator-11-2026 \
-  --set image.tag=2.1.0 \
+  --set image.tag=2.2.0 \
   --set config.bApiBaseUrl=https://b-api.staging.openeduhub.net \
   --set config.bApiRoute=topic-tree-generator
 
 # Or install/render directly from the local chart template in the repository
 helm upgrade --install topic-tree ./deploy/helm/topic-tree -f values-custom.yaml
 ```
+
+Behind the b-api the chart needs no secret. What the platform team has to set up (b-api proxy entry and route,
+NetworkPolicy peers and egress, monitoring labels), the post-install check, upgrades, rollback and a runbook for every
+alert are in the [operations guide](docs/en/operations.md).
 
 ### Option D: Local Python development (without Docker)
 
@@ -136,7 +143,7 @@ All settings are read from environment variables or `.env` and have defaults (se
 |---|---|---|
 | `SERVICE_ID` | `topic-tree` | Service identifier used in logs, metrics, and cache keys. |
 | `SERVICE_MODE` | `auto` | `auto`: `Authorization: Bearer bdt_…` routes via b-api, anything else runs standalone. `bapi`: delegation tokens only. `standalone`: never calls b-api. |
-| `SERVICE_API_KEYS` | *(empty)* | Comma-separated bearer keys for standalone auth. Empty = open (no auth required in standalone). |
+| `SERVICE_API_KEYS` | *(empty)* | Comma-separated bearer keys for standalone auth. Empty = open (no auth required in standalone). In `auto` mode a `bdt_…` token is not checked against these keys: the b-api checks it at the first LLM call, and work that needs no LLM (targeted changes, allow-listed `ref` downloads) happens before. A public instance that must accept service keys only runs with `SERVICE_MODE=standalone`. |
 
 ### Docker & Reverse Proxy (`docker-compose.yml`)
 
@@ -224,8 +231,9 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 ## Request and response structure (`POST /v2/topic-tree`)
 
 Every field of request and response, with type, default and meaning, is listed in
-[`docs/datenformat.md`](docs/datenformat.md) (generated from the models, German). Machine-readable:
-[`docs/schemas/`](docs/schemas/); call patterns, roles and the decision table for callers: [`docs/api.md`](docs/api.md).
+[`docs/en/data-format.md`](docs/en/data-format.md) (generated from the models). Machine-readable:
+[`docs/schemas/`](docs/schemas/); call patterns, roles and the decision table for callers:
+[`docs/en/api.md`](docs/en/api.md).
 
 | Request field | Required | Purpose |
 |---|---|---|
@@ -251,7 +259,7 @@ Every field of request and response, with type, default and meaning, is listed i
 
 A full request/response pair: [`docs/examples/topic_with_items.json`](docs/examples/topic_with_items.json) →
 [`docs/examples/responses/topic_with_items.json`](docs/examples/responses/topic_with_items.json). Errors are
-`{"error": {"code", "message", "trace_id"}}`; all codes are listed in `docs/api.md`.
+`{"error": {"code", "message", "trace_id"}}`; all codes are listed in [`docs/en/api.md`](docs/en/api.md#errors).
 
 ## Use Cases & Examples (`POST /v2/topic-tree`)
 
@@ -418,7 +426,7 @@ Locked keys (`feedback.locked`) and their branches never change; a change that w
 `CHANGE_REJECTED`. The response marks each node's `status` (`new`, `changed`, `moved`, `unchanged`), lists the
 applied `changes` and counts the version up (`v1` → `v2`). For the next run send back `collection`,
 `metadata.version`, `metadata.generation` and (to keep them) `metadata.title`/`metadata.description` as
-`current_tree` (see `docs/api.md`, "Änderungen an einem Baum einreichen").
+`current_tree` (see [`docs/en/api.md`](docs/en/api.md), "Submitting changes to a tree").
 
 ### 6. Sort contents into an existing tree (`refine` + `assign_only`)
 
@@ -475,7 +483,7 @@ Example: [`docs/examples/describe.json`](docs/examples/describe.json).
 | **Cluster items within a topic** *(bottom-up)* | `use_case: "contents"` + `topic` + `items` | Induces clusters from `items` scoped to `topic`; off-topic items land in `unassigned` (`off_topic`). Items marked `"use": ["content"]` only are sorted in without skewing clusters. |
 | **Curriculum document + topic + items** | `use_case: "document"` + optional `topic` + Markdown `"structure"` item(s) + `"content"` items | Derives the tree from curriculum headings (`origin.document`), uses `topic` as focus/title, and assigns content items. |
 | **Folders + topic + loose items + curriculum** | `use_case: "folders"` + `folders` + `items` (folder items + loose `"content"` items + optional `"structure"` doc) + `options.improve: true` | Keeps folder assignments (`confidence: 1.0`), improves folder structure using `topic` and supplementary docs, and sorts remaining loose items into matching folders. |
-| **Topic, curriculum or items + folders** | `use_case: "topic"`, `"document"` or `"contents"` + `folders` + optional `folders_use` | The folder structure as a whole gets a role like `use` (default `["structure", "content"]`): its tree inspires the plan, and each file's folder path is a hint for the assignment. `[]` accepts it unused (`INPUT_IGNORED`). See `docs/api.md` for the caller decision table. |
+| **Topic, curriculum or items + folders** | `use_case: "topic"`, `"document"` or `"contents"` + `folders` + optional `folders_use` | The folder structure as a whole gets a role like `use` (default `["structure", "content"]`): its tree inspires the plan, and each file's folder path is a hint for the assignment. `[]` accepts it unused (`INPUT_IGNORED`). See [`docs/en/api.md`](docs/en/api.md) for the caller decision table. |
 | **Refine + feedback + new items** | `mode: "refine"` + `current_tree` + `feedback` + new `items` | Applies structural changes (honoring `locked`), describes new/renamed nodes, and assigns the new `items` into the updated tree in the same call. |
 
 More combination requests in [`docs/examples/`](docs/examples/): `combo_topic_folders.json` (topic + folder structure
@@ -520,10 +528,13 @@ curl -s http://localhost:8000/v2/topic-tree \
 ## Tests and checks
 
 ```shell
-uv run pytest -q                                # full suite incl. E2E server, gunicorn smoke test & helm checks
+uv run pytest -q                                # full suite incl. E2E server and gunicorn smoke test; the UI's
+                                                # Node tests run when `node` is installed, the chart tests when
+                                                # `helm` is installed (CI has both)
+node --test tests/ui_js/*.test.cjs              # only the test UI's JavaScript unit tests
 uv run ruff check && uv run ruff format --check # lint & formatting (line length 120)
-helm lint --strict deploy/helm/topic-tree       # Helm chart validation
-uv run python -m scripts.export_schemas         # regenerate docs/schemas after model changes
+helm lint --strict deploy/helm/topic-tree       # Helm chart validation (CI also runs kubeconform and promtool)
+uv run python -m scripts.export_schemas         # regenerate docs/schemas and both field references after model changes
 uv run python -m scripts.build_vocab_snapshot   # refresh bundled OEH vocabulary labels
 uv run python -m scripts.probe_llm --model <route> --base-url <router-url>
 uv run python -m scripts.loadtest --url http://localhost:8000/v2/topic-tree --payload docs/examples/topic_full.json
@@ -543,5 +554,6 @@ app/ui         optional self-hosted test UI (/ui/, toggled via UI_ENABLED)
 app/legacy     frozen v1 endpoints
 deploy/helm    Helm chart template (published to GHCR OCI on vX.Y.Z tags)
 deploy/b-api   Reference LLM route definition (gpt-6-luna primary, gpt-5.6-luna fallback)
-docs/          API reference, JSON schemas, request examples, benchmarks, design plan
+docs/en, docs/de  guides in English and German (API, data format, operations, service profile)
+docs/          JSON schemas, request examples, audits, benchmarks, design plans (index: docs/README.md)
 ```

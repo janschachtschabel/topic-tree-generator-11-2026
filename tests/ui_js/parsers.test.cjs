@@ -99,3 +99,16 @@ test("countNodes counts nodes without service keys too", () => {
   assert.equal(P.countNodes([{ title: "A", subcollections: [{ title: "B" }, { key: "k", title: "C" }] }, { title: "D" }]), 4);
   assert.equal(P.countNodes(undefined), 0);
 });
+
+test("countKeyless counts nodes the change editor cannot offer", () => {
+  const tree = [{ title: "A", subcollections: [{ key: "k-b", title: "B" }, { title: "C" }] }, { key: "k-d", title: "D" }];
+  assert.equal(P.countKeyless(tree), 2);
+  assert.equal(P.countKeyless([{ key: "k", title: "K", subcollections: [] }]), 0);
+  assert.equal(P.countKeyless(undefined), 0);
+});
+
+test("presetOptionLabel drops the combination prefix only inside the combination group", () => {
+  assert.equal(P.presetOptionLabel("Kombination: Thema + Materialien", true), "Thema + Materialien");
+  assert.equal(P.presetOptionLabel("Kombination: Thema + Materialien", false), "Kombination: Thema + Materialien");
+  assert.equal(P.presetOptionLabel("Optik Sek I", true), "Optik Sek I");
+});

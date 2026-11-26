@@ -20,6 +20,8 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      # The service never talks to the Kubernetes API, so the pod gets no service account token.
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001

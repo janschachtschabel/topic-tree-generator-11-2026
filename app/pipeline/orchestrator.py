@@ -207,7 +207,7 @@ async def run(
     if resolved is not req:
         req = resolved
         check_request(req, rc.settings, loaded=True)
-    rc.explicit_shape = explicit_shape(req, rc.settings)
+    rc.explicit_shape, rc.shape_sent = explicit_shape(req, rc.settings), "shape" in req.model_fields_set
     merged = effective_request(req, rc.settings)
     # Checked on the sent request (so defaults are not reported), but with the inherited options of a refine.
     warn_unused_inputs(req, rc, options=merged.options)

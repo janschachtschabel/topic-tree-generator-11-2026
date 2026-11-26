@@ -72,6 +72,7 @@ async def test_subdomain_rule_with_leading_dot(serve) -> None:
         "https://cdn.example.org/a.md",
         "http://files.example.org/a.md",
         "https://127.0.0.1/a",
+        "https://files.example.org:8443/a.md",  # final audit: the allowlist ignored the port
     ],
 )
 async def test_disallowed_urls_are_rejected_without_a_request(serve, url: str) -> None:
@@ -325,3 +326,8 @@ async def test_raw_deflate_split_into_single_bytes_is_decoded(serve) -> None:
 
     serve(lambda r: httpx.Response(200, content=body(), headers={"Content-Encoding": "deflate"}))
     assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Roh"
+
+
+async def test_the_default_https_port_may_be_written_out(serve) -> None:
+    serve(lambda r: httpx.Response(200, text="ok"))
+    assert await fetch_text("https://files.example.org:443/a.md", ALLOWED) == "ok"

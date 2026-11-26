@@ -67,8 +67,10 @@ def test_helm_lint_strict_passes() -> None:
 @needs_helm
 def test_default_render_has_two_ports_probes_and_restricted_security() -> None:
     docs = kinds(render())
-    assert set(docs) == {"Deployment", "Service"}
+    assert set(docs) == {"Deployment", "Service", "PodDisruptionBudget"}
     pod = docs["Deployment"]["spec"]["template"]["spec"]
+    assert pod["automountServiceAccountToken"] is False
+    assert docs["PodDisruptionBudget"]["spec"]["maxUnavailable"] == 1
     container = pod["containers"][0]
     assert {p["name"]: p["containerPort"] for p in container["ports"]} == {"http": 8000, "internal": 9000}
     assert container["livenessProbe"]["httpGet"] == {"path": "/health", "port": "internal"}
@@ -116,7 +118,34 @@ def test_optional_parts_render_when_enabled() -> None:
     container = docs["Deployment"]["spec"]["template"]["spec"]["containers"][0]
     assert container["envFrom"] == [{"secretRef": {"name": "topic-tree-secrets"}}]
     alerts = [r["alert"] for g in docs["PrometheusRule"]["spec"]["groups"] for r in g["rules"]]
-    assert {"TopicTreeLLMErrors", "TopicTreeSlowRequests", "TopicTreeDescribeFailures"} <= set(alerts)
+    assert {
+        "TopicTreeDown",
+        "TopicTreeServerErrors",
+        "TopicTreeLLMErrors",
+        "TopicTreeSlowRequests",
+        "TopicTreeDescribeFailures",
+    } == set(alerts)
+    for rule in (r for g in docs["PrometheusRule"]["spec"]["groups"] for r in g["rules"]):
+        assert rule["annotations"]["description"] and "betrieb.md#" in rule["annotations"]["runbook_url"]
+
+
+@needs_helm
+def test_operator_labels_reach_service_monitor_and_rule() -> None:
+    # Final audit: kube-prometheus-stack selects by a release label the chart could not set.
+    docs = kinds(
+        render(*ALL_ON, "--set", "serviceMonitor.labels.release=kps", "--set", "prometheusRule.labels.release=kps")
+    )
+    assert docs["ServiceMonitor"]["metadata"]["labels"]["release"] == "kps"
+    assert docs["PrometheusRule"]["metadata"]["labels"]["release"] == "kps"
+
+
+def test_every_alert_has_a_runbook_section_in_both_languages() -> None:
+    template = (CHART / "templates" / "prometheusrule.yaml").read_text(encoding="utf-8")
+    alerts = re.findall(r"alert: (\w+)", template)
+    assert len(alerts) == 5
+    for doc in ("de/betrieb.md", "en/operations.md"):
+        text = (CHART.parent.parent.parent / "docs" / doc).read_text(encoding="utf-8")
+        assert all(f"### `{a}`" in text for a in alerts), doc
 
 
 @needs_helm

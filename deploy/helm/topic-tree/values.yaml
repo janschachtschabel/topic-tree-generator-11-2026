@@ -95,11 +95,19 @@ probes:
   liveness:
     httpGet: { path: /health, port: internal }
     periodSeconds: 15
+    timeoutSeconds: 3
     failureThreshold: 3
   readiness:
     httpGet: { path: /health, port: http }
     periodSeconds: 10
+    timeoutSeconds: 3
     failureThreshold: 3
+
+## @param podDisruptionBudget.enabled Keep pods running during node drains (requests take up to 280 s)
+## @param podDisruptionBudget.maxUnavailable Pods that may be evicted at the same time
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
 
 ## @param terminationGracePeriodSeconds Lets running requests finish (above requestTimeoutSeconds + 10 s)
 terminationGracePeriodSeconds: 300
@@ -135,19 +143,29 @@ networkPolicy:
 ## @section Monitoring
 ## @param serviceMonitor.enabled Create a ServiceMonitor (Prometheus Operator)
 ## @param serviceMonitor.interval Scrape interval
+## @param serviceMonitor.labels Extra labels, e.g. the release label the Prometheus Operator selects by
 serviceMonitor:
   enabled: false
   interval: 30s
+  labels: {}
 
 ## @param prometheusRule.enabled Create alert rules (Prometheus Operator)
-## @param prometheusRule.llmErrorRatio Alert when this share of LLM calls fails over 10 minutes
+## @param prometheusRule.labels Extra labels, e.g. the release label the Prometheus Operator selects by
+## @param prometheusRule.llmErrorRatio Alert when this share of LLM calls fails over 10 minutes (401/403 not counted)
+## @param prometheusRule.serverErrorRatio Alert when this share of requests ends with 5xx over 10 minutes
+## @param prometheusRule.minRequests Ratio alerts need at least this many calls in 10 minutes (no alert on one failure)
 ## @param prometheusRule.slowRequestSeconds Alert when p90 request duration exceeds this
 ## @param prometheusRule.describeFailuresPerHour Alert when more description batches (DESCRIBE_FAILED) fail per hour
+## @param prometheusRule.runbookUrl Runbook the alerts link to (anchor per alert is appended)
 prometheusRule:
   enabled: false
+  labels: {}
   llmErrorRatio: 0.2
+  serverErrorRatio: 0.05
+  minRequests: 10
   slowRequestSeconds: 240
   describeFailuresPerHour: 20
+  runbookUrl: https://github.com/janschachtschabel/topic-tree-generator-11-2026/blob/main/docs/de/betrieb.md
 
 ## @section Autoscaling
 ## @param autoscaling.enabled Create a HorizontalPodAutoscaler

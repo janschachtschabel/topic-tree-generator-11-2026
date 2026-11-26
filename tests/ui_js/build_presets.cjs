@@ -21,7 +21,7 @@ function build(preset) {
   const document = { getElementById: (id) => (els[id] ||= element()), querySelectorAll: () => [], createElement: element };
   const ctx = { window: {}, document, Option: function () {}, console };
   vm.createContext(ctx);
-  for (const file of ["parsers.js", "payload.js", "changes.js", "form.js"]) {
+  for (const file of ["parsers.js", "payload.js", "changes.js", "presetitems.js", "form.js"]) {
     const code = fs.readFileSync(path.join(STATIC, file), "utf8").replace('typeof module === "object" && module.exports', "false");
     vm.runInContext(code, ctx);
   }

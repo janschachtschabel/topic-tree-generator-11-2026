@@ -1,8 +1,10 @@
 # Aufrufe von POST /v2/topic-tree
 
-Vollständige Beispiele liegen unter `docs/examples/` (Anfragen) und `docs/examples/responses/` (Antwort), jedes Feld
-von Anfrage und Antwort mit Typ, Standard und Bedeutung in [`datenformat.md`](datenformat.md), maschinenlesbar unter
-`docs/schemas/`. Zum interaktiven Ausprobieren im Browser steht optional die
+> 🇬🇧 English version: [`../en/api.md`](../en/api.md) · Übersicht aller Dokumente: [`../README.md`](../README.md)
+
+Vollständige Beispiele liegen unter [`docs/examples/`](../examples/) (Anfragen) und
+[`docs/examples/responses/`](../examples/responses/) (Antwort), jedes Feld von Anfrage und Antwort mit Typ, Standard
+und Bedeutung in [`datenformat.md`](datenformat.md), maschinenlesbar unter [`docs/schemas/`](../schemas/). Zum interaktiven Ausprobieren im Browser steht optional die
 eingebaute Test-Oberfläche unter `/ui/` bereit (steuerbar über `UI_ENABLED=true|false`). Laufzeit synchron, typisch
 5 bis 45 Sekunden (große 3-Ebenen-Bäume ~25–45 s).
 
@@ -10,6 +12,9 @@ eingebaute Test-Oberfläche unter `/ui/` bereit (steuerbar über `UI_ENABLED=tru
 
 - Über die b-api: Der Proxy reicht das Delegations-Token (`Authorization: Bearer bdt_…`) durch; nichts weiter zu tun.
 - Eigenständig: ohne Anmeldung, oder mit `Authorization: Bearer <Dienst-Schlüssel>`, wenn `SERVICE_API_KEYS` gesetzt ist.
+  Im Modus `auto` gilt ein `bdt_…`-Token als Aufruf über die b-api und wird nicht gegen die Dienst-Schlüssel geprüft
+  (die b-api prüft es beim ersten LLM-Aufruf). Soll eine öffentliche Instanz nur Dienst-Schlüssel annehmen, läuft sie
+  mit `SERVICE_MODE=standalone`.
 
 ## Kürzester Aufruf
 
@@ -260,4 +265,6 @@ Beispiel: `docs/examples/responses/topic_with_items.json`; alle Felder: [`datenf
 zusammen (über 10 Mio. Zeichen) zu groß –, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
 404 `NOT_FOUND` und 405 `METHOD_NOT_ALLOWED` für unbekannte Pfade oder Methoden unter `/v2/`,
 413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
-401 `UNAUTHORIZED` / 403 `FORBIDDEN` Anmeldung bzw. fehlende b-api-Berechtigung, 501 `NOT_IMPLEMENTED`, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.
+401 `UNAUTHORIZED` / 403 `FORBIDDEN` Anmeldung bzw. fehlende b-api-Berechtigung, 501 `NOT_IMPLEMENTED`, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`,
+500 `INTERNAL` bei einem unerwarteten Fehler im Dienst (ohne Details; die `trace_id` findet die Logzeile, siehe
+[`betrieb.md`](betrieb.md)).

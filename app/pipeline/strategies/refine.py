@@ -17,6 +17,10 @@ from app.pipeline.strategies.refine_describe import (
     describe_hints,
     described_before,
     drop_vanished_describes,
+    edited_texts,
+    keep_edited_texts,
+    reject_describes_of_edited,
+    restore_edited_texts,
     warn_not_described,
 )
 from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
@@ -24,6 +28,7 @@ from app.schemas.request_v2 import Change, Frame, TopicTreeRequestV2
 from app.schemas.response_v2 import ChangeRecord, Question, StructureInfo, Unassigned
 
 _REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge, ChangeOp.describe}
+_STRUCTURE_OPS = {ChangeOp.add, ChangeOp.remove, ChangeOp.move, ChangeOp.merge, ChangeOp.split}
 
 
 def _structure(req: TopicTreeRequestV2) -> StructureInfo | None:
@@ -206,14 +211,20 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     if feedback.text:
         await refiner.apply_text(feedback.text)
     drop_vanished_describes(roots, result, rc)
+    edited = edited_texts(feedback.changes, result.changes)
+    rejected = reject_describes_of_edited(edited, result, rc)
+    # A rejected describe must not rewrite anything else either, unless another change refreshes the node.
+    refreshed_otherwise = {r.key for r in result.changes if r.op in _REFRESH_OPS and r.op != ChangeOp.describe}
+    refiner.refresh -= rejected - refreshed_otherwise
     protected = protected_keys(roots, set(feedback.locked))
     targets = [
         node
         for node, _, _ in walk(roots)
         if node.key not in protected and (node.key in refiner.refresh or not node.description)
     ]
-    before = described_before(roots, result)
-    await describe_nodes(
+    before = described_before(targets, refiner.refresh, edited)
+    saved = keep_edited_texts(roots, edited)
+    failed = await describe_nodes(
         targets,
         roots,
         rc,
@@ -221,5 +232,10 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         description_length=req.hints.description_length,
         extra=describe_hints(feedback.changes, result.changes),
     )
-    warn_not_described(roots, before, rc)
+    restore_edited_texts(roots, saved)
+    warn_not_described(roots, before, failed, rc)
+    if not rc.shape_sent and not any(r.op in _STRUCTURE_OPS for r in result.changes):
+        # Texts changed, the structure did not: its shape was checked when it was made (or is the caller's own,
+        # e.g. a single collection to describe), so repeating SHAPE_* warnings would only be noise.
+        result.shape_checked = False
     return result

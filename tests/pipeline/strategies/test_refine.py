@@ -645,3 +645,89 @@ async def test_assign_only_keeps_the_recorded_frame_of_the_unchanged_tree() -> N
     )
     resp, _ = await run(req, {})
     assert resp.metadata.generation.frame.educational_context_uri == [ex.SEK1]
+
+
+# Final audit 26.11.2026 (pipeline findings)
+
+
+async def test_assign_only_reports_a_changed_frame_and_labels_follow_the_recorded_frame() -> None:
+    tree = copy.deepcopy(CURRENT)
+    tree["generation"]["frame"] = ex.FRAME
+    sek2 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2"
+    req = request(
+        None, current_tree=tree, frame={**ex.FRAME, "educational_context_uri": [sek2]}, options={"assign_only": True}
+    )
+    resp, _ = await run(req, {})
+    assert any(w.code == "INPUT_IGNORED" and "frame" in w.message for w in resp.warnings)
+    assert sek2 not in resp.metadata.vocab_labels
+
+
+async def test_renamed_node_whose_description_is_not_rewritten_is_reported() -> None:
+    req = request({"changes": [{"op": "rename", "key": "k-linsen", "title": "Prismen"}]})
+    resp, _ = await run(req, {"describe_nodes": {"nodes": []}})
+    assert any(w.code == "DESCRIBE_FAILED" and w.key == "k-linsen" for w in resp.warnings)
+
+
+async def test_description_set_with_edit_is_not_overwritten_by_describe_or_rename() -> None:
+    edit = {"op": "edit", "key": "k-linsen", "properties": {"cm:description": ["MEINE BESCHREIBUNG"]}}
+    for changes in (
+        [edit, {"op": "describe", "key": "k-linsen"}],
+        [{"op": "describe", "key": "k-linsen"}, edit],
+        [edit, {"op": "rename", "key": "k-linsen", "title": "Prismen"}],
+    ):
+        resp, _ = await run(request({"changes": changes}), {})
+        linsen = by_key(resp.collection, "k-linsen")
+        assert linsen.properties.first("cm:description") == "MEINE BESCHREIBUNG", changes
+    resp, _ = await run(request({"changes": [edit, {"op": "describe", "key": "k-linsen"}]}), {})
+    assert any(w.code == "CHANGE_REJECTED" and "describe" in w.message for w in resp.warnings)
+
+
+async def test_two_describes_of_one_node_keep_both_hints() -> None:
+    changes = [
+        {"op": "describe", "key": "k-linsen", "hint": "ERSTER"},
+        {"op": "describe", "key": "k-linsen", "hint": "ZWEITER"},
+    ]
+    _, llm = await run(request({"changes": changes}), {})
+    prompt = llm.prompts("describe_nodes")[0]
+    assert "ERSTER" in prompt and "ZWEITER" in prompt
+
+
+async def test_a_failed_describe_batch_is_reported_once() -> None:
+    from app.llm.client import LLMStepError
+
+    req = request({"changes": [{"op": "describe", "key": "k-linsen"}]})
+    resp, _ = await run(req, {"describe_nodes": LLMStepError("describe_nodes", "invalid")})
+    failed = [w for w in resp.warnings if w.code == "DESCRIBE_FAILED"]
+    assert len(failed) == 1 and failed[0].step == "describe_nodes"
+
+
+async def test_describing_a_single_collection_gives_no_shape_warnings() -> None:
+    # Final audit: the Swagger example "describe" always returned SHAPE_WIDTH for its one-node tree.
+    tree = {"collection": [node("k-optik", "Optik")]}
+    req = request({"changes": [{"op": "describe", "key": "k-optik"}]}, current_tree=tree)
+    resp, _ = await run(req, {})
+    assert not [w for w in resp.warnings if w.code.startswith("SHAPE_")]
+
+
+async def test_structural_changes_are_still_shape_checked() -> None:
+    req = request({"changes": [{"op": "remove", "key": "k-akustik"}, {"op": "remove", "key": "k-mechanik"}]})
+    resp, _ = await run(req, {})
+    assert any(w.code.startswith("SHAPE_") for w in resp.warnings)
+
+
+async def test_a_rejected_describe_leaves_the_edited_node_alone() -> None:
+    # Review: the rejected describe still sent the node to the LLM, which rewrote its keywords.
+    edit = {"op": "edit", "key": "k-linsen", "properties": {"cm:description": ["MEINE BESCHREIBUNG"]}}
+    resp, llm = await run(request({"changes": [edit, {"op": "describe", "key": "k-linsen"}]}), {})
+    assert by_key(resp.collection, "k-linsen").properties.values("cclom:general_keyword") == ["x"]
+    assert all("k-linsen" not in p for p in llm.prompts("describe_nodes"))
+
+
+async def test_assign_only_with_an_empty_or_reordered_frame_is_not_reported() -> None:
+    # Review: an empty frame means "keep the tree's frame" and must not warn.
+    tree = copy.deepcopy(CURRENT)
+    tree["generation"]["frame"] = ex.FRAME
+    for frame in ({}, {k: list(reversed(v)) for k, v in ex.FRAME.items()}):
+        req = request(None, current_tree=copy.deepcopy(tree), frame=frame, options={"assign_only": True})
+        resp, _ = await run(req, {})
+        assert not [w for w in resp.warnings if "frame" in w.message], frame

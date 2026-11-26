@@ -58,6 +58,28 @@ def _handler(settings: Settings) -> type[BaseHTTPRequestHandler]:
             else:
                 self._json(404, {"status": "not_found"})
 
+        def _not_allowed(self) -> None:
+            body = b"" if self.command == "HEAD" else json.dumps({"status": "method_not_allowed"}).encode()
+            self.send_response(405)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Allow", "GET")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        do_POST = do_PUT = do_DELETE = do_PATCH = do_HEAD = do_OPTIONS = _not_allowed
+
+        def send_error(self, code: int, message: str | None = None, explain: str | None = None) -> None:
+            # Malformed requests and unknown methods: JSON like every other answer, never the stdlib HTML page.
+            body = json.dumps({"status": "error", "code": code}).encode()
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Connection", "close")
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(body)
+
         def log_message(self, format: str, *args: object) -> None:
             return  # probes would flood the logs
 

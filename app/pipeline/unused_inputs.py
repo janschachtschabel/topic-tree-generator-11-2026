@@ -2,7 +2,15 @@
 
 from app.pipeline.run_context import RunContext
 from app.schemas.common import ItemUse, Mode, UseCase
-from app.schemas.request_v2 import Options, TopicTreeRequestV2
+from app.schemas.request_v2 import Frame, Options, TopicTreeRequestV2
+
+
+def _frame_changed(recorded: Frame, sent: Frame) -> bool:
+    """An empty frame means "keep the tree's frame"; the order of URIs does not matter."""
+    fields = ("discipline_uri", "educational_context_uri", "intended_end_user_role_uri")
+    if not any(getattr(sent, f) for f in fields):
+        return False
+    return any(set(getattr(recorded, f)) != set(getattr(sent, f)) for f in fields)
 
 
 def _shown(ids: list[str]) -> str:
@@ -41,6 +49,13 @@ def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext, options: Options
             rc.warn(
                 "INPUT_IGNORED",
                 "options.auto_metadata wurde ignoriert: Mit assign_only bleiben die Knoten unverändert.",
+                step="input",
+            )
+        generation = req.current_tree.generation if req.current_tree else None
+        if options.assign_only and generation and generation.frame and _frame_changed(generation.frame, req.frame):
+            rc.warn(
+                "INPUT_IGNORED",
+                "Der geänderte frame wurde ignoriert: Mit assign_only bleiben Knoten und Rahmen des Baums unverändert.",
                 step="input",
             )
     elif req.folders and req.use_case != UseCase.folders and not req.effective_folders_use():
