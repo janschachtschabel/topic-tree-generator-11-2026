@@ -172,7 +172,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     roots = from_tree_in(current.collection)
     assign_missing_keys(roots)
     locked = set(req.feedback.locked) if req.feedback else set()
-    apply_changed_frame(roots, current.generation.frame if current.generation else None, req.frame, locked)
+    if not req.options.assign_only:  # only sorting in: the caller's node properties stay as they are
+        apply_changed_frame(roots, current.generation.frame if current.generation else None, req.frame, locked)
     result = StrategyResult(
         roots=roots,
         title=current.title or req.topic or (roots[0].title if len(roots) == 1 else "Themenbaum"),

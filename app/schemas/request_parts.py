@@ -110,7 +110,8 @@ class Options(RequestModel):
     assign_contents: bool = Field(True, description="Inhalte aus items den Knoten zuordnen")
     assign_only: bool = Field(
         False,
-        description="refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf",
+        description="refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für "
+        "diesen Aufruf",
     )
     multi_assign: bool = Field(True, description="Ein Inhalt darf mehreren Knoten zugeordnet werden")
     min_confidence: float = Field(

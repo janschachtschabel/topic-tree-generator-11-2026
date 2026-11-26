@@ -37,6 +37,12 @@ def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext, options: Options
     options = options or req.options
     if req.mode == Mode.refine:
         _refine(req, rc)
+        if options.assign_only and req.options.auto_metadata and "auto_metadata" in req.options.model_fields_set:
+            rc.warn(
+                "INPUT_IGNORED",
+                "options.auto_metadata wurde ignoriert: Mit assign_only bleiben die Knoten unverändert.",
+                step="input",
+            )
     elif req.folders and req.use_case != UseCase.folders and not req.effective_folders_use():
         rc.warn(
             "INPUT_IGNORED",

@@ -174,7 +174,7 @@ Werte: `create`, `refine`
 |---|---|---|---|---|
 | `improve` | ja/nein |  | `False` | folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück |
 | `assign_contents` | ja/nein |  | `True` | Inhalte aus items den Knoten zuordnen |
-| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf |
+| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf |
 | `multi_assign` | ja/nein |  | `True` | Ein Inhalt darf mehreren Knoten zugeordnet werden |
 | `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned |
 | `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist |
@@ -372,7 +372,7 @@ Werte: `new`, `unchanged`, `changed`, `moved`, `suggested`
 |---|---|---|---|---|
 | `improve` | ja/nein |  | `False` | folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück |
 | `assign_contents` | ja/nein |  | `True` | Inhalte aus items den Knoten zuordnen |
-| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf |
+| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf |
 | `multi_assign` | ja/nein |  | `True` | Ein Inhalt darf mehreren Knoten zugeordnet werden |
 | `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned |
 | `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist |

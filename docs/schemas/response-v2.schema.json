@@ -673,7 +673,7 @@
         },
         "assign_only": {
           "default": false,
-          "description": "refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf",
+          "description": "refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf",
           "title": "Assign Only",
           "type": "boolean"
         },

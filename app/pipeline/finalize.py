@@ -72,7 +72,9 @@ def node_properties(node: Node, frame: Frame) -> Properties:
     return props
 
 
-def to_node_out(node: Node, frame: Frame) -> NodeOut:
+def to_node_out(node: Node, frame: Frame, *, keep_properties: bool = False) -> NodeOut:
+    """`keep_properties` (assign_only): the caller's properties come back exactly as sent."""
+    properties = Properties.model_validate(node.properties.dump_v2()) if keep_properties else None
     return NodeOut(
         key=node.key,
         nodeId=node.node_id,
@@ -81,9 +83,9 @@ def to_node_out(node: Node, frame: Frame) -> NodeOut:
         status=node.status or NodeStatus.new,
         origin=node.origin,
         confidence=node.confidence,
-        properties=node_properties(node, frame),
+        properties=properties if properties is not None else node_properties(node, frame),
         contents=node.contents,
-        subcollections=[to_node_out(child, frame) for child in node.children],
+        subcollections=[to_node_out(child, frame, keep_properties=keep_properties) for child in node.children],
     )
 
 
@@ -134,7 +136,8 @@ def finalize(
     # A tree without version (hand-built or legacy) counts as v1, so its refine still gets a version chain.
     current = (req.current_tree.version or "v1") if req.current_tree else None
     version, based_on = next_version(current)
-    collection = [to_node_out(node, req.frame) for node in data.roots]
+    keep = req.options.assign_only
+    collection = [to_node_out(node, req.frame, keep_properties=keep) for node in data.roots]
     generation = Generation(
         mode=req.mode,
         use_case=req.use_case,
