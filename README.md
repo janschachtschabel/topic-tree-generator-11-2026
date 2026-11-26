@@ -91,20 +91,20 @@ Uses [`docker-compose.yml`](docker-compose.yml) with Traefik HTTPS labels and ze
 To pin a specific release tag (recommended for staging/production) instead of `:latest`:
 
 ```shell
-IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:2.0.0 docker compose up -d
+IMAGE=ghcr.io/janschachtschabel/topic-tree-generator-11-2026:2.1.0 docker compose up -d
 ```
 
 ### Option C: Kubernetes / Helm Chart (`deploy/helm/topic-tree`)
 
-A production-ready Helm chart template (`version` = `appVersion` = `2.0.0`, non-root `uid=10001`, `readOnlyRootFilesystem: true`, two-port `Service` `:8000` / `:9000`, `NetworkPolicy`, `ServiceMonitor`, `PrometheusRule`, `HPA`) is included in [`deploy/helm/topic-tree/`](deploy/helm/topic-tree/) and published as an OCI artifact on every `vX.Y.Z` release tag (reference b-api route template: [`deploy/b-api/route-topic-tree-generator.json`](deploy/b-api/route-topic-tree-generator.json)):
+A production-ready Helm chart template (`version` = `appVersion` = `2.1.0`, non-root `uid=10001`, `readOnlyRootFilesystem: true`, two-port `Service` `:8000` / `:9000`, `NetworkPolicy`, `ServiceMonitor`, `PrometheusRule`, `HPA`) is included in [`deploy/helm/topic-tree/`](deploy/helm/topic-tree/) and published as an OCI artifact on every `vX.Y.Z` release tag (reference b-api route template: [`deploy/b-api/route-topic-tree-generator.json`](deploy/b-api/route-topic-tree-generator.json)):
 
 ```shell
-# Install from the published OCI Helm chart (tag v2.0.0)
+# Install from the published OCI Helm chart (tag v2.1.0)
 helm upgrade --install topic-tree \
   oci://ghcr.io/janschachtschabel/topic-tree-generator-11-2026/charts/topic-tree \
-  --version 2.0.0 \
+  --version 2.1.0 \
   --set image.repository=ghcr.io/janschachtschabel/topic-tree-generator-11-2026 \
-  --set image.tag=2.0.0 \
+  --set image.tag=2.1.0 \
   --set config.bApiBaseUrl=https://b-api.staging.openeduhub.net \
   --set config.bApiRoute=topic-tree-generator
 

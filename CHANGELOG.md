@@ -1,6 +1,28 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 (2026-11-26)
+
+New
+- `folders_use` (see below), and the release workflow can publish a tag by hand (`workflow_dispatch`); the tag
+  `v2.0.0` of 25.11.2026 was never published as image or chart, so `2.1.0` is the first versioned release on GHCR.
+
+Fixed (full audit 26.11.2026, `docs/audits/2026-11-26-gesamtaudit.md`)
+- `refine`: contents left out by an inherited `assign_contents: false` are reported (`INPUT_IGNORED`).
+- `contents`: lone subgroups dissolve before the depth cut, so no level is lost; structure full texts beyond the fifth
+  that get no excerpt are reported (`INPUTS_TRUNCATED`).
+- The HTTP client shared by all callers keeps no cookies (a b-api cookie of one caller went along with the next
+  caller's token).
+- `fulltext.ref`: each URL is loaded once, all full texts of a request together are capped (`REF_TOO_LARGE`), and
+  compressed bodies are limited by their decoded size.
+- v1 LLM calls are bounded by `LLM_TIMEOUT_SECONDS` (before: SDK default of 600 s); format unchanged.
+- The B3 debug flag is forwarded as `X-B3-Flags: 1` instead of the invalid `X-B3-Sampled: d`.
+- User text (topic, hints, titles, folder names) stays on one line in prompts; the system prompt treats titles,
+  descriptions, excerpts and documents as material whose instructions are not followed.
+- Test UI: a refine base keeps every educational context and role; include/exclude terms may hold a comma (separate
+  with `;`); presets whose folder files carry more than a title open in the JSON view; `contents` with only folders
+  asks for structure materials; both JSON areas have accessible names; shape errors name the field.
+- CI: a release tag never moves `latest`, a version is never published twice, `uv lock --check`, and a report-only
+  `pip-audit` job. `docs/api.md` lists every warning and error code (with a test).
 
 Changed
 - Combinations without silent gaps (26.11.2026): the new field `folders_use` gives the whole folder structure a role
