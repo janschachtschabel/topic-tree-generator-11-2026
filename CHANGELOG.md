@@ -18,6 +18,23 @@ Changed
   - Text feedback that adds a node next to deeper branches now also plans its subtopics (one call, warning
     `EXPAND_FAILED` if that fails); proposed subtopics that already stand in the tree are dropped.
   - Node descriptions use one neutral voice (no "du"/"Sie", no imperatives) and start with the subject itself.
+- Second full audit (`docs/audits/2026-11-26-audit.md`), all findings fixed with regression tests:
+  - `refine`: `remove`, `merge` and `split` can no longer bypass a lock through an unlocked ancestor; a `split` on a
+    node removed earlier in the batch is rejected instead of failing with 500; a failed split warns `SPLIT_FAILED`;
+    keys of removed nodes are not handed out again.
+  - `refine` keeps inherited `options` and `hints` field by field; feedback ignored under `assign_only` is not
+    written to the history; a `current_tree` without version counts as `v1`; `create` ignores `current_tree`
+    (`INPUT_IGNORED`).
+  - Items the model leaves out of the assignment count in `ASSIGN_FAILED`; the `contents` budget covers all levels;
+    folders without `improve` warn `INPUT_IGNORED` for structure documents; a heading-less document cut to an excerpt
+    warns `OUTLINE_TRUNCATED`; shape ranges with one bound are accepted.
+  - Outline parser: `C#` keeps its `#`, inner underscores stay, fences close only with their own marker, setext
+    headings, text next to a page marker is kept; `exclude` matches at word starts; property-only edits are `changed`.
+  - API: loading refs stops at the request deadline (`REF_FAILED`); unexpected 500s carry the request's `trace_id`;
+    404/405 under `/v2/` use the v2 error format.
+  - Deploy: Helm renders `REF_MAX_BYTES`/`MAX_REQUEST_BYTES` as plain integers (before: `1.048576e+07`, crash on
+    start); Compose waits 300 s on stop.
+  - Test UI: adopting an assign-only result no longer blocks the next feedback; refine keeps `extra_topics`.
 
 ## 2.0.0 (2026-11-25)
 

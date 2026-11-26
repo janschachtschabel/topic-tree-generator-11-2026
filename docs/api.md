@@ -19,6 +19,8 @@ eingebaute Test-Oberfläche unter `/ui/` bereit (steuerbar über `UI_ENABLED=tru
 Wird `shape` weggelassen, wählt der Dienst Tiefe und Breite passend zum Aufruf:
 - **Reine Themenvorgabe (`use_case: "topic"` ohne Struktur-Items):** Empfehlungsrahmen je Zielgruppe (`5–15` Hauptknoten und max. `3` Ebenen für Schule/Berufsbildung/Hochschule; `5–10` bzw. `5–12` und max. `2` Ebenen für Elementarbereich bzw. Fortbildung/Organisationen). Gesetzte `extra_topics` (`general`, `methodology`) zählen regulär zur Gesamtzahl auf Ebene 1.
 - **Strukturgetriebene Eingaben (`document`, `contents`, `folders` sowie `topic` mit `"structure"`-Items):** Breite richtet sich nach dem Input bis `MAX_NODES_PER_LEVEL` (Standard `20`, z. B. Lehrplan mit 20 Themenfeldern), Tiefe bleibt auf `MAX_TREE_DEPTH` (Standard `3`) begrenzt.
+Eine Spanne mit nur einer Grenze (z. B. `"main_topics": {"max": 4}`) übernimmt die andere aus diesem Rahmen (bzw. aus
+`generation` bei `refine`) und passt sie so an, dass die gesendete Grenze gilt.
 Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`) können per Anfrage nicht überschritten werden (`422 SHAPE_LIMIT_EXCEEDED`).
 
 ## Je Use Case
@@ -70,7 +72,10 @@ Vokabular-Bezeichnungen, die deterministisch auf kanonische SkoHub-URIs abgebild
 `collection` als `current_tree.collection`, `metadata.generation` als `current_tree.generation`, `metadata.version`
 als `current_tree.version` sowie (optional) `metadata.title`/`metadata.description` als `current_tree.title`/
 `current_tree.description` zurückgeben und nur das neue `feedback` ergänzen. Fehlende Vorgaben übernimmt der Dienst
-aus `generation` (außer `options.assign_only`, das nur für den einen Aufruf gilt).
+aus `generation` (außer `options.assign_only`, das nur für den einen Aufruf gilt). Das gilt Feld für Feld: Wer nur
+`options: {"assign_only": true}` oder `hints: {"context": …}` schickt, behält alle übrigen Optionen und Hinweise aus
+`generation`. Ein `current_tree` ohne `version` zählt als `v1`. Bei `mode: create` wird ein mitgeschickter
+`current_tree` ignoriert (Warnung `INPUT_IGNORED`).
 
 Ein geänderter `frame` ersetzt die alten Frame-Werte an bestehenden Knoten; gezielt eingegrenzte Knoten und gesperrte
 Äste (`locked`) behalten ihre Werte.
@@ -84,7 +89,11 @@ Tiefe der Nachbaräste (Warnung `EXPAND_FAILED` oder `EXPAND_INCOMPLETE`, falls 
 den einen Knoten an.
 
 Änderungsoperationen in `feedback.changes`: `move` ohne `to` (oder mit `to: null`) verschiebt einen Knoten auf die
-Hauptebene.
+Hauptebene. `remove`, `split` und das Einschmelzen eines Knotens per `merge` (alle außer dem ersten Schlüssel) werden
+abgelehnt (`CHANGE_REJECTED`), wenn darunter ein gesperrter Knoten liegt; ebenso ein `split`, dessen Knoten eine
+frühere Änderung derselben Anfrage schon entfernt oder aufgeteilt hat. Scheitert das Aufteilen am Sprachmodell, kommt
+`SPLIT_FAILED` und der Rest der Rückmeldung wird trotzdem umgesetzt. Schlüssel entfernter Knoten werden in derselben
+Anfrage nicht neu vergeben.
 
 In der Test-UI (`/ui/`) heißt das „Baum ändern“: Basis aus einem Beispiel, dem letzten Ergebnis oder JSON, alle sieben
 Operationen (`add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`) als Zeilen mit Knotenauswahl, dazu Freitext,
@@ -101,7 +110,11 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
-  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `EXPAND_FAILED`, `EXPAND_INCOMPLETE`, `FEEDBACK_IGNORED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `SPLIT_FAILED`, `EXPAND_FAILED`, `EXPAND_INCOMPLETE`,
+  `FEEDBACK_IGNORED`, `INPUT_IGNORED`, `OUTLINE_TRUNCATED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`).
+  `ASSIGN_FAILED` nennt auch Inhalte, zu denen das Sprachmodell keine Antwort gab; sie stehen in `unassigned`.
+  `INPUT_IGNORED` meldet z. B. Gliederungsdokumente bei `folders` ohne `options.improve`. `OUTLINE_TRUNCATED` meldet
+  auch ein Dokument ohne Überschriften, von dem nur ein Auszug einfloss.
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 
@@ -109,6 +122,7 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
 (`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
-`REF_NOT_ALLOWED` …),
+`REF_NOT_ALLOWED`, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
+404 `NOT_FOUND` und 405 `METHOD_NOT_ALLOWED` für unbekannte Pfade oder Methoden unter `/v2/`,
 413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
 401/403 Anmeldung bzw. fehlende b-api-Berechtigung, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.
