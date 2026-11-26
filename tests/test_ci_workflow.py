@@ -44,3 +44,11 @@ def test_a_partial_publish_can_be_completed_and_the_audit_only_reports() -> None
     assert "steps.once.outputs.image" in steps["docker/build-push-action@v7"]["if"]
     assert "steps.once.outputs.chart" in steps["Package and push Helm chart to GHCR OCI on release tags"]["if"]
     assert data["jobs"]["audit"]["continue-on-error"] is True
+
+
+def test_alert_rules_are_unit_tested_with_promtool() -> None:
+    # Open Soll from the audits: CI only ran `promtool check rules`.
+    steps = _workflow()["jobs"]["test"]["steps"]
+    script = next(s["run"] for s in steps if "promtool" in s.get("run", ""))
+    assert "test rules topic-tree.test.yml" in script
+    assert (WORKFLOW.parents[2] / "tests" / "alerts" / "topic-tree.test.yml").exists()

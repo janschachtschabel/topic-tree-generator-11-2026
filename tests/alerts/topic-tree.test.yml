@@ -1,0 +1,110 @@
+# Unit tests for the chart's alert rules (promtool test rules), run by CI against
+# `helm template t deploy/helm/topic-tree --set prometheusRule.enabled=true` with default values.
+rule_files:
+  - alerts.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: no pod reachable fires TopicTreeDown
+    interval: 1m
+    input_series:
+      - series: 'up{job="t-topic-tree", instance="a"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: TopicTreeDown
+        exp_alerts:
+          - exp_labels: { severity: critical }
+            exp_annotations:
+              summary: "Themenbaum-Dienst: kein Pod erreichbar"
+              description: "Prometheus erreicht seit 5 Minuten keinen Pod des Dienstes (Port internal, /metrics)."
+              runbook_url: "https://github.com/janschachtschabel/topic-tree-generator-11-2026/blob/main/docs/de/betrieb.md#topictreedown"
+
+  - name: one healthy pod keeps TopicTreeDown quiet
+    interval: 1m
+    input_series:
+      - series: 'up{job="t-topic-tree", instance="a"}'
+        values: '0x10'
+      - series: 'up{job="t-topic-tree", instance="b"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: TopicTreeDown
+        exp_alerts: []
+
+  - name: many failing LLM calls fire TopicTreeLLMErrors
+    interval: 1m
+    input_series:
+      - series: 'topic_tree_llm_calls_total{step="plan_structure", outcome="ok"}'
+        values: '0+2x30'
+      - series: 'topic_tree_llm_calls_total{step="plan_structure", outcome="timeout"}'
+        values: '0+2x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: TopicTreeLLMErrors
+        exp_alerts:
+          - exp_labels: { severity: warning }
+
+  - name: callers without LLM rights (401/403) do not fire TopicTreeLLMErrors
+    interval: 1m
+    input_series:
+      - series: 'topic_tree_llm_calls_total{step="plan_structure", outcome="ok"}'
+        values: '0+1x30'
+      - series: 'topic_tree_llm_calls_total{step="plan_structure", outcome="http_403"}'
+        values: '0+5x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: TopicTreeLLMErrors
+        exp_alerts: []
+
+  - name: a single failure at low traffic does not fire TopicTreeLLMErrors
+    interval: 1m
+    input_series:
+      - series: 'topic_tree_llm_calls_total{step="plan_structure", outcome="timeout"}'
+        values: '0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: TopicTreeLLMErrors
+        exp_alerts: []
+
+  - name: many 5xx answers fire TopicTreeServerErrors
+    interval: 1m
+    input_series:
+      - series: 'topic_tree_requests_total{route="v2.topic_tree", status="200"}'
+        values: '0+3x30'
+      - series: 'topic_tree_requests_total{route="v2.topic_tree", status="503"}'
+        values: '0+1x30'
+      - series: 'topic_tree_requests_total{route="health", status="200"}'
+        values: '0+100x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: TopicTreeServerErrors
+        exp_alerts:
+          - exp_labels: { severity: warning }
+
+  - name: slow p90 fires TopicTreeSlowRequests
+    interval: 1m
+    input_series:
+      - series: 'topic_tree_request_seconds_bucket{route="v2.topic_tree", le="120.0"}'
+        values: '0x40'
+      - series: 'topic_tree_request_seconds_bucket{route="v2.topic_tree", le="300.0"}'
+        values: '0+2x40'
+      - series: 'topic_tree_request_seconds_bucket{route="v2.topic_tree", le="+Inf"}'
+        values: '0+2x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: TopicTreeSlowRequests
+        exp_alerts:
+          - exp_labels: { severity: warning }
+
+  - name: many failed description batches fire TopicTreeDescribeFailures
+    interval: 1m
+    input_series:
+      - series: 'topic_tree_warnings_total{code="DESCRIBE_FAILED"}'
+        values: '0+1x70'
+    alert_rule_test:
+      - eval_time: 65m
+        alertname: TopicTreeDescribeFailures
+        exp_alerts:
+          - exp_labels: { severity: info }

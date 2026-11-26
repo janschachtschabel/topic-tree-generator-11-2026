@@ -3,7 +3,11 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "topic-tree.fullname" . }}
-  labels: {{- include "topic-tree.labels" . | nindent 4 }}
+  labels:
+    {{- include "topic-tree.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   selector:
     matchLabels: {{- include "topic-tree.selectorLabels" . | nindent 6 }}
