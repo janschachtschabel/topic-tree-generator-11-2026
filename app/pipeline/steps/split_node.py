@@ -30,9 +30,11 @@ def _describe(node: Node) -> str:
 
 
 async def split_node(
-    roots: list[Node], change: Change, source: ChangeSource, rc: RunContext
+    roots: list[Node], change: Change, source: ChangeSource, rc: RunContext, taken: set[str] | None = None
 ) -> tuple[ChangeRecord, list[str]] | None:
-    """Replace the node by its parts. Returns (record, new keys) or None if the answer was unusable."""
+    """Replace the node by its parts. Returns (record, new keys) or None if the answer was unusable.
+
+    `taken` holds keys the parts must not get (e.g. of nodes removed earlier in the request)."""
     node = index(roots)[change.key]
     prompt = render(STEP, context=rc.context, node=_describe(node), hint=change.hint or "")
     result = await rc.llm.complete_json(STEP, prompt, SplitResult, max_tokens=1500)
@@ -41,7 +43,7 @@ async def split_node(
         rc.warn("CHANGE_REJECTED", f"„{node.title}“ konnte nicht sinnvoll aufgeteilt werden.", node.key, STEP)
         return None
 
-    taken = set(index(roots))
+    taken = (taken if taken is not None else set()) | set(index(roots))
     new_nodes = [
         Node(key=make_key(p.title, taken), title=p.title.strip(), origin=Origin(type=OriginType.feedback))
         for p in parts

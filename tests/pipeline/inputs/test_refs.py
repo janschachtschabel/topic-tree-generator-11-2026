@@ -191,3 +191,26 @@ async def test_slow_drip_response_is_cut_at_the_total_time_limit(serve) -> None:
         await fetch_text("https://files.example.org/a.md", settings)
     assert err.value.code == "REF_FAILED"
     assert time.monotonic() - started < 2
+
+
+async def test_loading_refs_stops_at_the_request_deadline(serve) -> None:
+    # Audit 2026-11-26: refs loaded outside the request deadline (40 slow documents took far longer than allowed).
+    import asyncio
+    import time
+
+    async def slow():
+        await asyncio.sleep(0.5)
+        yield b"## Titel"
+
+    serve(lambda r: httpx.Response(200, content=slow()))
+    data = copy.deepcopy(ex.DOCUMENT)
+    data["items"] = [
+        {"id": f"d{i}", "use": ["structure"], "fulltext": {"ref": f"https://files.example.org/{i}.md"}}
+        for i in range(40)
+    ]
+    settings = Settings(_env_file=None, ref_allowed_hosts=["files.example.org"], ref_timeout_seconds=5)
+    started = time.monotonic()
+    with pytest.raises(ApiError) as err:
+        await resolve_refs(TopicTreeRequestV2.model_validate(data), settings, deadline=started + 1)
+    assert err.value.code == "REF_FAILED"
+    assert time.monotonic() - started < 1.5

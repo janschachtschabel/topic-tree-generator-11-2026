@@ -64,6 +64,7 @@ class _Outcome:
         self.unassigned: list[Unassigned] = []
         self.dropped = 0
         self.failed_batches = 0
+        self.unanswered = 0
 
 
 def _apply(answer: Assignment, item: Item, nodes: dict[str, Node], options: Options, out: _Outcome) -> None:
@@ -116,12 +117,15 @@ async def assign_contents(roots: list[Node], items: list[Item], rc: RunContext, 
             raise result
         answers = {a.id: a for a in result.items}
         for item in batch:
+            # An item the model left out was never judged: it is unassigned, but the gap is reported.
+            out.unanswered += item.id not in answers
             _apply(answers.get(item.id, Assignment(id=item.id)), item, nodes, options, out)
 
-    if out.failed_batches or out.dropped:
+    if out.failed_batches or out.dropped or out.unanswered:
         rc.warn(
             "ASSIGN_FAILED",
-            f"Zuordnung unvollständig: {out.failed_batches} Gruppen fehlgeschlagen, {out.dropped} unbekannte Knoten verworfen.",
+            f"Zuordnung unvollständig: {out.failed_batches} Gruppen fehlgeschlagen, {out.dropped} unbekannte Knoten "
+            f"verworfen, {out.unanswered} Inhalte ohne Antwort.",
             step=STEP,
         )
     return out.unassigned

@@ -99,7 +99,7 @@ def _input_counts(req: TopicTreeRequestV2) -> InputCounts:
 
 def _feedback_history(req: TopicTreeRequestV2, version: str) -> list[FeedbackEntry]:
     history = list(req.current_tree.generation.feedback) if req.current_tree and req.current_tree.generation else []
-    if req.feedback and (req.feedback.text or req.feedback.changes):
+    if req.feedback and (req.feedback.text or req.feedback.changes) and not req.options.assign_only:
         text = req.feedback.text or f"{len(req.feedback.changes)} strukturierte Änderungen"
         history.append(FeedbackEntry(version=version, text=text))
     return history
@@ -130,8 +130,9 @@ def _collect_vocab_uris(frame: Frame, nodes: list[NodeOut]) -> list[str]:
 def finalize(
     req: TopicTreeRequestV2, data: FinalizeInput, *, model: str | None, usage: dict[str, Any], duration_ms: int
 ) -> TopicTreeResponseV2:
-    current = req.current_tree.version if req.current_tree else None
-    version, based_on = next_version(current) if req.current_tree else ("v1", None)
+    # A tree without version (hand-built or legacy) counts as v1, so its refine still gets a version chain.
+    current = (req.current_tree.version or "v1") if req.current_tree else None
+    version, based_on = next_version(current)
     collection = [to_node_out(node, req.frame) for node in data.roots]
     generation = Generation(
         mode=req.mode,

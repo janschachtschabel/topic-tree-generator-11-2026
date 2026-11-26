@@ -134,3 +134,59 @@ def test_explicit_shape_fields_are_preserved_while_omitted_siblings_get_defaults
     eff = effective_request(req, Settings(_env_file=None))
     assert eff.shape.depth == 3
     assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (5, 10)
+
+
+def _refine(generation: dict, **extra) -> TopicTreeRequestV2:
+    tree = {"version": "v2", "collection": [{"title": "Optik"}], "generation": {"use_case": "topic", **generation}}
+    return _req({"mode": "refine", "use_case": "topic", "frame": {}, "current_tree": tree, **extra})
+
+
+def test_partly_sent_options_keep_the_other_inherited_options() -> None:
+    req = _refine({"options": {"multi_assign": False, "min_confidence": 0.9}}, options={"assign_only": True})
+    eff = effective_request(req)
+    assert eff.options.assign_only is True
+    assert eff.options.multi_assign is False
+    assert eff.options.min_confidence == 0.9
+
+
+def test_sent_options_override_inherited_ones_but_assign_only_is_never_inherited() -> None:
+    req = _refine({"options": {"assign_only": True, "min_confidence": 0.9}}, options={"min_confidence": 0.5})
+    eff = effective_request(req)
+    assert eff.options.min_confidence == 0.5
+    assert eff.options.assign_only is False
+
+
+def test_partly_sent_hints_keep_the_other_inherited_hints() -> None:
+    inherited = {"order": "Epochen", "exclude": ["Krieg"], "description_length": 120, "context": "alt"}
+    eff = effective_request(_refine({"hints": inherited}, hints={"context": "Klasse 8"}))
+    assert eff.hints.context == "Klasse 8"
+    assert (eff.hints.order, eff.hints.exclude, eff.hints.description_length) == ("Epochen", ["Krieg"], 120)
+
+
+def test_a_range_with_one_bound_takes_the_other_from_the_recommendation() -> None:
+    base = {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}}
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"max": 4}, "children": {"max": 2}}}))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (4, 4)
+    assert (eff.shape.children.min, eff.shape.children.max) == (2, 2)
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 15}}}), Settings(_env_file=None))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (15, 15)
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 3}}}), Settings(_env_file=None))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (3, 15)
+
+
+def test_one_bound_ranges_take_the_other_bound_from_the_recommendation_or_generation() -> None:
+    base = {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}}
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 13}}}), Settings(_env_file=None))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (13, 15)
+    shape = {"depth": 2, "main_topics": {"min": 3, "max": 10}, "children": {"min": 2, "max": 6}}
+    eff = effective_request(_refine({"shape": shape}, shape={"main_topics": {"max": 5}}))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (3, 5)
+
+
+def test_a_range_with_only_min_is_not_checked_against_the_default_max() -> None:
+    from app.pipeline.input_checks import check_request
+
+    req = _req(
+        {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}, "shape": {"main_topics": {"min": 3}}}
+    )
+    check_request(req, Settings(_env_file=None, max_nodes_per_level=10))

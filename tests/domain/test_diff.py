@@ -79,3 +79,14 @@ def test_folder_node_under_a_new_node_counts_as_moved() -> None:
     roots = [Node(key="k-neu", title="Neu", children=[folder_node("k-echo", "Echo", "Echo")])]
     mark_status_against_folders(roots)
     assert find(roots, "k-echo").status == NodeStatus.moved
+
+
+def test_an_edit_of_other_properties_marks_the_node_changed() -> None:
+    from app.schemas.properties import Properties
+
+    old = old_tree()
+    new = copy.deepcopy(old)
+    find(new, "k-linsen").properties = Properties.model_validate({"ccm:taxonid": ["x"]})
+    mark_status_against_previous(new, old)
+    assert find(new, "k-linsen").status == NodeStatus.changed
+    assert find(new, "k-optik").status == NodeStatus.unchanged

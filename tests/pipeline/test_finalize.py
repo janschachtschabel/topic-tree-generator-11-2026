@@ -113,3 +113,18 @@ def test_metadata_carries_vocab_labels_for_all_used_uris() -> None:
     assert vlabels[OTHER_DISC] == "Biologie"
     assert vlabels[ex.SEK1] == "Sekundarstufe I"
     assert vlabels[ex.TEACHER] == "Lehrer/in"
+
+
+def test_feedback_ignored_under_assign_only_is_not_written_to_the_history() -> None:
+    data = copy.deepcopy(ex.FOLDERS_REFINE)
+    data["current_tree"]["generation"]["feedback"] = [{"version": "v1", "text": "alt"}]
+    data["options"] = {"assign_only": True}
+    out = run(data)
+    assert [f["text"] for f in out["metadata"]["generation"]["feedback"]] == ["alt"]
+
+
+def test_refine_of_a_tree_without_version_counts_it_as_v1() -> None:
+    data = copy.deepcopy(ex.FOLDERS_REFINE)
+    data["current_tree"].pop("version", None)
+    meta = run(data)["metadata"]
+    assert (meta["version"], meta["based_on"]) == ("v2", "v1")

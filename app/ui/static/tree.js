@@ -71,36 +71,58 @@
     };
   }
 
-  function renderNode(node, depth, ctx) {
-    const { lockedSet, onToggleLock, vocabLabels, titleCounts } = ctx;
+  function pillRow(className, values, label = (v) => v, title = null) {
+    const row = el("div", "pill-row");
+    for (const value of values) {
+      const pill = el("span", className, label(value));
+      if (title) pill.title = title(value);
+      row.appendChild(pill);
+    }
+    return row;
+  }
+
+  function nodeActions(node, ctx) {
+    const actions = [];
+    const isLocked = ctx.lockedSet.has(node.key);
+    const lockBtn = el("button", "lock-btn", isLocked ? t("tree.locked") : t("tree.lock"));
+    lockBtn.type = "button";
+    lockBtn.setAttribute("aria-pressed", String(isLocked));
+    lockBtn.title = t("tree.lockTitle");
+    lockBtn.addEventListener("click", () => {
+      const nowLocked = ctx.onToggleLock(node.key);
+      lockBtn.setAttribute("aria-pressed", String(nowLocked));
+      lockBtn.textContent = nowLocked ? t("tree.locked") : t("tree.lock");
+    });
+    actions.push(lockBtn);
+    if (ctx.onEditNode) {
+      const editBtn = el("button", "lock-btn edit-btn", t("tree.edit"));
+      editBtn.type = "button";
+      editBtn.title = t("tree.editTitle");
+      editBtn.addEventListener("click", () => ctx.onEditNode(node.key));
+      actions.push(editBtn);
+    }
+    return actions;
+  }
+
+  /** Head row: toggle, level, title, counts, key and badges. Returns the head plus its toggle and title. */
+  function nodeHead(node, depth, ctx, isDuplicate) {
     const children = node.subcollections || [];
     const hasChildren = children.length > 0;
-    const isDuplicate = (titleCounts.get(normTitle(node.title)) || 0) > 1;
-    const item = el("div", `tree-node${isDuplicate ? " is-duplicate" : ""}`);
-    item.setAttribute("role", "treeitem");
-    item.setAttribute("aria-expanded", hasChildren ? "true" : "false");
-    item.dataset.key = node.key || "";
-
     const head = el("div", "node-head");
     const toggle = el("button", `node-toggle${hasChildren ? "" : " leaf"}`, "▾");
     toggle.type = "button";
     toggle.setAttribute("aria-label", hasChildren ? t("tree.toggleAria", { title: node.title }) : "");
     head.appendChild(toggle);
-
     head.appendChild(el("span", "level-tag", `E${depth}`));
     const titleEl = el("span", `node-title${hasChildren ? " expandable" : ""}`, node.title);
     head.appendChild(titleEl);
-    if (hasChildren) {
-      head.appendChild(el("span", "node-count", `(${children.length})`));
-    }
+    if (hasChildren) head.appendChild(el("span", "node-count", `(${children.length})`));
     if ((node.contents || []).length) {
       const count = node.contents.length;
       const unit = count === 1 ? t("tree.contentSingular") : t("tree.contentPlural");
       head.appendChild(el("span", "node-count", `· ${count} ${unit}`));
     }
-    if (node.shorttitle && node.shorttitle !== node.title) {
-      head.appendChild(el("span", "node-short", node.shorttitle));
-    }
+    if (node.shorttitle && node.shorttitle !== node.title) head.appendChild(el("span", "node-short", node.shorttitle));
     if (node.key) head.appendChild(el("span", "node-key", node.key));
     if (isDuplicate) {
       const dupBadge = el("span", "status-badge duplicate", t("tree.badge.duplicate"));
@@ -108,36 +130,17 @@
       head.appendChild(dupBadge);
     }
     if (node.status) {
-      const statusText = t(`tree.status.${node.status}`) || node.status;
-      head.appendChild(el("span", `status-badge ${node.status}`, statusText));
+      head.appendChild(el("span", `status-badge ${node.status}`, t(`tree.status.${node.status}`) || node.status));
     }
+    if (node.key) for (const action of nodeActions(node, ctx)) head.appendChild(action);
+    return { head, toggle, titleEl };
+  }
 
-    if (node.key) {
-      const isLocked = lockedSet.has(node.key);
-      const lockBtn = el("button", "lock-btn", isLocked ? t("tree.locked") : t("tree.lock"));
-      lockBtn.type = "button";
-      lockBtn.setAttribute("aria-pressed", String(isLocked));
-      lockBtn.title = t("tree.lockTitle");
-      lockBtn.addEventListener("click", () => {
-        const nowLocked = onToggleLock(node.key);
-        lockBtn.setAttribute("aria-pressed", String(nowLocked));
-        lockBtn.textContent = nowLocked ? t("tree.locked") : t("tree.lock");
-      });
-      head.appendChild(lockBtn);
-      if (ctx.onEditNode) {
-        const editBtn = el("button", "lock-btn edit-btn", t("tree.edit"));
-        editBtn.type = "button";
-        editBtn.title = t("tree.editTitle");
-        editBtn.addEventListener("click", () => ctx.onEditNode(node.key));
-        head.appendChild(editBtn);
-      }
-    }
-    item.appendChild(head);
-
+  /** Body: origin, metadata, description, keywords and contents. */
+  function nodeBody(node, vocabLabels) {
     const body = el("div", "node-body");
     const originText = formatOrigin(node.origin);
     if (originText) body.appendChild(el("div", "node-origin", originText));
-
     const props = node.properties || {};
     const metaUris = [
       ...(props["ccm:taxonid"] || []),
@@ -145,44 +148,44 @@
       ...(props["ccm:educationalintendedenduserrole"] || []),
     ];
     if (metaUris.length) {
-      const mRow = el("div", "pill-row");
-      for (const uri of metaUris) {
-        const lbl = (vocabLabels && vocabLabels[uri]) || uri.split("/").pop();
-        const pill = el("span", "meta-pill", lbl);
-        pill.title = uri;
-        mRow.appendChild(pill);
-      }
-      body.appendChild(mRow);
+      const label = (uri) => (vocabLabels && vocabLabels[uri]) || uri.split("/").pop();
+      body.appendChild(pillRow("meta-pill", metaUris, label, (uri) => uri));
     }
-
     const desc = (props["cm:description"] && props["cm:description"][0]) || "";
     body.appendChild(el("p", desc ? "node-desc" : "node-desc missing", desc || t("tree.noDesc")));
-
     const keywords = props["cclom:general_keyword"] || [];
-    if (keywords.length) {
-      const kwRow = el("div", "pill-row");
-      for (const kw of keywords) kwRow.appendChild(el("span", "kw-pill", kw));
-      body.appendChild(kwRow);
-    }
-
+    if (keywords.length) body.appendChild(pillRow("kw-pill", keywords));
     const contents = node.contents || [];
     if (contents.length) {
-      const cRow = el("div", "pill-row");
-      for (const c of contents) {
+      const label = (c) => {
         const conf = c.confidence != null ? ` · ${c.confidence.toFixed(2)}` : "";
         const nid = c.nodeId ? ` (${c.nodeId})` : "";
-        cRow.appendChild(el("span", "content-pill", `${t("tree.contentPrefix")} ${c.id}${nid}${conf}`));
-      }
-      body.appendChild(cRow);
+        return `${t("tree.contentPrefix")} ${c.id}${nid}${conf}`;
+      };
+      body.appendChild(pillRow("content-pill", contents, label));
     }
+    return { body, desc, keywords };
+  }
+
+  function renderNode(node, depth, ctx) {
+    const children = node.subcollections || [];
+    const hasChildren = children.length > 0;
+    const isDuplicate = (ctx.titleCounts.get(normTitle(node.title)) || 0) > 1;
+    const item = el("div", `tree-node${isDuplicate ? " is-duplicate" : ""}`);
+    item.setAttribute("role", "treeitem");
+    item.setAttribute("aria-expanded", hasChildren ? "true" : "false");
+    item.dataset.key = node.key || "";
+
+    const { head, toggle, titleEl } = nodeHead(node, depth, ctx, isDuplicate);
+    item.appendChild(head);
+    const { body, desc, keywords } = nodeBody(node, ctx.vocabLabels);
     item.appendChild(body);
 
     const childBox = el("div", "node-children");
+    childBox.hidden = !hasChildren;
     if (hasChildren) {
       childBox.setAttribute("role", "group");
-      for (const child of children) {
-        childBox.appendChild(renderNode(child, depth + 1, ctx));
-      }
+      for (const child of children) childBox.appendChild(renderNode(child, depth + 1, ctx));
       const toggleBranch = () => {
         const open = !childBox.hidden;
         childBox.hidden = open;
@@ -191,13 +194,9 @@
       };
       toggle.addEventListener("click", toggleBranch);
       titleEl.addEventListener("click", toggleBranch);
-    } else {
-      childBox.hidden = true;
     }
     item.appendChild(childBox);
-
-    const searchHaystack = [node.title, node.shorttitle, node.key, desc, ...keywords].join(" ").toLowerCase();
-    item.dataset.search = searchHaystack;
+    item.dataset.search = [node.title, node.shorttitle, node.key, desc, ...keywords].join(" ").toLowerCase();
     return item;
   }
 

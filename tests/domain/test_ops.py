@@ -163,3 +163,32 @@ def test_nested_add_resolves_newly_added_parent_by_title_or_key() -> None:
     assert farben is not None
     assert [c.title for c in farben.children] == ["Spektralfarben", "Farbmischung"]
     assert result.applied[1].parent == "k-farben-und-spektrum"
+
+
+def test_a_locked_node_cannot_be_removed_merged_or_split_through_its_unlocked_ancestor() -> None:
+    roots, result = run(
+        [
+            ch(op="remove", key="k-optik"),
+            ch(op="merge", keys=["k-akustik", "k-optik"], title="Z"),
+            ch(op="split", key="k-optik", hint="x"),
+        ],
+        locked={"k-linsen"},
+    )
+    assert [w.code for w in result.rejected] == ["CHANGE_REJECTED"] * 3
+    assert set(index(roots)) == set(index(tree()))
+    assert result.pending_splits == []
+    assert find(roots, "k-optik").title == "Optik"
+
+
+def test_merging_into_the_parent_of_a_locked_node_keeps_the_locked_node_in_place() -> None:
+    roots, result = run([ch(op="merge", keys=["k-optik", "k-akustik"], title="Z")], locked={"k-linsen"})
+    assert result.rejected == []
+    assert parent_of(roots, "k-linsen").key == "k-optik"
+
+
+def test_a_key_removed_in_the_same_batch_is_not_given_to_a_new_node() -> None:
+    roots, result = run([ch(op="remove", key="k-akustik"), ch(op="add", parent=None, title="Akustik")])
+    assert result.rejected == []
+    new_key = result.applied[1].key
+    assert new_key != "k-akustik"
+    assert find(roots, new_key).title == "Akustik"

@@ -227,3 +227,12 @@ async def test_subgroups_are_cut_at_children_max_not_main_max() -> None:
     result = await build(req(items(10)), run)
     assert len(result.roots[0].children) == 6
     assert any(w.code == "SHAPE_WIDTH" for w in run.warnings)
+
+
+def test_output_budget_covers_every_level_of_a_three_level_shape() -> None:
+    from app.pipeline.strategies.contents import _max_tokens
+
+    shape = {"depth": 3, "main_topics": {"min": 3, "max": 6}, "children": {"min": 2, "max": 4}}
+    request = req(items(3), shape=shape)
+    groups = 6 + 6 * 4 + 6 * 4 * 4
+    assert _max_tokens(request) == min(32000, 1000 + groups * (request.hints.description_length * 2 + 60))

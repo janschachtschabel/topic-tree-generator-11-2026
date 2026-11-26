@@ -26,8 +26,10 @@ def make_key(title: str, taken: set[str]) -> str:
     return key
 
 
-def assign_missing_keys(roots: list[Node]) -> None:
-    """Give every node without a key (or with a duplicate key) a fresh one; existing unique keys stay."""
+def assign_missing_keys(roots: list[Node], reserved: set[str] | None = None) -> None:
+    """Give every node without a key (or with a duplicate key) a fresh one; existing unique keys stay.
+
+    `reserved` keys (e.g. of nodes removed in this request) are never handed out; new keys are added to it."""
     taken: set[str] = set()
     pending: list[Node] = []
     for node, _, _ in walk(roots):
@@ -35,5 +37,8 @@ def assign_missing_keys(roots: list[Node]) -> None:
             taken.add(node.key)
         else:
             pending.append(node)
+    blocked = taken | (reserved or set())
     for node in pending:
-        node.key = make_key(node.title, taken)
+        node.key = make_key(node.title, blocked)
+        if reserved is not None:
+            reserved.add(node.key)

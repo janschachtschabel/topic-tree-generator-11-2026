@@ -15,5 +15,5 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    stop_grace_period: 90s
+    stop_grace_period: 300s
     restart: unless-stopped

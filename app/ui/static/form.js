@@ -56,8 +56,9 @@
         mainMax: intOrNull("f-main-max"),
         childMin: intOrNull("f-child-min"),
         childMax: intOrNull("f-child-max"),
-        extraGeneral: task === "topic" && $("f-extra-general").checked,
-        extraMethodology: task === "topic" && $("f-extra-methodology").checked,
+        // A refine keeps the base's extra topics (loaded from its generation), so they are not lost on the way.
+        extraGeneral: (task === "topic" || task === "refine") && $("f-extra-general").checked,
+        extraMethodology: (task === "topic" || task === "refine") && $("f-extra-methodology").checked,
       },
       hints: {
         context: $("f-hint-context").value,
@@ -121,7 +122,15 @@
   /** With `setSelectValue`, frame, shape, hints and options of the base's generation are loaded into the form. */
   function setBase(state, tree, setSelectValue) {
     state.currentTree = tree;
-    if (tree && tree.generation && setSelectValue) applySettings(state, tree.generation, setSelectValue);
+    if (tree && tree.generation && setSelectValue) {
+      // assign_only describes the call that made the base, not the tree: carrying it over would block feedback.
+      const generation = { ...tree.generation, options: { ...(tree.generation.options || {}), assign_only: false } };
+      applySettings(state, generation, setSelectValue);
+    } else if (tree) {
+      // The extra-topic boxes are hidden in refine: without a generation, nothing from an earlier run may linger.
+      $("f-extra-general").checked = false;
+      $("f-extra-methodology").checked = false;
+    }
     $("f-current-tree").value = tree ? JSON.stringify(tree, null, 2) : "";
     const count = tree ? P().treeNodeOptions(tree.collection).length : 0;
     $("base-summary").textContent = tree

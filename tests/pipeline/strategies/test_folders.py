@@ -145,3 +145,22 @@ async def test_items_marked_neither_structure_nor_content_stay_out_of_folders() 
     items = [*ex.FOLDER_ITEMS[:1], {"id": "c2", "use": [], "properties": {"cm:title": ["Notiz"]}}, *ex.FOLDER_ITEMS[2:]]
     result = await build(req(items=items), rc(FakeLLM({"describe_nodes": describe})))
     assert [c.id for c in result.roots[0].contents] == ["c1"]
+
+
+async def test_a_structure_document_without_improve_is_reported_as_ignored() -> None:
+    llm = FakeLLM({"describe_nodes": describe})
+    doc = {
+        "id": "d1",
+        "use": ["structure"],
+        "properties": {"cm:title": ["Plan"]},
+        "fulltext": {"format": "markdown", "text": "## Farben"},
+    }
+    context = rc(llm)
+    await build(req(items=[*ex.FOLDER_ITEMS, doc]), context)
+    assert "INPUT_IGNORED" in [w.code for w in context.warnings]
+
+
+async def test_folders_without_structure_documents_give_no_input_warning() -> None:
+    context = rc(FakeLLM({"describe_nodes": describe}))
+    await build(req(), context)
+    assert "INPUT_IGNORED" not in [w.code for w in context.warnings]

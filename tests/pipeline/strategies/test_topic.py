@@ -251,3 +251,22 @@ async def test_untitled_llm_nodes_are_dropped_with_a_warning() -> None:
     titles = [n.title for n in resp.collection[1].subcollections]
     assert titles == ["Kind 1.1"]
     assert "UNTITLED_NODE" in [w.code for w in resp.warnings]
+
+
+async def test_create_ignores_a_sent_current_tree_and_says_so() -> None:
+    current = {
+        "version": "v3",
+        "collection": [{"key": "k-alt", "title": "Alt"}],
+        "generation": {
+            "use_case": "topic",
+            "options": {"min_confidence": 0.95},
+            "feedback": [{"version": "v2", "text": "x"}],
+        },
+    }
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
+    resp = await orchestrator.run(req(current_tree=current), rc(llm))
+    meta = resp.metadata
+    assert (meta.version, meta.based_on) == ("v1", None)
+    assert meta.generation.options.min_confidence == 0.6
+    assert meta.generation.feedback == []
+    assert "INPUT_IGNORED" in [w.code for w in resp.warnings]

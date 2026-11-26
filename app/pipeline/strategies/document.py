@@ -51,6 +51,13 @@ def _sections(doc: Item) -> list[DocSection]:
 def _outline_text(sections: list[DocSection], docs: list[Item], rc: RunContext) -> str:
     if len(sections) <= len(docs):
         # No usable headings: hand over a text excerpt instead of an outline.
+        cut = [d.id for d in docs if len(d.fulltext.text) > EXCERPT_CHARS]
+        if cut:
+            rc.warn(
+                "OUTLINE_TRUNCATED",
+                f"Dokument ohne Überschriften: nur die ersten {EXCERPT_CHARS} Zeichen flossen ein ({', '.join(cut)}).",
+                step="document",
+            )
         return "\n\n".join(f"Dokument {d.id}:\n{truncate_sentences(d.fulltext.text, EXCERPT_CHARS)}" for d in docs)
     if len(sections) > MAX_SECTIONS:
         rc.warn("OUTLINE_TRUNCATED", f"Gliederung auf {MAX_SECTIONS} Abschnitte gekürzt.", step="document")
@@ -122,16 +129,12 @@ def _checked_mapping(
     return outline
 
 
-async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
-    docs = structure_documents(req)
-    sections = [s for doc in docs for s in _sections(doc)]
+async def _mapping(
+    req: TopicTreeRequestV2, rc: RunContext, sections: list[DocSection], docs: list[Item]
+) -> tuple[list[MappedNode], str, list[str], str]:
+    """(mapped nodes, order, levels, description) from the LLM, or from the headings when it is unavailable."""
     try:
         mapping = await map_outline(_outline_text(sections, docs, rc), rc, req.topic)
-        mapped = _checked_mapping(mapping.nodes, sections, req, rc)
-        order, levels, description = mapping.order, mapping.levels, mapping.description
-        if req.topic and mapped is mapping.nodes and len(mapped) == 1 and mapped[0].children:
-            # One section covers the topic: its subsections become the main topics.
-            mapped, levels = mapped[0].children, levels[1:]
     except LLMStepError as err:
         fallback = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
         if not fallback or len(sections) <= len(docs):
@@ -142,8 +145,19 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
             "der Baum folgt direkt den Überschriften des Dokuments.",
             step="map_outline",
         )
-        mapped = fallback
-        order, levels, description = "Gliederung", [], ""
+        return fallback, "Gliederung", [], ""
+    mapped = _checked_mapping(mapping.nodes, sections, req, rc)
+    levels = mapping.levels
+    if req.topic and mapped is mapping.nodes and len(mapped) == 1 and mapped[0].children:
+        # One section covers the topic: its subsections become the main topics.
+        mapped, levels = mapped[0].children, levels[1:]
+    return mapped, mapping.order, levels, mapping.description
+
+
+async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
+    docs = structure_documents(req)
+    sections = [s for doc in docs for s in _sections(doc)]
+    mapped, order, levels, description = await _mapping(req, rc, sections, docs)
 
     converter = _Converter({s.ref: s for s in sections}, docs[0].id, req)
     roots = converter.nodes(mapped, req.shape.depth, req.shape.main_topics.max)

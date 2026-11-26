@@ -105,9 +105,8 @@ def items_block(items: list[Item], rc: RunContext) -> str:
 
 
 def _max_tokens(req: TopicTreeRequestV2) -> int:
-    groups = req.shape.main_topics.max
-    if req.shape.depth > 1:
-        groups += groups * req.shape.children.max
+    """Output budget for the largest grouping the shape allows, summed over every level."""
+    groups = sum(req.shape.main_topics.max * req.shape.children.max**level for level in range(req.shape.depth))
     return min(32000, 1000 + groups * (req.hints.description_length * 2 + 60))
 
 

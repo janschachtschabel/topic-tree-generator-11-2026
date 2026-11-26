@@ -44,9 +44,10 @@ class _Refiner:
         self.rc = rc
         self.result = result
         self.refresh: set[str] = set()
+        self.taken: set[str] = set(index(roots))  # keys of removed nodes are never handed out again
 
     async def apply(self, changes: list[Change], source: ChangeSource) -> None:
-        applied = apply_changes(self.roots, changes, self.locked, source)
+        applied = apply_changes(self.roots, changes, self.locked, source, self.taken)
         self.result.changes.extend(applied.applied)
         for warning in applied.rejected:
             self.rc.warn(warning.code, warning.message, warning.key, warning.step)
@@ -61,11 +62,28 @@ class _Refiner:
                 )
         self.refresh.update(r.key for r in applied.applied if r.op in _REFRESH_OPS and r.key)
         for change in applied.pending_splits:
-            outcome = await split_node(self.roots, change, source, self.rc)
-            if outcome:
-                record, new_keys = outcome
-                self.result.changes.append(record)
-                self.refresh.update(new_keys)
+            await self.split(change, source)
+
+    async def split(self, change: Change, source: ChangeSource) -> None:
+        """A split collected earlier in the batch; later changes may have removed or replaced the node since."""
+        if change.key not in index(self.roots):
+            self.rc.warn(
+                "CHANGE_REJECTED",
+                f"Änderung split nicht umgesetzt: {change.key} gibt es nach den vorherigen Änderungen nicht mehr.",
+                change.key,
+                "apply_changes",
+            )
+            return
+        try:
+            outcome = await split_node(self.roots, change, source, self.rc, self.taken)
+        except LLMStepError as err:
+            self.rc.warn("SPLIT_FAILED", f"Aufteilen nicht möglich ({err.reason}).", change.key, "split_node")
+            return
+        if outcome:
+            record, new_keys = outcome
+            self.result.changes.append(record)
+            self.refresh.update(new_keys)
+            self.taken.update(new_keys)
 
     async def apply_text(self, text: str) -> None:
         protected = protected_keys(self.roots, self.locked)
@@ -110,7 +128,7 @@ class _Refiner:
                 "expand_nodes",
             )
             return
-        assign_missing_keys(self.roots)
+        assign_missing_keys(self.roots, self.taken)
         still_bare = [node for node, _ in targets if not node.children]
         if still_bare:
             self.rc.warn(

@@ -116,3 +116,14 @@ def test_gitlab_ci_kubeconform_job_uses_alpine_image_with_shell() -> None:
     image = gitlab_ci["kubeconform"]["image"]
     image_name = image["name"] if isinstance(image, dict) else image
     assert image_name.startswith("ghcr.io/yannh/kubeconform:") and image_name.endswith("-alpine"), image_name
+
+
+def test_large_integer_values_are_rendered_without_float_notation() -> None:
+    # Audit 2026-11-26: Helm reads numbers as float64, so `| quote` turned 10485760 into "1.048576e+07",
+    # which Settings cannot parse; `int64` first keeps the plain digits.
+    template = (CHART / "templates" / "deployment.yaml").read_text(encoding="utf-8")
+    values = yaml.safe_load((CHART / "values.yaml").read_text(encoding="utf-8"))["config"]
+    large = [name for name, value in values.items() if isinstance(value, int) and value >= 1_000_000]
+    assert large
+    for name in large:
+        assert f".Values.config.{name} | int64 | quote" in template
