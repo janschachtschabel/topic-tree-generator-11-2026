@@ -17,6 +17,10 @@ from app.pipeline.strategies.refine_describe import (
     describe_hints,
     described_before,
     drop_vanished_describes,
+    edited_texts,
+    keep_edited_texts,
+    reject_describes_of_edited,
+    restore_edited_texts,
     warn_not_described,
 )
 from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
@@ -206,14 +210,17 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     if feedback.text:
         await refiner.apply_text(feedback.text)
     drop_vanished_describes(roots, result, rc)
+    edited = edited_texts(feedback.changes, result.changes)
+    reject_describes_of_edited(edited, result, rc)
     protected = protected_keys(roots, set(feedback.locked))
     targets = [
         node
         for node, _, _ in walk(roots)
         if node.key not in protected and (node.key in refiner.refresh or not node.description)
     ]
-    before = described_before(roots, result)
-    await describe_nodes(
+    before = described_before(targets, refiner.refresh, edited)
+    saved = keep_edited_texts(roots, edited)
+    failed = await describe_nodes(
         targets,
         roots,
         rc,
@@ -221,5 +228,6 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         description_length=req.hints.description_length,
         extra=describe_hints(feedback.changes, result.changes),
     )
-    warn_not_described(roots, before, rc)
+    restore_edited_texts(roots, saved)
+    warn_not_described(roots, before, failed, rc)
     return result

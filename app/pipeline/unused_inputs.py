@@ -43,6 +43,13 @@ def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext, options: Options
                 "options.auto_metadata wurde ignoriert: Mit assign_only bleiben die Knoten unverändert.",
                 step="input",
             )
+        generation = req.current_tree.generation if req.current_tree else None
+        if options.assign_only and generation and generation.frame and generation.frame != req.frame:
+            rc.warn(
+                "INPUT_IGNORED",
+                "Der geänderte frame wurde ignoriert: Mit assign_only bleiben Knoten und Rahmen des Baums unverändert.",
+                step="input",
+            )
     elif req.folders and req.use_case != UseCase.folders and not req.effective_folders_use():
         rc.warn(
             "INPUT_IGNORED",

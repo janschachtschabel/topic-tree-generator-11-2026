@@ -102,10 +102,13 @@ async def describe_nodes(
     context: str,
     description_length: int = 60,
     extra: dict[str, str] | None = None,
-) -> None:
-    """Fill `description` and `keywords` of `targets` (keys must be assigned). Failures become warnings."""
+) -> set[str]:
+    """Fill `description` and `keywords` of `targets` (keys must be assigned). Failures become warnings.
+
+    Returns the keys of the batches that failed (already reported), so callers do not report them twice.
+    """
     if not targets:
-        return
+        return set()
     outline = render_tree_outline(roots) or "(leer)"
     prefix = render(STEP, context=context, outline=outline, nodes="").rstrip() + "\n\n"
     batches = _balanced_batches(targets, BATCH)
@@ -114,8 +117,10 @@ async def describe_nodes(
         return_exceptions=True,
     )
     deadline_hit = False
+    failed: set[str] = set()
     for batch, outcome in zip(batches, outcomes, strict=True):
         if isinstance(outcome, LLMStepError):
+            failed.update(node.key for node in batch)
             if outcome.reason == "deadline":
                 deadline_hit = True
             else:
@@ -126,3 +131,4 @@ async def describe_nodes(
             raise outcome
     if deadline_hit:
         rc.warn("DEADLINE_EXCEEDED", "Die Frist ist abgelaufen; einige Beschreibungen fehlen.", step=STEP)
+    return failed

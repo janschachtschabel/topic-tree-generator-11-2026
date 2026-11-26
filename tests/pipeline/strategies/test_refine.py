@@ -645,3 +645,57 @@ async def test_assign_only_keeps_the_recorded_frame_of_the_unchanged_tree() -> N
     )
     resp, _ = await run(req, {})
     assert resp.metadata.generation.frame.educational_context_uri == [ex.SEK1]
+
+
+# Final audit 26.11.2026 (pipeline findings)
+
+
+async def test_assign_only_reports_a_changed_frame_and_labels_follow_the_recorded_frame() -> None:
+    tree = copy.deepcopy(CURRENT)
+    tree["generation"]["frame"] = ex.FRAME
+    sek2 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2"
+    req = request(
+        None, current_tree=tree, frame={**ex.FRAME, "educational_context_uri": [sek2]}, options={"assign_only": True}
+    )
+    resp, _ = await run(req, {})
+    assert any(w.code == "INPUT_IGNORED" and "frame" in w.message for w in resp.warnings)
+    assert sek2 not in resp.metadata.vocab_labels
+
+
+async def test_renamed_node_whose_description_is_not_rewritten_is_reported() -> None:
+    req = request({"changes": [{"op": "rename", "key": "k-linsen", "title": "Prismen"}]})
+    resp, _ = await run(req, {"describe_nodes": {"nodes": []}})
+    assert any(w.code == "DESCRIBE_FAILED" and w.key == "k-linsen" for w in resp.warnings)
+
+
+async def test_description_set_with_edit_is_not_overwritten_by_describe_or_rename() -> None:
+    edit = {"op": "edit", "key": "k-linsen", "properties": {"cm:description": ["MEINE BESCHREIBUNG"]}}
+    for changes in (
+        [edit, {"op": "describe", "key": "k-linsen"}],
+        [{"op": "describe", "key": "k-linsen"}, edit],
+        [edit, {"op": "rename", "key": "k-linsen", "title": "Prismen"}],
+    ):
+        resp, _ = await run(request({"changes": changes}), {})
+        linsen = by_key(resp.collection, "k-linsen")
+        assert linsen.properties.first("cm:description") == "MEINE BESCHREIBUNG", changes
+    resp, _ = await run(request({"changes": [edit, {"op": "describe", "key": "k-linsen"}]}), {})
+    assert any(w.code == "CHANGE_REJECTED" and "describe" in w.message for w in resp.warnings)
+
+
+async def test_two_describes_of_one_node_keep_both_hints() -> None:
+    changes = [
+        {"op": "describe", "key": "k-linsen", "hint": "ERSTER"},
+        {"op": "describe", "key": "k-linsen", "hint": "ZWEITER"},
+    ]
+    _, llm = await run(request({"changes": changes}), {})
+    prompt = llm.prompts("describe_nodes")[0]
+    assert "ERSTER" in prompt and "ZWEITER" in prompt
+
+
+async def test_a_failed_describe_batch_is_reported_once() -> None:
+    from app.llm.client import LLMStepError
+
+    req = request({"changes": [{"op": "describe", "key": "k-linsen"}]})
+    resp, _ = await run(req, {"describe_nodes": LLMStepError("describe_nodes", "invalid")})
+    failed = [w for w in resp.warnings if w.code == "DESCRIBE_FAILED"]
+    assert len(failed) == 1 and failed[0].step == "describe_nodes"

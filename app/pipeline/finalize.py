@@ -145,12 +145,13 @@ def finalize(
     current = (req.current_tree.version or "v1") if req.current_tree else None
     version, based_on = next_version(current)
     keep = req.options.assign_only
+    frame = _recorded_frame(req)
     collection = [to_node_out(node, req.frame, keep_properties=keep) for node in data.roots]
     generation = Generation(
         mode=req.mode,
         use_case=req.use_case,
         topic=req.topic,
-        frame=_recorded_frame(req),
+        frame=frame,
         shape=req.shape,
         hints=req.hints,
         options=req.options,
@@ -164,11 +165,11 @@ def finalize(
     metadata = Metadata(
         title=data.title,
         description=data.description,
-        target_audience=_audience(req.frame),
+        target_audience=_audience(frame),
         created_at=datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         version=version,
         based_on=based_on,
-        vocab_labels=resolve_labels(_collect_vocab_uris(req.frame, collection)),
+        vocab_labels=resolve_labels(_collect_vocab_uris(frame, collection)),
         generation=generation,
     )
     return TopicTreeResponseV2(
