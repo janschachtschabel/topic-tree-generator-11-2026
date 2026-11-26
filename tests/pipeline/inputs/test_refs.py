@@ -310,3 +310,18 @@ async def test_raw_deflate_bodies_are_decoded(serve) -> None:
     raw = packer.compress(b"# Roh") + packer.flush()
     serve(lambda r: httpx.Response(200, content=raw, headers={"Content-Encoding": "deflate"}))
     assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Roh"
+
+
+async def test_raw_deflate_split_into_single_bytes_is_decoded(serve) -> None:
+    # Re-review: the raw-deflate fallback was only tried on the first chunk; one byte gave zlib nothing to reject.
+    import zlib
+
+    packer = zlib.compressobj(wbits=-15)
+    raw = packer.compress(b"# Roh") + packer.flush()
+
+    async def body():
+        for i in range(len(raw)):
+            yield raw[i : i + 1]
+
+    serve(lambda r: httpx.Response(200, content=body(), headers={"Content-Encoding": "deflate"}))
+    assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Roh"

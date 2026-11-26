@@ -18,7 +18,7 @@ from app.settings import Settings
 
 MAX_REF_ITEMS = 5000
 MAX_FULLTEXT_CHARS = 2_000_000
-MAX_TOTAL_FULLTEXT_CHARS = 20_000_000  # all full texts of one request together (memory per worker)
+MAX_TOTAL_FULLTEXT_CHARS = 10_000_000  # all full texts of one request together: five documents of 2 million (memory)
 MAX_CONCURRENT_REFS = 8
 _ITEMS = TypeAdapter(list[Item])
 
@@ -67,6 +67,9 @@ async def _read_body(response: httpx.Response, host: str, limit: int) -> bytearr
         raise ApiError(422, "REF_FAILED", "Verweis konnte nicht geladen werden.", details={"host": host})
     decoder = zlib.decompressobj(_WBITS[encoding]) if encoding in _WBITS else None
     body, raw = bytearray(), 0
+    # `deflate` may also come without the zlib wrapper (raw deflate). Until the first output, the raw bytes are kept
+    # so that the stream can be decoded again as raw deflate when the zlib header turns out to be wrong.
+    head: bytearray | None = bytearray() if encoding == "deflate" else None
     async for chunk in response.aiter_raw():
         # Raw bytes count too: zlib keeps data after the end of a stream in `unused_data`, unbounded.
         raw += len(chunk)
@@ -75,23 +78,29 @@ async def _read_body(response: httpx.Response, host: str, limit: int) -> bytearr
         if decoder is None:
             body.extend(chunk)
         else:
-            decoder = _decode(decoder, chunk, body, limit, first=raw == len(chunk), host=host)
+            if head is not None:
+                head.extend(chunk)
+            decoder = _decode(decoder, chunk, body, limit, head, host)
+            if body or (head is not None and len(head) > _HEAD_LIMIT):
+                head = None
         if len(body) > limit or (decoder is not None and decoder.unconsumed_tail):
             raise _too_large(host)
     return body
 
 
-def _decode(decoder: Any, chunk: bytes, body: bytearray, limit: int, *, first: bool, host: str) -> Any:
-    """Decode one chunk into `body` (at most up to the limit). A `deflate` body may also come without the zlib
-    wrapper (raw deflate); that is detected on the first chunk."""
+_HEAD_LIMIT = 1024
+
+
+def _decode(decoder: Any, chunk: bytes, body: bytearray, limit: int, head: bytearray | None, host: str) -> Any:
+    """Decode one chunk into `body` (at most up to the limit); falls back to raw deflate over `head` if given."""
     try:
         body.extend(decoder.decompress(chunk, limit + 1 - len(body)))
         return decoder
     except zlib.error as exc:
-        if first:
+        if head is not None:
             try:
                 raw_decoder = zlib.decompressobj(-15)
-                body.extend(raw_decoder.decompress(chunk, limit + 1 - len(body)))
+                body.extend(raw_decoder.decompress(bytes(head), limit + 1 - len(body)))
                 return raw_decoder
             except zlib.error:
                 pass
