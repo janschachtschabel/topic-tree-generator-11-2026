@@ -890,6 +890,22 @@
       "default": null,
       "title": "Folders"
     },
+    "folders_use": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ItemUse"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Rolle der ganzen Ordnerstruktur, Werte wie bei use: ['structure'] prägt den Baum, ['content'] Ordnerzuordnung der Dateien wird übernommen bzw. dient als Hinweis, beide (Standard) oder [] keines.",
+      "title": "Folders Use"
+    },
     "items": {
       "anyOf": [
         {

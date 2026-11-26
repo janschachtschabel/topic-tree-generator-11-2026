@@ -86,6 +86,8 @@ FOLDER_ITEMS = [
     content_item(i, t) for i, t in [("c1", "Licht"), ("c2", "Schatten"), ("c3", "Sammellinse"), ("c4", "Spiegelbild")]
 ]
 
+FOLDERS = {"mode": "create", "use_case": "folders", "folders": FOLDERS_TREE, "items": FOLDER_ITEMS, "frame": FRAME}
+
 CURRENT_TREE = {
     "version": "v1",
     "collection": [

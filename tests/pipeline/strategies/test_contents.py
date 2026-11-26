@@ -245,3 +245,17 @@ async def test_a_group_with_a_single_subgroup_loses_the_subdivision() -> None:
     assert [n.title for n in result.roots] == ["Gruppe 0", "Gruppe 1"]
     assert result.roots[0].children == []
     assert len(result.roots[1].children) == 3
+
+
+async def test_full_texts_of_shaping_items_and_folders_reach_the_grouping() -> None:
+    curriculum = {
+        "id": "d1",
+        "use": ["structure"],
+        "properties": {"cm:title": ["Lehrplan Optik"]},
+        "fulltext": {"format": "markdown", "text": "# Themenfeld Licht\nSchatten und Lichtquellen."},
+    }
+    llm = FakeLLM({"group_contents": grouping()})
+    await build(req([*items(3), curriculum], folders=[{"title": "Mappe Licht", "items": ["c0"]}]), rc(llm))
+    prompt = llm.prompts("group_contents")[0]
+    assert "Auszug: # Themenfeld Licht" in prompt
+    assert "- Mappe Licht (1 Dateien)" in prompt

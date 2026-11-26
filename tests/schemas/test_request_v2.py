@@ -279,3 +279,16 @@ def test_document_may_be_structure_and_content_at_once() -> None:
     request = parse({"mode": "create", "use_case": "document", "frame": ex.FRAME, "items": [doc]})
     check_request(request, SETTINGS)
     assert request.effective_use(request.items[0]) == {ItemUse.structure, ItemUse.content}
+
+
+def test_folders_use_defaults_to_structure_and_content() -> None:
+    req = parse(ex.FOLDERS)
+    assert req.effective_folders_use() == {ItemUse.structure, ItemUse.content}
+    assert parse({**ex.FOLDERS, "folders_use": []}).effective_folders_use() == set()
+
+
+def test_folders_use_case_needs_the_folders_as_structure() -> None:
+    with pytest.raises(ApiError) as err:
+        check_request(parse({**ex.FOLDERS, "folders_use": ["content"]}), SETTINGS)
+    assert (err.value.status, err.value.code) == (422, "INVALID_INPUT")
+    check_request(parse({**ex.FOLDERS, "folders_use": ["structure"]}), SETTINGS)

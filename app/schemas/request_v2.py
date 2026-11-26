@@ -202,6 +202,11 @@ class TopicTreeRequestV2(_Model):
     use_case: UseCase
     topic: str | None = Field(None, min_length=1, max_length=2000)
     folders: list[FolderNode] | None = None
+    folders_use: list[ItemUse] | None = Field(
+        None,
+        description="Rolle der ganzen Ordnerstruktur, Werte wie bei use: ['structure'] prägt den Baum, ['content'] "
+        "Ordnerzuordnung der Dateien wird übernommen bzw. dient als Hinweis, beide (Standard) oder [] keines.",
+    )
     items: list[Item] | None = None
     items_ref: HttpsUrl | None = None
     current_tree: CurrentTree | None = None
@@ -210,6 +215,10 @@ class TopicTreeRequestV2(_Model):
     shape: Shape = Field(default_factory=Shape)
     hints: Hints = Field(default_factory=Hints)
     options: Options = Field(default_factory=Options)
+
+    def effective_folders_use(self) -> set[ItemUse]:
+        """Without `folders_use` the folder structure shapes the tree and its assignments count (combination)."""
+        return {ItemUse.structure, ItemUse.content} if self.folders_use is None else set(self.folders_use)
 
     def effective_use(self, item: Item) -> set[ItemUse]:
         """Spec: without `use`, contents items are structure and content; everything else is content only.

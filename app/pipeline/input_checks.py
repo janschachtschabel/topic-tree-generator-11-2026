@@ -74,6 +74,12 @@ def _check_create_inputs(req: TopicTreeRequestV2) -> None:
         raise _missing("use_case 'topic' braucht 'topic'.")
     if req.use_case == UseCase.folders and not req.folders:
         raise _missing("use_case 'folders' braucht 'folders'.")
+    if req.use_case == UseCase.folders and ItemUse.structure not in req.effective_folders_use():
+        raise ApiError(
+            422,
+            "INVALID_INPUT",
+            "Bei use_case 'folders' bilden die Ordner das Gerüst; folders_use braucht 'structure'.",
+        )
     if req.use_case == UseCase.contents:
         if not has_items:
             raise _missing("use_case 'contents' braucht mindestens einen Eintrag in 'items' oder 'items_ref'.")

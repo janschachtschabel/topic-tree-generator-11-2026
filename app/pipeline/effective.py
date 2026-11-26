@@ -12,6 +12,7 @@ Every recommended default is clamped to the operator's hard caps (`MAX_TREE_DEPT
 
 from pydantic import BaseModel
 
+from app.pipeline.inputs_block import folders_shape_tree
 from app.pipeline.run_context import ExplicitShape
 from app.schemas.common import ItemUse, UseCase
 from app.schemas.request_v2 import ChildRange, MainRange, Shape, TopicTreeRequestV2
@@ -34,6 +35,8 @@ def _clamp_children(low: int, high: int, cap: int) -> ChildRange:
 def has_structure_inputs(req: TopicTreeRequestV2) -> bool:
     """True when structure is anchored in supplied documents, folders, or content items."""
     if req.use_case in {UseCase.document, UseCase.contents, UseCase.folders}:
+        return True
+    if folders_shape_tree(req):
         return True
     return any(ItemUse.structure in req.effective_use(item) for item in (req.items or []))
 

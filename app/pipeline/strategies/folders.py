@@ -22,13 +22,14 @@ def item_titles(items: list[Item]) -> dict[str, str]:
 
 def folders_to_nodes(folders: list[FolderNode], req: TopicTreeRequestV2, trail: list[str] | None = None) -> list[Node]:
     by_id = {item.id: item for item in req.items or []}
+    keep = ItemUse.content in req.effective_folders_use()  # without it, the files are assigned anew afterwards
     nodes = []
     for folder in folders:
         here = [*(trail or []), folder.title]
         contents = [
             ContentRef(id=i, nodeId=by_id[i].node_id if i in by_id else None, confidence=1.0)
             for i in folder.items
-            if i not in by_id or ItemUse.content in req.effective_use(by_id[i])
+            if keep and (i not in by_id or ItemUse.content in req.effective_use(by_id[i]))
         ]
         nodes.append(
             Node(

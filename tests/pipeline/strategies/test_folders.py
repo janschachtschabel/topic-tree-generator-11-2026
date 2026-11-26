@@ -164,3 +164,8 @@ async def test_folders_without_structure_documents_give_no_input_warning() -> No
     context = rc(FakeLLM({"describe_nodes": describe}))
     await build(req(), context)
     assert "INPUT_IGNORED" not in [w.code for w in context.warnings]
+
+
+async def test_without_the_content_role_folder_files_are_sorted_in_anew() -> None:
+    result = await build(req(folders_use=["structure"]), rc(FakeLLM({"describe_nodes": describe})))
+    assert all(not node.contents for node, _, _ in walk(result.roots))

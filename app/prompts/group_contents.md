@@ -1,4 +1,5 @@
 {{context}}
+{{inputs}}
 
 ## Inhalte
 {{items}}

@@ -28,11 +28,13 @@ from app.pipeline.effective import effective_request, explicit_shape, has_struct
 from app.pipeline.finalize import FinalizeInput, finalize
 from app.pipeline.input_checks import check_request
 from app.pipeline.inputs.refs import resolve_refs
+from app.pipeline.inputs_block import folder_paths
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.assign_contents import assign_contents
 from app.pipeline.steps.infer_metadata import infer_metadata
 from app.pipeline.strategies import contents, document, folders, refine, topic
+from app.pipeline.unused_inputs import warn_unused_inputs
 from app.schemas.common import ChangeOp, ItemUse, Mode, UnassignedReason, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.schemas.response_v2 import TopicTreeResponseV2, Unassigned
@@ -127,7 +129,7 @@ async def _assign(req: TopicTreeRequestV2, rc: RunContext, result: StrategyResul
         _warn_already_placed(rc, [i.id for i in content_items if i.id in placed])
     pending = [i for i in content_items if i.id not in placed and i.id not in already_unassigned]
     if pending:
-        result.unassigned.extend(await assign_contents(result.roots, pending, rc, req.options))
+        result.unassigned.extend(await assign_contents(result.roots, pending, rc, req.options, paths=folder_paths(req)))
 
 
 def _protected_keyword_keys(req: TopicTreeRequestV2, result: StrategyResult, previous: list[Node] | None) -> set[str]:
@@ -206,6 +208,7 @@ async def run(
         req = resolved
         check_request(req, rc.settings, loaded=True)
     rc.explicit_shape = explicit_shape(req, rc.settings)
+    warn_unused_inputs(req, rc)
     req = effective_request(req, rc.settings)
     if req.mode == Mode.refine:
         strategy: Strategy | None = refine.build
