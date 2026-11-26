@@ -3,7 +3,7 @@ folder structure when it is not the backbone (`folders_use`). Only inline full t
 are loaded before (see inputs/refs.py)."""
 
 from app.domain.diff import FOLDER_SEPARATOR
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.pipeline.run_context import RunContext
 from app.schemas.common import ItemUse, Mode, UseCase
 from app.schemas.request_v2 import FolderNode, Item, TopicTreeRequestV2
@@ -19,17 +19,17 @@ HEADING = "## Ergänzende Eingaben (dürfen zusätzliche Themen anregen)"
 def _item_lines(items: list[Item], fulltext_left: int) -> list[str]:
     lines = []
     for item in items:
-        title = item.properties.first("cm:title") or item.id
+        title = one_line(item.properties.first("cm:title") or item.id)
         parts = [f"- {title}"]
         if description := item.properties.first("cm:description"):
-            parts.append(truncate_sentences(description, DESC_LIMIT))
+            parts.append(one_line(truncate_sentences(description, DESC_LIMIT)))
         if keywords := item.properties.values("cclom:general_keyword"):
-            parts.append("Schlagworte: " + ", ".join(keywords[:8]))
+            parts.append("Schlagworte: " + ", ".join(map(one_line, keywords[:8])))
         lines.append(
             " | ".join(parts) if len(parts) > 2 else (f"{parts[0]}: {parts[1]}" if len(parts) == 2 else parts[0])
         )
         if fulltext_left > 0 and item.fulltext and item.fulltext.text and item.fulltext.text.strip():
-            lines.append(f"  Auszug: {truncate_sentences(item.fulltext.text, EXCERPT)}")
+            lines.append(f"  Auszug: {one_line(truncate_sentences(item.fulltext.text, EXCERPT))}")
             fulltext_left -= 1
     return lines
 
@@ -48,7 +48,7 @@ def _folder_lines(folders: list[FolderNode], depth: int = 0) -> list[str]:
     lines = []
     for folder in folders:
         files = f" ({len(folder.items)} Dateien)" if folder.items else ""
-        lines.append(f"{'  ' * depth}- {folder.title}{files}")
+        lines.append(f"{'  ' * depth}- {one_line(folder.title)}{files}")
         lines.extend(_folder_lines(folder.subcollections, depth + 1))
     return lines
 
@@ -102,7 +102,7 @@ def folder_paths(req: TopicTreeRequestV2) -> dict[str, str]:
 
     def visit(folders: list[FolderNode], trail: list[str]) -> None:
         for folder in folders:
-            here = [*trail, folder.title]
+            here = [*trail, one_line(folder.title)]
             for item_id in folder.items:
                 paths.setdefault(item_id, FOLDER_SEPARATOR.join(here))
             visit(folder.subcollections, here)

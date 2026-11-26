@@ -1,4 +1,4 @@
-"""Boundary-safe text truncation for prompt excerpts."""
+"""Boundary-safe text truncation and flattening for prompt excerpts."""
 
 import re
 
@@ -65,3 +65,8 @@ def truncate_sentences(text: str, max_chars: int) -> str:
     if space >= min_keep:
         return probe[:space].rstrip()
     return cleaned[:max_chars].rstrip()
+
+
+def one_line(text: str) -> str:
+    """Collapse all whitespace, newlines included, so user text cannot open its own section in a prompt."""
+    return " ".join(text.split())

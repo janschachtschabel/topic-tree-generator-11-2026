@@ -2,6 +2,7 @@
 prompt so the provider's prefix cache covers both (plan E2). Must be deterministic."""
 
 from app.domain.shape_rules import EXTRA_TITLES
+from app.domain.text import one_line
 from app.pipeline.effective import ExplicitShape, explicit_shape, has_structure_inputs
 from app.schemas.common import ExtraTopic, Mode, UseCase
 from app.schemas.request_v2 import TopicTreeRequestV2
@@ -50,7 +51,7 @@ def build_context_block(
     hints, shape, frame = req.hints, req.shape, req.frame
     lines = ["## Anfragekontext"]
     if topic or req.topic:
-        lines.append(f"Thema: {topic or req.topic}")
+        lines.append(f"Thema: {one_line(topic or req.topic)}")
     for caption, uris in (
         ("Fach", frame.discipline_uri),
         ("Bildungsstufe", frame.educational_context_uri),
@@ -59,12 +60,14 @@ def build_context_block(
         if uris:
             lines.append(f"{caption}: {_labels(uris, unknown)}")
     if hints.context:
-        lines.append(f"Zweck und Kontext: {hints.context}")
+        lines.append(f"Zweck und Kontext: {one_line(hints.context)}")
     if hints.include:
-        lines.append(f"Unbedingt aufnehmen: {'; '.join(hints.include)}")
+        lines.append(f"Unbedingt aufnehmen: {'; '.join(map(one_line, hints.include))}")
     if hints.exclude:
-        lines.append(f"Ausschließen: {'; '.join(hints.exclude)}")
-    lines.append(f"Ordnungsprinzip (Vorgabe): {hints.order}" if hints.order else "Ordnungsprinzip: keine Vorgabe")
+        lines.append(f"Ausschließen: {'; '.join(map(one_line, hints.exclude))}")
+    lines.append(
+        f"Ordnungsprinzip (Vorgabe): {one_line(hints.order)}" if hints.order else "Ordnungsprinzip: keine Vorgabe"
+    )
     lines.append(_shape_line(req, exp))
     if shape.extra_topics and req.mode == Mode.create and req.use_case == UseCase.topic:
         extras = ", ".join(f"„{EXTRA_TITLES[e]}“ ({_EXTRA_POSITION[e]})" for e in shape.extra_topics)
