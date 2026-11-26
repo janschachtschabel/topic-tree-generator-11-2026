@@ -84,6 +84,7 @@ def test_api_doc_lists_every_warning_and_error_code_the_code_emits(lang: str) ->
         codes |= set(re.findall(r'_warning\(\s*"([A-Z][A-Z_]+)"', text))
         codes |= set(re.findall(r'code="([A-Z][A-Z_]+)"', text))
         codes |= set(re.findall(r'ApiError\(\s*(?:\d+|status\.\w+),\s*"([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'error_response\(\s*\d+,\s*"([A-Z][A-Z_]+)"', text))  # final audit: 500 INTERNAL
     assert sorted(c for c in codes if f"`{c}`" not in doc) == []
 
 
