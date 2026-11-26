@@ -22,6 +22,16 @@ def _folder_item_ids(req: TopicTreeRequestV2) -> set[str]:
     return ids
 
 
+def _tree_content_ids(nodes: list) -> set[str]:
+    ids: set[str] = set()
+    stack = list(nodes)
+    while stack:
+        node = stack.pop()
+        ids.update(ref.id for ref in node.contents)
+        stack.extend(node.subcollections)
+    return ids
+
+
 def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext, options: Options | None = None) -> None:
     """`options` are the effective ones (a refine inherits them from `current_tree.generation`)."""
     options = options or req.options
@@ -43,8 +53,10 @@ def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext, options: Options
             step="input",
         )
     if not options.assign_contents:
-        in_folders = _folder_item_ids(req) if req.use_case == UseCase.folders else set()
-        ids = [i.id for i in req.items or [] if ItemUse.content in req.effective_use(i) and i.id not in in_folders]
+        kept = _folder_item_ids(req) if req.use_case == UseCase.folders else set()
+        if req.mode == Mode.refine and req.current_tree is not None:
+            kept |= _tree_content_ids(req.current_tree.collection)  # already placed: they stay where they are
+        ids = [i.id for i in req.items or [] if ItemUse.content in req.effective_use(i) and i.id not in kept]
         if ids:
             rc.warn(
                 "INPUT_IGNORED",
