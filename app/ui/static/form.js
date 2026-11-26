@@ -158,7 +158,7 @@
       $("f-extra-methodology").checked = false;
     }
     $("f-current-tree").value = tree ? JSON.stringify(tree, null, 2) : "";
-    const count = tree ? P().treeNodeOptions(tree.collection).length : 0;
+    const count = tree ? P().countNodes(tree.collection) : 0;
     $("base-summary").textContent = tree
       ? t("base.summary", {
         title: tree.title || "–",

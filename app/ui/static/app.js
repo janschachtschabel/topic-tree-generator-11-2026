@@ -169,6 +169,7 @@
     $("base-area").hidden = !tree || !$("result-area").hidden;
     if (!tree) return;
     $("base-heading").textContent = t("base.heading", { title: tree.title || "–", version: tree.version || "–" });
+    $("base-tree-label").textContent = t(state.task === "assign" ? "base.tree.assign" : "base.tree");
     if (state.task === "assign") window.TopicTreeView.renderTree($("base-tree"), tree.collection, new Set(), null, {});
     else window.TopicTreeView.renderTree($("base-tree"), tree.collection, state.lockedKeys, toggleLock, {}, editNode);
   }
