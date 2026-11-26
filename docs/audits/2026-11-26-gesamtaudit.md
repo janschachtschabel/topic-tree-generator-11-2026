@@ -11,7 +11,7 @@ gezählt). Ergebnis: Release `v2.1.0`.
   (3) Test-UI und Beispiele (Playwright gegen den OpenAI-Stub), (4) Deploy, CI, Release-Fähigkeit, Doku und Steckbrief.
 - Vorher: `uv run pytest -q` 597 grün, 5 übersprungen (Helm-Tests ohne `helm`); ruff sauber.
 - Jeder Befund wurde mit einer Probe bestätigt; jeder Fix hat einen Regressionstest, der vorher fehlschlug.
-- Nachher: 626 grün, 5 übersprungen; 33 Node-Tests der UI grün; `pip-audit` ohne bekannte Lücken.
+- Nachher: 629 grün, 5 übersprungen; 33 Node-Tests der UI grün; `pip-audit` ohne bekannte Lücken.
 - Nicht geprüft werden konnte lokal: `pip-audit` (läuft jetzt als eigener CI-Job) und `helm` (läuft in der CI).
 - Nicht als Befund gewertet (Vorgabe Jan): Binärdateien in `fulltext.ref`; die Umwandlung (z. B. PDF) passiert vorher.
 
