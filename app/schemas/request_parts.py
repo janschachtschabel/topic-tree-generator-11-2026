@@ -2,11 +2,17 @@
 
 from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
 from app.schemas.common import ExtraTopic
 
-ShortText = Annotated[str, Field(min_length=1, max_length=200)]
+
+def _one_line(value: object) -> object:
+    """Titles never span lines: a newline in a title would open its own line in an LLM prompt."""
+    return " ".join(value.split()) if isinstance(value, str) else value
+
+
+ShortText = Annotated[str, BeforeValidator(_one_line), Field(min_length=1, max_length=200)]
 
 
 class RequestModel(BaseModel):

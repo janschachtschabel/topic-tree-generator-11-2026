@@ -2,6 +2,7 @@
 
 from app.domain.diff import FOLDER_SEPARATOR
 from app.domain.keys import assign_missing_keys
+from app.domain.text import one_line
 from app.domain.tree import Node, walk
 from app.llm.client import LLMStepError
 from app.pipeline.inputs_block import structure_inputs_block
@@ -17,7 +18,7 @@ _DESCRIBE_TITLES = 10
 
 
 def item_titles(items: list[Item]) -> dict[str, str]:
-    return {item.id: item.properties.first("cm:title") or item.id for item in items}
+    return {item.id: one_line(item.properties.first("cm:title") or item.id) for item in items}
 
 
 def folders_to_nodes(folders: list[FolderNode], req: TopicTreeRequestV2, trail: list[str] | None = None) -> list[Node]:

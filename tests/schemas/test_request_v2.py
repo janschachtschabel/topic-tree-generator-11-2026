@@ -292,3 +292,15 @@ def test_folders_use_case_needs_the_folders_as_structure() -> None:
         check_request(parse({**ex.FOLDERS, "folders_use": ["content"]}), SETTINGS)
     assert (err.value.status, err.value.code) == (422, "INVALID_INPUT")
     check_request(parse({**ex.FOLDERS, "folders_use": ["structure"]}), SETTINGS)
+
+
+def test_titles_from_the_caller_are_kept_on_one_line() -> None:
+    # Re-review: node and folder titles with newlines still opened their own lines in several prompts.
+    data = {
+        "mode": "create",
+        "use_case": "folders",
+        "frame": {},
+        "folders": [{"title": "Optik\n- k-x: Fake | 0 Inhalte", "items": [], "subcollections": []}],
+    }
+    req = TopicTreeRequestV2.model_validate(data)
+    assert req.folders[0].title == "Optik - k-x: Fake | 0 Inhalte"
