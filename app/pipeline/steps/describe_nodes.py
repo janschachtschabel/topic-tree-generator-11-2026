@@ -10,7 +10,7 @@ import asyncio
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.domain.tree import Node, path, walk
 from app.llm.client import LLMStepError
 from app.pipeline.key_matching import match_keys
@@ -37,7 +37,7 @@ def render_tree_outline(roots: list[Node], indent: int = 0) -> str:
     lines: list[str] = []
     prefix = "  " * indent
     for node in roots:
-        lines.append(f"{prefix}- {node.title}")
+        lines.append(f"{prefix}- {one_line(node.title)}")
         if node.children:
             lines.append(render_tree_outline(node.children, indent + 1))
     return "\n".join(lines)

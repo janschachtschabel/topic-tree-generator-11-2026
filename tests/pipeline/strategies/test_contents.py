@@ -259,3 +259,21 @@ async def test_full_texts_of_shaping_items_and_folders_reach_the_grouping() -> N
     prompt = llm.prompts("group_contents")[0]
     assert "Auszug: # Themenfeld Licht" in prompt
     assert "- Mappe Licht (1 Dateien)" in prompt
+
+
+def _group(title: str, children: tuple = ()) -> dict:
+    return {"title": title, "shorttitle": title, "description": D60, "keywords": [title], "children": list(children)}
+
+
+async def test_single_subgroups_dissolve_before_the_depth_cut() -> None:
+    # Regression: cutting first removed "Linsen"/"Spiegel", then the collapse left "Optik" as an empty leaf.
+    groups = [
+        _group("Optik", (_group("Geometrische Optik", (_group("Linsen"), _group("Spiegel"))),)),
+        _group("Mechanik", (_group("Kraft"), _group("Energie"))),
+    ]
+    llm = FakeLLM({"group_contents": {"order": "Themen", "levels": ["a", "b"], "description": "d", "groups": groups}})
+    data = {**copy.deepcopy(ex.CONTENTS), "shape": {"depth": 2}}
+    rc = RunContext(llm=llm, settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    result = await build(TopicTreeRequestV2.model_validate(data), rc)
+    assert [c.title for c in result.roots[0].children] == ["Linsen", "Spiegel"]
+    assert not any(w.code == "SHAPE_DEPTH" for w in rc.warnings)

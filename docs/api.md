@@ -1,7 +1,8 @@
 # Aufrufe von POST /v2/topic-tree
 
-Vollständige Beispiele liegen unter `docs/examples/`, das Format unter `docs/schemas/`, die Feldbedeutungen in der
-Spec „Themenbaum-Dienst: Use Cases und Datenformat“. Zum interaktiven Ausprobieren im Browser steht optional die
+Vollständige Beispiele liegen unter `docs/examples/` (Anfragen) und `docs/examples/responses/` (Antwort), jedes Feld
+von Anfrage und Antwort mit Typ, Standard und Bedeutung in [`datenformat.md`](datenformat.md), maschinenlesbar unter
+`docs/schemas/`. Zum interaktiven Ausprobieren im Browser steht optional die
 eingebaute Test-Oberfläche unter `/ui/` bereit (steuerbar über `UI_ENABLED=true|false`). Laufzeit synchron, typisch
 5 bis 45 Sekunden (große 3-Ebenen-Bäume ~25–45 s).
 
@@ -33,6 +34,11 @@ Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`) können per 
 | `contents.json` | contents | Gruppen aus den Inhalten (inkl. Duplikatbereinigung), Zuordnung mit Konfidenz |
 | `refine_feedback.json` | refine | Rückmeldung als Text; `locked` schützt Äste |
 | `assign_only.json` | refine | Nur neue Inhalte einsortieren, Struktur bleibt |
+| `refine_changes.json` | refine | Alle sieben gezielten Änderungen, dazu Freitext, gesperrter Ast und ein neuer Inhalt |
+| `topic_with_items.json` | topic | Thema und zwei Inhalte; die Antwort dazu: `responses/topic_with_items.json` |
+| `combo_topic_folders.json` | topic + Ordner | Ordnerstruktur regt an (`folders_use`), Ordnerpfade und `path` helfen beim Einsortieren |
+| `combo_document_topic_contents.json` | document + Thema + Inhalte | Lehrplan als Gerüst, `topic` grenzt ein, Themenliste ohne Text ergänzt, Inhalte werden einsortiert |
+| `contents_with_curriculum.json` | contents + Lehrplan | Gruppen aus Inhalten, der Lehrplan-Volltext fließt ein, ein Inhalt wird nur einsortiert |
 
 ## Use Cases kombinieren (z. B. Themenvorgabe + Inhalte)
 
@@ -136,6 +142,49 @@ Operationen (`add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`) als Ze
 gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema + Materialien) laufen dort über
 „Zusätzlich einbeziehen“.
 
+## Änderungen an einem Baum einreichen (`mode: refine`)
+
+1. Das letzte Ergebnis zurückgeben: `collection` → `current_tree.collection`, `metadata.version` →
+   `current_tree.version`, `metadata.generation` → `current_tree.generation` (siehe „Nächster Durchlauf“).
+2. Den Wunsch in `feedback` beschreiben, frei oder gezielt (beides geht in einer Anfrage):
+   - `feedback.text`: Freitext, z. B. „Farben als eigenes Hauptthema“. Das Sprachmodell setzt ihn in Änderungen um;
+     was daran unklar ist, kommt als `questions` zurück und wird nicht umgesetzt (der Rest schon).
+   - `feedback.changes`: gezielte Änderungen, ohne Sprachmodell umgesetzt (außer `split`).
+   - `feedback.locked`: Schlüssel von Knoten, die mit ihrem Ast unverändert bleiben.
+3. Neue Inhalte zum Einsortieren als `items` mitschicken (eigene ids).
+
+| `op` | Pflichtfelder | Wirkung |
+|---|---|---|
+| `add` | `title` | Neuer Knoten unter `parent` (Schlüssel oder Titel); ohne `parent` auf der Hauptebene |
+| `remove` | `key` | Knoten samt Ast entfernen; seine Inhalte stehen danach in `unassigned` (`no_matching_node`), sofern sie nicht noch an einem anderen Knoten hängen |
+| `rename` | `key`, `title` | Titel ändern; Kurztitel und Beschreibung werden neu geschrieben |
+| `edit` | `key`, `properties` | Properties setzen, z. B. `cclom:general_keyword` oder `ccm:taxonid` |
+| `move` | `key` | Unter `to` verschieben; ohne `to` oder mit `null` auf die Hauptebene |
+| `merge` | `keys` (mind. 2), `title` | Knoten zusammenführen; der erste Schlüssel bleibt |
+| `split` | `key`, `hint` | Knoten nach dem Hinweis in mehrere aufteilen (Sprachmodell) |
+
+```json
+{
+  "mode": "refine",
+  "use_case": "topic",
+  "current_tree": {"version": "v1", "collection": [{"key": "k-optik", "title": "Optik", "subcollections": []}]},
+  "feedback": {
+    "changes": [
+      {"op": "add", "title": "Farben"},
+      {"op": "rename", "key": "k-optik", "title": "Geometrische Optik"}
+    ],
+    "text": "Beschreibungen alltagsnäher formulieren",
+    "locked": []
+  },
+  "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]}
+}
+```
+
+Alle sieben Operationen zusammen: `docs/examples/refine_changes.json`. In der Antwort steht jede umgesetzte Änderung
+in `changes` (mit `from`: `feedback_changes`, `feedback_text` oder `service`), jeder Knoten trägt `status` (`new`,
+`changed`, `moved`, `unchanged`, `suggested`), die Version zählt hoch (`v1` → `v2`, `metadata.based_on` nennt die Vorversion).
+Abgelehnte Änderungen melden `CHANGE_REJECTED`.
+
 ## Seitenmarken im Markdown (use_case document)
 
 Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) sowie `<!-- page_break -->`,
@@ -143,23 +192,37 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 
 ## Antwort lesen
 
+Beispiel: `docs/examples/responses/topic_with_items.json`; alle Felder: [`datenformat.md`](datenformat.md#antwort).
+
+- `metadata`: Titel, Beschreibung, Version (`v1`, `v2`, …), Bezeichnungen der Vokabular-URIs und `generation`
+  (alle Einstellungen des Laufs, für den nächsten Durchlauf zurückgeben).
+- `collection[]`: der Baum. Je Knoten `key` (stabil über refine-Läufe), `title`, `shorttitle`, `status`, `origin`
+  (Herkunft: `topic`, `document` mit Abschnitt und Seite, `folder`, `cluster`, `feedback`), `properties` (edu-sharing:
+  `cm:title`, `cm:description`, `cclom:general_keyword`, `ccm:taxonid`, …), `contents[]` (`id`, `nodeId`,
+  `confidence`) und `subcollections[]`.
+- `unassigned[]`: nicht einsortierte Inhalte mit Grund (`off_topic`, `low_confidence`, `no_matching_node`,
+  `excluded`).
+- `changes[]`: umgesetzte (refine) oder vorgeschlagene (`folders` mit `improve`) Änderungen.
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
   `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `SPLIT_FAILED`, `EXPAND_FAILED`, `EXPAND_INCOMPLETE`,
-  `FEEDBACK_IGNORED`, `INPUT_IGNORED`, `OUTLINE_TRUNCATED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`).
+  `FEEDBACK_IGNORED`, `INPUT_IGNORED`, `OUTLINE_TRUNCATED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`,
+  `SHAPE_DEPTH`, `SHAPE_WIDTH` (Antwort des Sprachmodells zu tief bzw. zu breit, gekürzt), `SECTION_UNKNOWN`,
+  `ITEMS_SAMPLED`, `UNTITLED_NODE`, `DESCRIPTION_MISSING`, `DESCRIPTION_LENGTH`).
   `ASSIGN_FAILED` nennt auch Inhalte, zu denen das Sprachmodell keine Antwort gab; sie stehen in `unassigned`.
   `INPUT_IGNORED` meldet gesendete, aber nicht genutzte Eingaben (z. B. Gliederungsdokumente bei `folders` ohne
   `options.improve`, Ordner mit `folders_use: []`, Inhalte bei `assign_contents: false`). `OUTLINE_TRUNCATED` meldet
   auch ein Dokument ohne Überschriften, von dem nur ein Auszug einfloss.
-- `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
+- `questions[]`: Rückfragen zu unklarem Feedback; der unklare Teil wird nicht umgesetzt.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 
 ## Fehler
 
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
-(`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
-`REF_NOT_ALLOWED`, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
+(`MISSING_INPUT`, `INVALID_INPUT`, `INVALID_OPTION`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`,
+`ITEMS_TOO_LARGE`, `REF_NOT_ALLOWED`, `REF_INVALID`, `REF_TOO_LARGE` – ein Verweis oder alle Volltexte einer Anfrage
+zusammen (über 10 Mio. Zeichen) zu groß –, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
 404 `NOT_FOUND` und 405 `METHOD_NOT_ALLOWED` für unbekannte Pfade oder Methoden unter `/v2/`,
 413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
-401/403 Anmeldung bzw. fehlende b-api-Berechtigung, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.
+401 `UNAUTHORIZED` / 403 `FORBIDDEN` Anmeldung bzw. fehlende b-api-Berechtigung, 501 `NOT_IMPLEMENTED`, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.

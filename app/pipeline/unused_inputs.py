@@ -2,7 +2,7 @@
 
 from app.pipeline.run_context import RunContext
 from app.schemas.common import ItemUse, Mode, UseCase
-from app.schemas.request_v2 import TopicTreeRequestV2
+from app.schemas.request_v2 import Options, TopicTreeRequestV2
 
 
 def _shown(ids: list[str]) -> str:
@@ -22,7 +22,19 @@ def _folder_item_ids(req: TopicTreeRequestV2) -> set[str]:
     return ids
 
 
-def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext) -> None:
+def _tree_content_ids(nodes: list) -> set[str]:
+    ids: set[str] = set()
+    stack = list(nodes)
+    while stack:
+        node = stack.pop()
+        ids.update(ref.id for ref in node.contents)
+        stack.extend(node.subcollections)
+    return ids
+
+
+def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext, options: Options | None = None) -> None:
+    """`options` are the effective ones (a refine inherits them from `current_tree.generation`)."""
+    options = options or req.options
     if req.mode == Mode.refine:
         _refine(req, rc)
     elif req.folders and req.use_case != UseCase.folders and not req.effective_folders_use():
@@ -40,9 +52,11 @@ def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext) -> None:
             "shape.extra_topics gilt nur bei use_case 'topic' und wurde ignoriert.",
             step="input",
         )
-    if not req.options.assign_contents:
-        in_folders = _folder_item_ids(req) if req.use_case == UseCase.folders else set()
-        ids = [i.id for i in req.items or [] if ItemUse.content in req.effective_use(i) and i.id not in in_folders]
+    if not options.assign_contents:
+        kept = _folder_item_ids(req) if req.use_case == UseCase.folders else set()
+        if req.mode == Mode.refine and req.current_tree is not None:
+            kept |= _tree_content_ids(req.current_tree.collection)  # already placed: they stay where they are
+        ids = [i.id for i in req.items or [] if ItemUse.content in req.effective_use(i) and i.id not in kept]
         if ids:
             rc.warn(
                 "INPUT_IGNORED",

@@ -5,13 +5,13 @@ import re
 from app.domain.keys import assign_missing_keys
 from app.domain.quality import PLATFORM_STOPWORDS
 from app.domain.shape_rules import eliminate_generated_duplicates
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.domain.tree import collapse_single_children
 from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.group_contents import group_contents
-from app.pipeline.steps.node_conversion import Cut, to_nodes
+from app.pipeline.steps.node_conversion import BranchNode, Cut, to_nodes
 from app.schemas.common import ItemUse, OriginType
 from app.schemas.request_v2 import Item, TopicTreeRequestV2
 from app.schemas.response_v2 import StructureInfo
@@ -25,14 +25,14 @@ _WORD = re.compile(r"[^\W\d_]{4,}")
 
 def _detail(item: Item) -> str:
     p = item.properties
-    parts = [f"- id: {item.id}", p.first("cm:title") or "(ohne Titel)"]
+    parts = [f"- id: {item.id}", one_line(p.first("cm:title") or "(ohne Titel)")]
     disciplines = list(dict.fromkeys(lbl for uri in p.values("ccm:taxonid") if (lbl := label(uri))))
     if disciplines:
         parts.append("Fach: " + ", ".join(disciplines[:3]))
     if description := p.first("cm:description"):
-        parts.append(truncate_sentences(description, _TEXT))
+        parts.append(one_line(truncate_sentences(description, _TEXT)))
     if keywords := p.values("cclom:general_keyword"):
-        parts.append("Schlagworte: " + ", ".join(keywords[:8]))
+        parts.append("Schlagworte: " + ", ".join(map(one_line, keywords[:8])))
     return " | ".join(parts)
 
 
@@ -102,8 +102,15 @@ def items_block(items: list[Item], rc: RunContext) -> str:
             rc.warn("ITEMS_SAMPLED", f"Nur {MAX_TITLES} weitere Titel flossen in die Gruppenbildung ein.", step="group")
             rest = rest[:MAX_TITLES]
         lines.append("\nWeitere Titel:")
-        lines.extend(f"- {(i.properties.first('cm:title') or i.id)[:80]}" for i in rest)
+        lines.extend(f"- {one_line(i.properties.first('cm:title') or i.id)[:80]}" for i in rest)
     return "\n".join(lines)
+
+
+def _dissolve_single_subgroups(groups: list[BranchNode]) -> None:
+    for group in groups:
+        while len(group.children) == 1:
+            group.children = group.children[0].children
+        _dissolve_single_subgroups(group.children)
 
 
 def _max_tokens(req: TopicTreeRequestV2) -> int:
@@ -119,6 +126,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     inputs = structure_inputs_block(req, rc, items=with_text)
     grouping = await group_contents(items_block(shaping, rc), rc, max_tokens=_max_tokens(req), inputs_block=inputs)
 
+    # Dissolve lone subgroups before the depth cut, so a level they hid is not cut away.
+    _dissolve_single_subgroups(grouping.groups)
     cut = Cut()
     shape = req.shape
     roots = to_nodes(

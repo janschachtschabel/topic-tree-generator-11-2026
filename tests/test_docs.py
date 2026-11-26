@@ -66,3 +66,48 @@ def test_steckbrief_short_description_equals_openapi_description() -> None:
     steckbrief = (ROOT / "docs" / "steckbrief.md").read_text(encoding="utf-8")
     row = next(line for line in steckbrief.splitlines() if line.startswith("| **Funktionalität / Kurzbeschreibung**"))
     assert row.split("|")[2].strip() == DESCRIPTION
+
+
+def test_api_doc_lists_every_warning_and_error_code_the_code_emits() -> None:
+    # Regression: seven warning codes and six error codes were missing from docs/api.md.
+    import re
+
+    doc = (ROOT / "docs" / "api.md").read_text(encoding="utf-8")
+    codes: set[str] = set()
+    for path in (ROOT / "app").rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        codes |= set(re.findall(r'warn\(\s*"([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'_warning\(\s*"([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'code="([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'ApiError\(\s*(?:\d+|status\.\w+),\s*"([A-Z][A-Z_]+)"', text))
+    assert sorted(c for c in codes if f"`{c}`" not in doc) == []
+
+
+def test_response_examples_validate_against_the_v2_response_model() -> None:
+    from app.schemas.response_v2 import TopicTreeResponseV2
+
+    files = sorted((ROOT / "docs" / "examples" / "responses").glob("*.json"))
+    assert files
+    for path in files:
+        TopicTreeResponseV2.model_validate(json.loads(path.read_text(encoding="utf-8")))
+
+
+def test_examples_cover_combinations_and_every_change_op() -> None:
+    examples = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "docs" / "examples").glob("*.json")}
+    ops = {c["op"] for c in examples["refine_changes"]["feedback"]["changes"]}
+    assert ops == {"add", "remove", "rename", "edit", "move", "merge", "split"}
+    assert "folders_use" in examples["combo_topic_folders"]
+    assert (ROOT / "docs" / "datenformat.md").exists()
+
+
+def test_field_reference_tables_have_five_cells_per_row() -> None:
+    # Re-review: enum types were escaped twice ("\\|"), which split a generated table row.
+    rows = [
+        line
+        for line in (ROOT / "docs" / "datenformat.md").read_text(encoding="utf-8").splitlines()
+        if line.startswith("| ")
+    ]
+    assert rows
+    for row in rows:
+        cells = re.split(r"(?<!\\)\|", row)[1:-1]
+        assert len(cells) == 5 and "\\\\|" not in row, row

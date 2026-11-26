@@ -232,3 +232,9 @@ test("folders in topic carry their role; the default role is left out", () => {
   const none = B.build(form({ extras: { folders: true }, folderOutline: outline, foldersUse: "none" }));
   assert.deepEqual(none.folders_use, []);
 });
+
+test("contents with only a folder structure asks for structure materials before sending", () => {
+  // Regression: the service answered 422 MISSING_INPUT; the form gave no hint beforehand.
+  const outline = "Optik\n  - Spiegel\n  - Linse";
+  throwsKey(() => B.build(form({ task: "contents", extras: { folders: true }, folderOutline: outline })), "err.materialsRequired");
+});

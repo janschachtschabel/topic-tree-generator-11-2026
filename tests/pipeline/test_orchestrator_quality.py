@@ -272,3 +272,38 @@ async def test_refine_reports_items_that_are_already_placed_instead_of_skipping_
     assert len(warnings) == 1 and "c1" in warnings[0].message
     assert [ref.id for ref in resp.collection[0].contents] == ["c1"]
     assert resp.unassigned == []
+
+
+async def test_refine_reports_contents_left_out_by_an_inherited_assign_contents_off() -> None:
+    # Regression: the check read only the sent options, so an inherited `assign_contents: false` dropped new items.
+    tree = copy.deepcopy(ex.CURRENT_TREE)
+    tree["generation"]["options"] = {"assign_contents": False}
+    data = {
+        "mode": "refine",
+        "use_case": "folders",
+        "current_tree": tree,
+        "items": [ex.content_item("c9", "Prisma")],
+        "frame": ex.FRAME,
+    }
+    rc = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(TopicTreeRequestV2.model_validate(data), rc)
+    ignored = [w.message for w in resp.warnings if w.code == "INPUT_IGNORED"]
+    assert any("assign_contents" in m and "c9" in m for m in ignored)
+
+
+async def test_inherited_assign_contents_off_does_not_report_items_already_in_the_tree() -> None:
+    # Review: re-sent items that already sit in current_tree were reported as "nicht einsortiert".
+    tree = copy.deepcopy(ex.CURRENT_TREE)
+    tree["generation"]["options"] = {"assign_contents": False}
+    tree["collection"][0]["contents"] = [{"id": "c5"}]
+    placed = "c5"
+    data = {
+        "mode": "refine",
+        "use_case": "folders",
+        "current_tree": tree,
+        "items": [ex.content_item(placed, "Schon da")],
+        "frame": ex.FRAME,
+    }
+    rc = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
+    resp = await orchestrator.run(TopicTreeRequestV2.model_validate(data), rc)
+    assert not [w for w in resp.warnings if w.code == "INPUT_IGNORED" and "assign_contents" in w.message]

@@ -12,6 +12,7 @@ import re
 import time
 import weakref
 from collections.abc import Callable
+from http.cookiejar import DefaultCookiePolicy
 from typing import Any
 
 import httpx
@@ -62,11 +63,18 @@ def acquire_llm_slot(limit: int) -> asyncio.Semaphore:
     return entry[1]
 
 
+def new_http_client(**kwargs: Any) -> httpx.AsyncClient:
+    """HTTP client shared by all callers of a worker: it must never keep per-caller state such as cookies."""
+    client = httpx.AsyncClient(limits=httpx.Limits(max_connections=50, max_keepalive_connections=20), **kwargs)
+    client.cookies.jar.set_policy(DefaultCookiePolicy(allowed_domains=[]))
+    return client
+
+
 def shared_http_client() -> httpx.AsyncClient:
     loop = asyncio.get_running_loop()
     client = _http_clients.get(loop)
     if client is None:
-        client = httpx.AsyncClient(limits=httpx.Limits(max_connections=50, max_keepalive_connections=20))
+        client = new_http_client()
         _http_clients[loop] = client
     return client
 

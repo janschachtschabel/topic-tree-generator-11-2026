@@ -1,0 +1,79 @@
+{
+  "mode": "create",
+  "use_case": "topic",
+  "topic": "Optik für Klasse 7",
+  "folders": [
+    {
+      "title": "Licht",
+      "items": [
+        "f1"
+      ],
+      "subcollections": [
+        {
+          "title": "Schatten",
+          "items": [
+            "f2"
+          ],
+          "subcollections": []
+        }
+      ]
+    },
+    {
+      "title": "Spiegel",
+      "items": [
+        "f3"
+      ],
+      "subcollections": []
+    }
+  ],
+  "folders_use": [
+    "structure",
+    "content"
+  ],
+  "items": [
+    {
+      "id": "f1",
+      "properties": {
+        "cm:title": [
+          "Licht und Sehen"
+        ]
+      }
+    },
+    {
+      "id": "f2",
+      "properties": {
+        "cm:title": [
+          "Kernschatten im Experiment"
+        ]
+      }
+    },
+    {
+      "id": "f3",
+      "properties": {
+        "cm:title": [
+          "Spiegelbilder"
+        ]
+      }
+    },
+    {
+      "id": "m1",
+      "use": [
+        "content"
+      ],
+      "path": "Licht/Linsen",
+      "properties": {
+        "cm:title": [
+          "Lupe selber bauen"
+        ]
+      }
+    }
+  ],
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ]
+  }
+}

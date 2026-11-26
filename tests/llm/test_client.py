@@ -240,3 +240,21 @@ async def test_double_budget_is_capped() -> None:
     fake = FakeOpenAI([('{"title": "Op', "length"), GOOD])
     await make_client(fake).complete_json("plan", "USER", Answer, max_tokens=30000)
     assert fake.calls[1]["max_completion_tokens"] == 32000
+
+
+async def test_shared_http_client_never_keeps_cookies_between_callers() -> None:
+    # Regression: one cookie jar per worker sent caller A's b-api cookie along with caller B's token.
+    import httpx
+
+    from app.llm.client import new_http_client
+
+    seen: list[str | None] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.headers.get("cookie"))
+        return httpx.Response(200, headers={"set-cookie": "session=caller-a; Path=/"}, json={})
+
+    async with new_http_client(transport=httpx.MockTransport(handler)) as client:
+        await client.post("https://b-api.example.org/v1/chat", headers={"Authorization": "Bearer bdt_a"})
+        await client.post("https://b-api.example.org/v1/chat", headers={"Authorization": "Bearer bdt_b"})
+    assert seen == [None, None]

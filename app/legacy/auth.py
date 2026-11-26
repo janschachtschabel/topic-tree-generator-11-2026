@@ -18,6 +18,7 @@ class LegacyTarget:
     concurrency: int = 20
     # False for a provider called directly (OPENAI_API_KEY): a third party gets no trace headers.
     own_endpoint: bool = True
+    timeout: float = 120.0  # per LLM call; LLM_TIMEOUT_SECONDS
 
 
 def _unauthorized() -> HTTPException:
@@ -37,6 +38,7 @@ def _standalone_target(cfg: Settings) -> LegacyTarget | None:
             cfg.legacy_max_retries,
             cfg.llm_max_concurrency,
             own_endpoint=False,
+            timeout=cfg.llm_timeout_seconds,
         )
     if cfg.b_api_dev_key:
         return LegacyTarget(
@@ -45,6 +47,7 @@ def _standalone_target(cfg: Settings) -> LegacyTarget | None:
             cfg.legacy_route,
             cfg.legacy_max_retries,
             cfg.llm_max_concurrency,
+            timeout=cfg.llm_timeout_seconds,
         )
     return None
 
@@ -65,6 +68,7 @@ def resolve_target(request: Request, cfg: Settings) -> LegacyTarget:
             cfg.legacy_route,
             cfg.legacy_max_retries,
             cfg.llm_max_concurrency,
+            timeout=cfg.llm_timeout_seconds,
         )
 
     target = _standalone_target(cfg)
@@ -80,6 +84,7 @@ def resolve_target(request: Request, cfg: Settings) -> LegacyTarget:
                 cfg.legacy_route,
                 cfg.legacy_max_retries,
                 cfg.llm_max_concurrency,
+                timeout=cfg.llm_timeout_seconds,
             )
         raise _unauthorized()
 

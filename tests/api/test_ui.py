@@ -281,3 +281,22 @@ def test_presets_include_elementary_and_higher_education_and_combinations() -> N
     assert any({("structure", "content"), ("content",)} <= uses(p) for p in by_task["contents"])
     assert any(p["payload"].get("items") and p["payload"]["feedback"].get("changes") for p in by_task["refine"])
     assert any(p["payload"]["frame"] != p["payload"]["current_tree"]["generation"]["frame"] for p in by_task["refine"])
+
+
+def test_ui_every_field_has_an_accessible_name_and_shape_errors_name_the_field() -> None:
+    # Regression: the two JSON areas had no accessible name; a bad number showed the raw id "f-depth".
+    import re
+    from pathlib import Path
+
+    static = Path("app/ui/static")
+    html = (static / "index.html").read_text(encoding="utf-8")
+    labelled = set(re.findall(r'<label[^>]*for="([^"]+)"', html))
+    for tag, ident in re.findall(r'<(input|select|textarea)\b[^>]*\bid="([^"]+)"', html):
+        match = re.search(rf'<{tag}\b[^>]*\bid="{ident}"[^>]*>', html)
+        element, before = match.group(0), html[: match.start()]
+        wrapped = before.rfind("<label") > before.rfind("</label>")
+        named = ident in labelled or wrapped or "aria-label" in element or 'type="hidden"' in element
+        assert named, f"{ident} has no accessible name"
+    i18n = (static / "i18n.js").read_text(encoding="utf-8")
+    for field in ("f-depth", "f-main-min", "f-main-max", "f-child-min", "f-child-max"):
+        assert i18n.count(f'"fieldname.{field}"') == 2

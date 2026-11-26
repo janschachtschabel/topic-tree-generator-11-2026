@@ -208,8 +208,10 @@ async def run(
         req = resolved
         check_request(req, rc.settings, loaded=True)
     rc.explicit_shape = explicit_shape(req, rc.settings)
-    warn_unused_inputs(req, rc)
-    req = effective_request(req, rc.settings)
+    merged = effective_request(req, rc.settings)
+    # Checked on the sent request (so defaults are not reported), but with the inherited options of a refine.
+    warn_unused_inputs(req, rc, options=merged.options)
+    req = merged
     if req.mode == Mode.refine:
         strategy: Strategy | None = refine.build
     else:

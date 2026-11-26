@@ -14,8 +14,29 @@ from tests.fixtures import spec_examples as ex
 ALLOWED = Settings(_env_file=None, ref_allowed_hosts=["files.example.org", ".cdn.example.org"], ref_max_bytes=1000)
 
 
+class _Stream(httpx.AsyncByteStream):
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+
+    async def __aiter__(self):
+        yield self.data
+
+
+def _streamed(handler):
+    """Serve the handler's response as a network stream (raw bytes, not read ahead) like a real server."""
+
+    def wrapped(request: httpx.Request) -> httpx.Response:
+        response = handler(request)
+        if not isinstance(response.stream, httpx.ByteStream):
+            return response  # already a live stream (e.g. a slow drip)
+        raw = b"".join(response.stream)
+        return httpx.Response(response.status_code, headers=response.headers, stream=_Stream(raw))
+
+    return wrapped
+
+
 def transport(handler):
-    return lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    return lambda: httpx.AsyncClient(transport=httpx.MockTransport(_streamed(handler)))
 
 
 @pytest.fixture
@@ -214,3 +235,93 @@ async def test_loading_refs_stops_at_the_request_deadline(serve) -> None:
         await resolve_refs(TopicTreeRequestV2.model_validate(data), settings, deadline=started + 1)
     assert err.value.code == "REF_FAILED"
     assert time.monotonic() - started < 1.5
+
+
+def _doc_items(urls: list[str]) -> dict:
+    items = [{"id": f"d{i}", "use": ["structure"], "fulltext": {"ref": url}} for i, url in enumerate(urls)]
+    return {**copy.deepcopy(ex.DOCUMENT), "items": items}
+
+
+async def test_the_same_ref_url_is_fetched_once(serve) -> None:
+    # Regression: 300 items pointing at one URL meant 300 downloads held in memory at once.
+    seen = serve(lambda r: httpx.Response(200, text="# Lehrplan"))
+    req = TopicTreeRequestV2.model_validate(_doc_items(["https://files.example.org/a.md"] * 3))
+    resolved = await resolve_refs(req, ALLOWED)
+    assert len(seen) == 1
+    assert [i.fulltext.text for i in resolved.items] == ["# Lehrplan"] * 3
+
+
+async def test_loaded_full_texts_have_a_total_cap(serve, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Regression: every ref was capped alone, but many distinct refs together could exhaust the pod's memory.
+    monkeypatch.setattr(refs, "MAX_TOTAL_FULLTEXT_CHARS", 25)
+    serve(lambda r: httpx.Response(200, text="x" * 10))
+    urls = [f"https://files.example.org/{i}.md" for i in range(3)]
+    with pytest.raises(ApiError) as err:
+        await resolve_refs(TopicTreeRequestV2.model_validate(_doc_items(urls)), ALLOWED)
+    assert err.value.code == "REF_TOO_LARGE"
+
+
+async def test_compressed_bodies_are_limited_by_their_decoded_size(serve) -> None:
+    # Regression: Content-Length and the size check saw compressed bytes; a gzip bomb expanded in memory first.
+    import gzip
+
+    bomb = gzip.compress(b"a" * 50_000)
+    accepted: list[str | None] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        accepted.append(request.headers.get("accept-encoding"))
+        return httpx.Response(200, content=bomb, headers={"Content-Encoding": "gzip"})
+
+    serve(handler)
+    with pytest.raises(ApiError) as err:
+        await fetch_text("https://files.example.org/a.md", ALLOWED)
+    assert err.value.code == "REF_TOO_LARGE"
+    assert accepted == ["identity"]
+
+
+async def test_small_compressed_bodies_are_decoded(serve) -> None:
+    import gzip
+
+    serve(
+        lambda r: httpx.Response(200, content=gzip.compress("# Läuft".encode()), headers={"Content-Encoding": "gzip"})
+    )
+    assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Läuft"
+
+
+async def test_data_after_the_end_of_a_gzip_stream_is_bounded(serve) -> None:
+    # Review: zlib keeps bytes after the gzip end in unused_data, so only the raw size can bound them.
+    import gzip
+
+    async def body():  # streamed without Content-Length, so only the read loop can stop it
+        yield gzip.compress(b"hi")
+        for _ in range(5):
+            yield b"\0" * 1000
+
+    serve(lambda r: httpx.Response(200, content=body(), headers={"Content-Encoding": "gzip"}))
+    with pytest.raises(ApiError) as err:
+        await fetch_text("https://files.example.org/a.md", ALLOWED)
+    assert err.value.code == "REF_TOO_LARGE"
+
+
+async def test_raw_deflate_bodies_are_decoded(serve) -> None:
+    import zlib
+
+    packer = zlib.compressobj(wbits=-15)
+    raw = packer.compress(b"# Roh") + packer.flush()
+    serve(lambda r: httpx.Response(200, content=raw, headers={"Content-Encoding": "deflate"}))
+    assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Roh"
+
+
+async def test_raw_deflate_split_into_single_bytes_is_decoded(serve) -> None:
+    # Re-review: the raw-deflate fallback was only tried on the first chunk; one byte gave zlib nothing to reject.
+    import zlib
+
+    packer = zlib.compressobj(wbits=-15)
+    raw = packer.compress(b"# Roh") + packer.flush()
+
+    async def body():
+        for i in range(len(raw)):
+            yield raw[i : i + 1]
+
+    serve(lambda r: httpx.Response(200, content=body(), headers={"Content-Encoding": "deflate"}))
+    assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Roh"
