@@ -40,6 +40,20 @@ def test_json_lines_carry_service_and_trace_fields(stream: io.StringIO) -> None:
     assert "timestamp" in line
 
 
+def test_json_lines_carry_the_operators_client_trace_id(stream: io.StringIO) -> None:
+    # Leitfaden Kap. 2.3: operations filter logs across services by x-client-trace-id.
+    tc = TraceContext(trace_id=TRACE, span_id="a2fb4a1d1a96d312", client_trace_id="op-4711")
+    token = current_trace.set(tc)
+    try:
+        logger.info("with client trace")
+    finally:
+        current_trace.reset(token)
+    logger.info("outside a request")
+    inside, outside = lines(stream)
+    assert inside["client_trace_id"] == "op-4711"
+    assert "client_trace_id" not in outside
+
+
 def test_text_format_is_plain() -> None:
     buffer = io.StringIO()
     configure_logging(service="topic-tree", level="INFO", fmt="text", stream=buffer)

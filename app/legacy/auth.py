@@ -16,6 +16,8 @@ class LegacyTarget:
     model: str
     max_retries: int
     concurrency: int = 20
+    # False for a provider called directly (OPENAI_API_KEY): a third party gets no trace headers.
+    own_endpoint: bool = True
 
 
 def _unauthorized() -> HTTPException:
@@ -34,6 +36,7 @@ def _standalone_target(cfg: Settings) -> LegacyTarget | None:
             cfg.openai_model,
             cfg.legacy_max_retries,
             cfg.llm_max_concurrency,
+            own_endpoint=False,
         )
     if cfg.b_api_dev_key:
         return LegacyTarget(

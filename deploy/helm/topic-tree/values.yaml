@@ -88,6 +88,19 @@ resources:
   limits:
     memory: 512Mi
 
+## @section Probes (both without dependencies; Leitfaden Kap. 3)
+## @param probes.liveness Liveness probe: /health on the internal port
+## @param probes.readiness Readiness probe: /health on the public port, so a broken public listener leaves rotation
+probes:
+  liveness:
+    httpGet: { path: /health, port: internal }
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet: { path: /health, port: http }
+    periodSeconds: 10
+    failureThreshold: 3
+
 ## @param terminationGracePeriodSeconds Lets running requests finish (above requestTimeoutSeconds + 10 s)
 terminationGracePeriodSeconds: 300
 

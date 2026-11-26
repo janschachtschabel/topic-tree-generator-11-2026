@@ -60,7 +60,7 @@ def _build_openai_client(target: LegacyTarget) -> Any:
         "base_url": target.base_url,
         "max_retries": target.max_retries,
     }
-    headers = outgoing_headers(get_trace())
+    headers = outgoing_headers(get_trace()) if target.own_endpoint else {}
     if AsyncOpenAI is _REAL_ASYNC_OPENAI:
         kwargs["default_headers"] = headers
         kwargs["http_client"] = shared_http_client()

@@ -147,6 +147,15 @@ async def test_client_is_built_with_token_retries_and_trace_headers_only() -> No
     assert not any(h.startswith("x-edu") or h == "x-api-key" for h in headers)
 
 
+async def test_no_trace_headers_go_to_a_third_party_llm() -> None:
+    # Leitfaden Kap. 2.3: B3 and x-client-trace-id only to own dependencies (b-api), not to OpenAI directly.
+    direct = LLMBackend(kind="openai", base_url=None, model="m", send_cache_key=True, api_key="k")
+    fake = FakeOpenAI([GOOD])
+    await make_client(fake, backend=direct).complete_json("plan", "U", Answer)
+    headers = {k.lower() for k in fake.constructed[0].get("default_headers") or {}}
+    assert not any(h.startswith("x-b3") or h in {"b3", "x-client-trace-id"} for h in headers)
+
+
 async def test_prompt_cache_key_only_when_backend_allows_it() -> None:
     fake = FakeOpenAI([GOOD])
     await make_client(fake).complete_json("plan", "U", Answer)

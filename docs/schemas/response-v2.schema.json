@@ -16,7 +16,8 @@
     "ChangeRecord": {
       "properties": {
         "op": {
-          "$ref": "#/$defs/ChangeOp"
+          "$ref": "#/$defs/ChangeOp",
+          "description": "Art der Änderung"
         },
         "key": {
           "anyOf": [
@@ -28,6 +29,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des betroffenen oder neuen Knotens",
           "title": "Key"
         },
         "keys": {
@@ -43,6 +45,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel der zusammengeführten Knoten (merge)",
           "title": "Keys"
         },
         "parent": {
@@ -55,6 +58,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des Elternknotens eines neuen Knotens (add)",
           "title": "Parent"
         },
         "to": {
@@ -67,6 +71,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des neuen Elternknotens (move)",
           "title": "To"
         },
         "title": {
@@ -79,10 +84,12 @@
             }
           ],
           "default": null,
+          "description": "Neuer Titel",
           "title": "Title"
         },
         "from": {
-          "$ref": "#/$defs/ChangeSource"
+          "$ref": "#/$defs/ChangeSource",
+          "description": "Auslöser: feedback_text, feedback_changes oder service (Vorschlag des Dienstes)"
         }
       },
       "required": [
@@ -105,6 +112,7 @@
       "properties": {
         "min": {
           "default": 3,
+          "description": "Mindestzahl der Unterthemen je Knoten (nie genau eines)",
           "maximum": 20,
           "minimum": 2,
           "title": "Min",
@@ -112,6 +120,7 @@
         },
         "max": {
           "default": 8,
+          "description": "Höchstzahl der Unterthemen je Knoten; begrenzt durch MAX_NODES_PER_LEVEL",
           "maximum": 20,
           "minimum": 2,
           "title": "Max",
@@ -124,6 +133,7 @@
     "ContentRef": {
       "properties": {
         "id": {
+          "description": "id des Inhalts aus der Anfrage",
           "title": "Id",
           "type": "string"
         },
@@ -137,10 +147,12 @@
             }
           ],
           "default": null,
+          "description": "Knoten-ID im Repository, unverändert aus der Anfrage",
           "title": "Nodeid"
         },
         "confidence": {
           "default": 1.0,
+          "description": "Konfidenz der Zuordnung zwischen 0 und 1 (1 bei Übernahme aus folders)",
           "maximum": 1,
           "minimum": 0,
           "title": "Confidence",
@@ -173,6 +185,7 @@
             }
           ],
           "default": null,
+          "description": "Version des Baums, auf die sich die Rückmeldung bezog",
           "title": "Version"
         },
         "text": {
@@ -185,6 +198,7 @@
             }
           ],
           "default": null,
+          "description": "Text der Rückmeldung",
           "title": "Text"
         }
       },
@@ -194,6 +208,7 @@
     "Frame": {
       "properties": {
         "discipline_uri": {
+          "description": "Fächer als SkoHub-URIs (Vokabular discipline); prägen Inhalt und Knoten-Metadaten",
           "items": {
             "type": "string"
           },
@@ -202,6 +217,7 @@
           "type": "array"
         },
         "educational_context_uri": {
+          "description": "Bildungsstufen als SkoHub-URIs (educationalContext); bestimmen den Rahmen für die Form",
           "items": {
             "type": "string"
           },
@@ -210,6 +226,7 @@
           "type": "array"
         },
         "intended_end_user_role_uri": {
+          "description": "Zielgruppen als SkoHub-URIs (intendedEndUserRole), etwa Lehrkräfte oder Lernende",
           "items": {
             "type": "string"
           },
@@ -224,10 +241,12 @@
     "Generation": {
       "properties": {
         "mode": {
-          "$ref": "#/$defs/Mode"
+          "$ref": "#/$defs/Mode",
+          "description": "Modus dieses Laufs"
         },
         "use_case": {
-          "$ref": "#/$defs/UseCase"
+          "$ref": "#/$defs/UseCase",
+          "description": "Use Case dieses Laufs"
         },
         "topic": {
           "anyOf": [
@@ -239,24 +258,31 @@
             }
           ],
           "default": null,
+          "description": "Thema dieses Laufs",
           "title": "Topic"
         },
         "frame": {
-          "$ref": "#/$defs/Frame"
+          "$ref": "#/$defs/Frame",
+          "description": "Wirksamer Rahmen"
         },
         "shape": {
-          "$ref": "#/$defs/Shape"
+          "$ref": "#/$defs/Shape",
+          "description": "Wirksame Form"
         },
         "hints": {
-          "$ref": "#/$defs/Hints"
+          "$ref": "#/$defs/Hints",
+          "description": "Wirksame Hinweise"
         },
         "options": {
-          "$ref": "#/$defs/Options"
+          "$ref": "#/$defs/Options",
+          "description": "Wirksame Optionen"
         },
         "inputs": {
-          "$ref": "#/$defs/InputCounts"
+          "$ref": "#/$defs/InputCounts",
+          "description": "Anzahl der Eingaben"
         },
         "feedback": {
+          "description": "Alle bisherigen Rückmeldungen",
           "items": {
             "$ref": "#/$defs/FeedbackEntry"
           },
@@ -272,7 +298,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Erkannte oder vorgegebene Ordnung"
         },
         "usage": {
           "anyOf": [
@@ -283,9 +310,11 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Verbrauch dieses Laufs"
         },
         "generator_version": {
+          "description": "Version des Dienstes",
           "title": "Generator Version",
           "type": "string"
         },
@@ -299,6 +328,7 @@
             }
           ],
           "default": null,
+          "description": "Name der Route bzw. des Modells, die angefragt wurden",
           "title": "Model"
         }
       },
@@ -327,9 +357,11 @@
             }
           ],
           "default": null,
+          "description": "Freitext zu Zweck und Kontext des Baums, etwa Zielgruppe oder Einsatz",
           "title": "Context"
         },
         "include": {
+          "description": "Begriffe, die im Baum vorkommen sollen",
           "items": {
             "maxLength": 200,
             "minLength": 1,
@@ -340,6 +372,7 @@
           "type": "array"
         },
         "exclude": {
+          "description": "Begriffe, die nicht vorkommen sollen",
           "items": {
             "maxLength": 200,
             "minLength": 1,
@@ -360,6 +393,7 @@
             }
           ],
           "default": null,
+          "description": "Gewünschtes Ordnungsprinzip, etwa „chronologisch“ oder „nach Kompetenzen“",
           "title": "Order"
         },
         "description_length": {
@@ -372,6 +406,7 @@
         },
         "language": {
           "default": "de",
+          "description": "Sprache der Titel und Beschreibungen als ISO-639-1-Code",
           "pattern": "^[a-z]{2}$",
           "title": "Language",
           "type": "string"
@@ -384,11 +419,13 @@
       "properties": {
         "folders": {
           "default": 0,
+          "description": "Anzahl der übergebenen Ordner",
           "title": "Folders",
           "type": "integer"
         },
         "items": {
-          "$ref": "#/$defs/ItemCounts"
+          "$ref": "#/$defs/ItemCounts",
+          "description": "Anzahl der Einträge je Rolle"
         }
       },
       "title": "InputCounts",
@@ -398,11 +435,13 @@
       "properties": {
         "structure": {
           "default": 0,
+          "description": "Anzahl der Einträge mit Rolle structure",
           "title": "Structure",
           "type": "integer"
         },
         "content": {
           "default": 0,
+          "description": "Anzahl der Einträge mit Rolle content",
           "title": "Content",
           "type": "integer"
         }
@@ -414,6 +453,7 @@
       "properties": {
         "min": {
           "default": 6,
+          "description": "Mindestzahl der Hauptthemen (Ebene 1)",
           "maximum": 20,
           "minimum": 1,
           "title": "Min",
@@ -421,6 +461,7 @@
         },
         "max": {
           "default": 12,
+          "description": "Höchstzahl der Hauptthemen (Ebene 1); begrenzt durch MAX_NODES_PER_LEVEL",
           "maximum": 20,
           "minimum": 1,
           "title": "Max",
@@ -433,34 +474,41 @@
     "Metadata": {
       "properties": {
         "title": {
+          "description": "Titel des Baums",
           "title": "Title",
           "type": "string"
         },
         "description": {
           "default": "",
+          "description": "Beschreibung des Baums",
           "title": "Description",
           "type": "string"
         },
         "target_audience": {
           "default": "Lehrkräfte",
+          "description": "Zielgruppe in Worten",
           "title": "Target Audience",
           "type": "string"
         },
         "created_at": {
+          "description": "Zeitpunkt der Erzeugung (ISO 8601)",
           "title": "Created At",
           "type": "string"
         },
         "author": {
           "default": "Themenbaum Generator",
+          "description": "Erzeuger",
           "title": "Author",
           "type": "string"
         },
         "schema_version": {
           "default": "2.0",
+          "description": "Version dieses Antwortformats",
           "title": "Schema Version",
           "type": "string"
         },
         "version": {
+          "description": "Version des Baums (v1, v2, …); steigt mit jedem refine",
           "title": "Version",
           "type": "string"
         },
@@ -474,17 +522,20 @@
             }
           ],
           "default": null,
+          "description": "Version, auf der dieser Baum aufbaut",
           "title": "Based On"
         },
         "vocab_labels": {
           "additionalProperties": {
             "type": "string"
           },
+          "description": "Deutsche Bezeichnungen der verwendeten Vokabular-URIs",
           "title": "Vocab Labels",
           "type": "object"
         },
         "generation": {
-          "$ref": "#/$defs/Generation"
+          "$ref": "#/$defs/Generation",
+          "description": "Wirksame Vorgaben dieses Laufs; für den nächsten refine als current_tree.generation zurückgeben"
         }
       },
       "required": [
@@ -507,19 +558,23 @@
     "NodeOut": {
       "properties": {
         "key": {
+          "description": "Stabiler Schlüssel des Knotens; bleibt über refine-Läufe erhalten",
           "title": "Key",
           "type": "string"
         },
         "title": {
+          "description": "Titel des Knotens",
           "title": "Title",
           "type": "string"
         },
         "shorttitle": {
+          "description": "Kurztitel, höchstens 20 Zeichen",
           "title": "Shorttitle",
           "type": "string"
         },
         "status": {
-          "$ref": "#/$defs/NodeStatus"
+          "$ref": "#/$defs/NodeStatus",
+          "description": "Änderungsstand gegenüber current_tree: new, unchanged, changed, moved oder suggested"
         },
         "origin": {
           "anyOf": [
@@ -530,7 +585,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Herkunft des Knotens"
         },
         "confidence": {
           "anyOf": [
@@ -544,12 +600,15 @@
             }
           ],
           "default": null,
+          "description": "Konfidenz, falls der Knoten nur vorgeschlagen ist",
           "title": "Confidence"
         },
         "properties": {
-          "$ref": "#/$defs/Properties"
+          "$ref": "#/$defs/Properties",
+          "description": "edu-sharing-Properties des Knotens, etwa cm:title, cclom:general_description, ccm:taxonid"
         },
         "contents": {
+          "description": "Zugeordnete Inhalte",
           "items": {
             "$ref": "#/$defs/ContentRef"
           },
@@ -557,6 +616,7 @@
           "type": "array"
         },
         "subcollections": {
+          "description": "Unterknoten",
           "items": {
             "$ref": "#/$defs/NodeOut"
           },
@@ -588,26 +648,31 @@
       "properties": {
         "improve": {
           "default": false,
+          "description": "folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück",
           "title": "Improve",
           "type": "boolean"
         },
         "assign_contents": {
           "default": true,
+          "description": "Inhalte aus items den Knoten zuordnen",
           "title": "Assign Contents",
           "type": "boolean"
         },
         "assign_only": {
           "default": false,
+          "description": "refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf",
           "title": "Assign Only",
           "type": "boolean"
         },
         "multi_assign": {
           "default": true,
+          "description": "Ein Inhalt darf mehreren Knoten zugeordnet werden",
           "title": "Multi Assign",
           "type": "boolean"
         },
         "min_confidence": {
           "default": 0.6,
+          "description": "Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned",
           "maximum": 1,
           "minimum": 0,
           "title": "Min Confidence",
@@ -615,6 +680,7 @@
         },
         "auto_metadata": {
           "default": false,
+          "description": "Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist",
           "title": "Auto Metadata",
           "type": "boolean"
         }
@@ -625,7 +691,8 @@
     "Origin": {
       "properties": {
         "type": {
-          "$ref": "#/$defs/OriginType"
+          "$ref": "#/$defs/OriginType",
+          "description": "Woher der Knoten stammt: topic, document, folder, cluster oder feedback"
         },
         "id": {
           "anyOf": [
@@ -637,6 +704,7 @@
             }
           ],
           "default": null,
+          "description": "id des Eintrags in items, aus dem der Knoten stammt (document)",
           "title": "Id"
         },
         "section": {
@@ -649,6 +717,7 @@
             }
           ],
           "default": null,
+          "description": "Abschnitt im Dokument (document)",
           "title": "Section"
         },
         "page": {
@@ -661,6 +730,7 @@
             }
           ],
           "default": null,
+          "description": "Seite im Dokument, falls Seitenmarken vorhanden sind (document)",
           "title": "Page"
         },
         "path": {
@@ -673,6 +743,7 @@
             }
           ],
           "default": null,
+          "description": "Ordnerpfad (folders)",
           "title": "Path"
         }
       },
@@ -705,6 +776,7 @@
     "Question": {
       "properties": {
         "text": {
+          "description": "Rückfrage zu einer unklaren Rückmeldung",
           "title": "Text",
           "type": "string"
         },
@@ -718,6 +790,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des betroffenen Knotens",
           "title": "Key"
         },
         "options": {
@@ -733,6 +806,7 @@
             }
           ],
           "default": null,
+          "description": "Antwortmöglichkeiten",
           "title": "Options"
         }
       },
@@ -745,10 +819,12 @@
     "ServiceWarning": {
       "properties": {
         "code": {
+          "description": "Fester Code, etwa LLM_DEGRADED, DESCRIBE_FAILED oder SHAPE_SINGLE_CHILD",
           "title": "Code",
           "type": "string"
         },
         "message": {
+          "description": "Erklärung für Menschen",
           "title": "Message",
           "type": "string"
         },
@@ -762,6 +838,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des betroffenen Knotens",
           "title": "Key"
         },
         "step": {
@@ -774,6 +851,7 @@
             }
           ],
           "default": null,
+          "description": "Verarbeitungsschritt, in dem die Warnung entstand",
           "title": "Step"
         }
       },
@@ -788,18 +866,22 @@
       "properties": {
         "depth": {
           "default": 3,
+          "description": "Anzahl der Ebenen, höchstens MAX_TREE_DEPTH; ohne shape nach Bildungsstufe und Eingabe",
           "maximum": 4,
           "minimum": 1,
           "title": "Depth",
           "type": "integer"
         },
         "main_topics": {
-          "$ref": "#/$defs/MainRange"
+          "$ref": "#/$defs/MainRange",
+          "description": "Spanne der Hauptthemen; eine einzelne Grenze übernimmt die andere aus dem Empfehlungsrahmen"
         },
         "children": {
-          "$ref": "#/$defs/ChildRange"
+          "$ref": "#/$defs/ChildRange",
+          "description": "Spanne der Unterthemen je Knoten"
         },
         "extra_topics": {
+          "description": "Zusätzliche Hauptthemen: general (Allgemeines) und/oder methodology (Methodik und Didaktik)",
           "items": {
             "$ref": "#/$defs/ExtraTopic"
           },
@@ -813,10 +895,12 @@
     "StructureInfo": {
       "properties": {
         "order": {
+          "description": "Ordnungsprinzip des Baums",
           "title": "Order",
           "type": "string"
         },
         "levels": {
+          "description": "Bedeutung der Ebenen, von oben nach unten",
           "items": {
             "type": "string"
           },
@@ -824,6 +908,7 @@
           "type": "array"
         },
         "source": {
+          "description": "Herkunft der Ordnung: hint (aus hints.order), detected (erkannt) oder input (aus der Eingabe)",
           "enum": [
             "hint",
             "detected",
@@ -843,6 +928,7 @@
     "Unassigned": {
       "properties": {
         "id": {
+          "description": "id des nicht zugeordneten Inhalts",
           "title": "Id",
           "type": "string"
         },
@@ -856,10 +942,12 @@
             }
           ],
           "default": null,
+          "description": "Knoten-ID im Repository, unverändert aus der Anfrage",
           "title": "Nodeid"
         },
         "reason": {
-          "$ref": "#/$defs/UnassignedReason"
+          "$ref": "#/$defs/UnassignedReason",
+          "description": "Grund: off_topic, low_confidence, no_matching_node oder excluded"
         }
       },
       "required": [
@@ -883,31 +971,37 @@
       "properties": {
         "llm_calls": {
           "default": 0,
+          "description": "Anzahl der LLM-Aufrufe",
           "title": "Llm Calls",
           "type": "integer"
         },
         "failed_calls": {
           "default": 0,
+          "description": "Davon fehlgeschlagen",
           "title": "Failed Calls",
           "type": "integer"
         },
         "prompt_tokens": {
           "default": 0,
+          "description": "Eingabe-Tokens",
           "title": "Prompt Tokens",
           "type": "integer"
         },
         "cached_tokens": {
           "default": 0,
+          "description": "Davon aus dem Prompt-Cache des Anbieters",
           "title": "Cached Tokens",
           "type": "integer"
         },
         "completion_tokens": {
           "default": 0,
+          "description": "Ausgabe-Tokens",
           "title": "Completion Tokens",
           "type": "integer"
         },
         "duration_ms": {
           "default": 0,
+          "description": "Dauer der Verarbeitung in Millisekunden",
           "title": "Duration Ms",
           "type": "integer"
         }
@@ -928,9 +1022,11 @@
   },
   "properties": {
     "metadata": {
-      "$ref": "#/$defs/Metadata"
+      "$ref": "#/$defs/Metadata",
+      "description": "Angaben zum Baum und zum Lauf"
     },
     "collection": {
+      "description": "Der Baum: Hauptthemen mit Unterknoten",
       "items": {
         "$ref": "#/$defs/NodeOut"
       },
@@ -938,6 +1034,7 @@
       "type": "array"
     },
     "unassigned": {
+      "description": "Inhalte, die keinem Knoten zugeordnet wurden, mit Grund",
       "items": {
         "$ref": "#/$defs/Unassigned"
       },
@@ -945,6 +1042,7 @@
       "type": "array"
     },
     "changes": {
+      "description": "Angewendete und vorgeschlagene Änderungen",
       "items": {
         "$ref": "#/$defs/ChangeRecord"
       },
@@ -952,6 +1050,7 @@
       "type": "array"
     },
     "questions": {
+      "description": "Rückfragen zu unklarer Rückmeldung; der Baum bleibt dafür unverändert",
       "items": {
         "$ref": "#/$defs/Question"
       },
@@ -959,6 +1058,7 @@
       "type": "array"
     },
     "warnings": {
+      "description": "Was nicht gelungen ist oder auffiel; ein Schritt ohne Ergebnis steht immer hier",
       "items": {
         "$ref": "#/$defs/ServiceWarning"
       },
