@@ -148,74 +148,8 @@
     showFormError("");
   }
 
-  // --- refine base -------------------------------------------------------------------------------------
-  function toggleLock(key) {
-    if (state.lockedKeys.has(key)) state.lockedKeys.delete(key);
-    else state.lockedKeys.add(key);
-    $("f-fb-locked").value = [...state.lockedKeys].join(", ");
-    refresh();
-    renderBase();
-    return state.lockedKeys.has(key);
-  }
-
-  const resultShown = () => Boolean(state.lastResponse) && !$("result-area").hidden;
-
-  // Actions on the result tree first make that result the base, so keys and locks refer to the tree on screen.
-  function lockOnResult(key) {
-    adoptResult();
-    return toggleLock(key);
-  }
-
-  function editNode(key) {
-    if (resultShown()) adoptResult();
-    state.changes.addRow({ op: "rename", key });
-    $("changes-editor").scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  function renderBase() {
-    const tree = ["refine", "assign"].includes(state.task) ? state.currentTree : null;
-    $("base-area").hidden = !tree || !$("result-area").hidden;
-    if (!tree) return;
-    $("base-heading").textContent = t("base.heading", { title: tree.title || "–", version: tree.version || "–" });
-    $("base-tree-label").textContent = t(state.task === "assign" ? "base.tree.assign" : "base.tree");
-    if (state.task === "assign") window.TopicTreeView.renderTree($("base-tree"), tree.collection, new Set(), null, {});
-    else window.TopicTreeView.renderTree($("base-tree"), tree.collection, state.lockedKeys, toggleLock, {}, editNode);
-  }
-
-  function adoptResult() {
-    const resp = state.lastResponse;
-    if (!resp) return;
-    const generation = resp.metadata.generation || {};
-    F().setBase(state, {
-      version: resp.metadata.version,
-      title: resp.metadata.title,
-      description: resp.metadata.description,
-      collection: resp.collection,
-      generation,
-    }, setSelectValue);
-    // Feedback and materials of the last run are already in the adopted tree; start the next change from scratch.
-    $("f-fb-text").value = "";
-    $("f-materials-b").value = "";
-    $("x-content-materials").checked = false;
-    state.lockedKeys = new Set();
-    $("f-fb-locked").value = "";
-    state.changes.setChanges([]);
-    $("result-area").hidden = true;
-    selectTask("refine");
-    setStatus("status.adopted", { version: resp.metadata.version });
-  }
-
-  function readBaseJson() {
-    const raw = $("f-current-tree").value.trim();
-    try {
-      F().setBase(state, raw ? JSON.parse(raw) : null, setSelectValue);
-      showFormError("");
-    } catch {
-      showFormError(t("err.json", { field: "current_tree" }));
-    }
-    refresh();
-    renderBase();
-  }
+  const B = () => window.TopicTreeBase;
+  const renderBase = () => B().renderBase();
 
   // --- submit and result -------------------------------------------------------------------------------
   function currentPayload() {
@@ -286,7 +220,7 @@
       ? t("tree.orderLine", { source: st.source, order: st.order }) + ((st.levels || []).length ? ` · ${st.levels.join(" → ")}` : "")
       : "";
     window.TopicTreeView.renderTree(
-      $("tree-container"), resp.collection, new Set(), lockOnResult, resp.metadata.vocab_labels || {}, editNode,
+      $("tree-container"), resp.collection, new Set(), B().lockOnResult, resp.metadata.vocab_labels || {}, B().editNode,
     );
     if ($("tree-filter").value) window.TopicTreeView.filterTree($("tree-container"), $("tree-filter").value);
     renderRaw();
@@ -310,7 +244,7 @@
   }
 
   window.TopicTreeApp = {
-    state, $, t, setStatus, showFormError, populateSelect, selectTask, applyPreset, refresh, submitForm,
-    adoptResult, readBaseJson, renderSuccess, renderRaw, setJsonOverride, renderChips, renderBase, fillPresetSelect, TASKS,
+    state, $, t, setStatus, showFormError, populateSelect, setSelectValue, selectTask, applyPreset, refresh, submitForm,
+    renderSuccess, renderRaw, setJsonOverride, renderChips, renderBase, fillPresetSelect, TASKS,
   };
 })();

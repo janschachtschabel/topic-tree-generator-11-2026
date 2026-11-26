@@ -51,6 +51,7 @@ def test_ui_enabled_serves_self_hosted_html_and_assets_without_exposing_in_opena
         ("result.js", "javascript"),
         ("form.js", "javascript"),
         ("app.js", "javascript"),
+        ("base.js", "javascript"),
         ("boot.js", "javascript"),
     ):
         asset = client.get(f"/ui/assets/{name}")
@@ -193,6 +194,7 @@ def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
         "result.js",
         "form.js",
         "app.js",
+        "base.js",
         "boot.js",
     ]
     positions = [html.index(f"/ui/assets/{name}") for name in order]
