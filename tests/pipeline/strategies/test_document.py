@@ -3,8 +3,10 @@ import time
 from pathlib import Path
 
 from app.domain.tree import walk
+from app.llm.client import LLMStepError
 from app.pipeline import orchestrator
 from app.pipeline.run_context import RunContext
+from app.pipeline.steps.map_outline import narrowing
 from app.pipeline.strategies.document import build
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.settings import Settings
@@ -297,7 +299,6 @@ async def test_document_without_explicit_shape_keeps_all_20_curriculum_main_area
 
 
 async def test_document_falls_back_to_deterministic_outline_when_llm_unavailable() -> None:
-    from app.llm.client import LLMStepError
 
     llm = FakeLLM(
         {
@@ -310,3 +311,54 @@ async def test_document_falls_back_to_deterministic_outline_when_llm_unavailable
     assert [n.title for n in resp.collection] == ["Themenfeld 1: Licht", "Themenfeld 2: Grenzflächen"]
     codes = [w.code for w in resp.warnings]
     assert "LLM_DEGRADED" in codes and "DESCRIBE_FAILED" in codes
+
+
+async def test_topic_narrows_the_document_and_a_narrow_mapping_is_kept() -> None:
+    narrow = {
+        "order": "Themenfelder",
+        "levels": ["Themenfeld", "Fachbegriff"],
+        "description": "Licht an Grenzflächen",
+        "nodes": [
+            {
+                "title": "Reflexion",
+                "shorttitle": "Reflexion",
+                "section_ids": ["d1:s5"],
+                "children": [],
+            }
+        ],
+    }
+    llm = FakeLLM({"map_outline": narrow, "describe_nodes": describe})
+    run = rc(llm)
+    result = await build(req([doc()], topic="Optik: Licht an Grenzflächen"), run)
+    assert [r.title for r in result.roots] == ["Reflexion"]
+    assert "OUTLINE_FALLBACK" not in [w.code for w in run.warnings]
+    prompt = llm.prompts("map_outline")[0]
+    assert "Das Thema „Optik: Licht an Grenzflächen“ grenzt das Dokument ein" in prompt
+    assert narrowing(None) == ""
+
+
+async def test_a_topic_covered_by_one_section_makes_its_subsections_the_main_topics() -> None:
+    single = {
+        "order": "Themenfelder",
+        "levels": ["Themenfeld", "Fachbegriff"],
+        "description": "Grenzflächen",
+        "nodes": [MAPPING["nodes"][1]],
+    }
+    llm = FakeLLM({"map_outline": single, "describe_nodes": describe})
+    result = await build(req([doc()], topic="Licht an Grenzflächen"), rc(llm))
+    assert [r.title for r in result.roots] == ["Reflexion", "Brechung"]
+
+
+async def test_unfolding_drops_the_first_level_name() -> None:
+    single = {**MAPPING, "levels": ["Themenfeld", "Fachbegriff"], "nodes": [MAPPING["nodes"][1]]}
+    llm = FakeLLM({"map_outline": single, "describe_nodes": describe})
+    result = await build(req([doc()], topic="Licht an Grenzflächen"), rc(llm))
+    assert result.structure.levels == ["Fachbegriff"]
+
+
+async def test_an_empty_mapping_with_topic_falls_back_to_the_full_outline() -> None:
+    llm = FakeLLM({"map_outline": {**MAPPING, "nodes": []}, "describe_nodes": describe})
+    run = rc(llm)
+    result = await build(req([doc()], topic="Licht"), run)
+    assert len(result.roots) > 1
+    assert "OUTLINE_FALLBACK" in [w.code for w in run.warnings]

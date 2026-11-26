@@ -5,10 +5,12 @@ from pydantic import ValidationError
 
 from app.domain.keys import assign_missing_keys
 from app.domain.ops import apply_changes, protected_keys
-from app.domain.tree import Node, from_tree_in, walk
+from app.domain.tree import Node, from_tree_in, index, parent_of, walk
+from app.llm.client import LLMStepError
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.describe_nodes import describe_nodes
+from app.pipeline.steps.expand_nodes import expand_nodes, shallow_leaves
 from app.pipeline.steps.interpret_feedback import interpret_feedback
 from app.pipeline.steps.split_node import split_node
 from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
@@ -33,8 +35,11 @@ def _keys_of(item: Change | ChangeRecord) -> set[str]:
 
 
 class _Refiner:
-    def __init__(self, roots: list[Node], locked: set[str], rc: RunContext, result: StrategyResult) -> None:
+    def __init__(
+        self, roots: list[Node], locked: set[str], rc: RunContext, result: StrategyResult, width: tuple[int, int]
+    ) -> None:
         self.roots = roots
+        self.width = width
         self.locked = locked
         self.rc = rc
         self.result = result
@@ -79,6 +84,41 @@ class _Refiner:
             else:
                 allowed.append(change)
         await self.apply(allowed, ChangeSource.feedback_text)
+        await self.expand_new_leaves()
+
+    async def expand_new_leaves(self) -> None:
+        """Nodes added from text get subtopics down to their neighbours' depth (one call for all of them)."""
+        nodes = index(self.roots)
+        targets = []
+        for record in self.result.changes:
+            node = nodes.get(record.key or "")
+            if record.op != ChangeOp.add or record.source != ChangeSource.feedback_text or node is None:
+                continue
+            parent = parent_of(self.roots, node.key)
+            for leaf, levels in shallow_leaves(node, parent.children if parent else self.roots):
+                if all(leaf is not known for known, _ in targets):
+                    targets.append((leaf, levels))
+        if not targets:
+            return
+        try:
+            await expand_nodes(targets, self.roots, self.rc, self.width)
+        except LLMStepError as err:
+            self.rc.warn(
+                "EXPAND_FAILED",
+                f"Unterthemen für {len(targets)} neue Knoten konnten nicht erzeugt werden ({err.reason}).",
+                targets[0][0].key,
+                "expand_nodes",
+            )
+            return
+        assign_missing_keys(self.roots)
+        still_bare = [node for node, _ in targets if not node.children]
+        if still_bare:
+            self.rc.warn(
+                "EXPAND_INCOMPLETE",
+                f"{len(still_bare)} neue Knoten blieben ohne Unterthemen, obwohl die Nachbaräste tiefer sind.",
+                still_bare[0].key,
+                "expand_nodes",
+            )
 
 
 _FRAME_FIELDS = (
@@ -133,7 +173,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
                 step="refine",
             )
         return result
-    refiner = _Refiner(roots, set(feedback.locked), rc, result)
+    width = (req.shape.children.min, req.shape.children.max)
+    refiner = _Refiner(roots, set(feedback.locked), rc, result, width)
     if feedback.changes:
         await refiner.apply(feedback.changes, ChangeSource.feedback_changes)
     if feedback.text:

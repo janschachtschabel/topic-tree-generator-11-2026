@@ -33,3 +33,15 @@ def test_system_prompt_is_static_and_long_enough_for_prefix_caching() -> None:
 
 def test_system_prompt_is_loaded_byte_identically() -> None:
     assert load("system") == load("system")
+
+
+def test_descriptions_use_one_neutral_voice_without_direct_address() -> None:
+    # Live run 2026-11-26: parallel describe batches mixed "du", "Sie", imperatives and "Lehrkräfte können" in one tree.
+    text = load("system")
+    assert "ohne Anrede" in text
+    assert "„Dieser Bereich …“" in text and "erklärt die Sache selbst" in text
+
+
+def test_feedback_adds_new_branches_down_to_the_depth_of_their_neighbours() -> None:
+    # Live run 2026-11-26: "add a main topic" in a 3-level tree produced a bare leaf (SHAPE_UNBALANCED).
+    assert "bis zur Tiefe ihrer Nachbaräste" in load("interpret_feedback")

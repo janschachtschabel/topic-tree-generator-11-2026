@@ -105,8 +105,12 @@ class _Converter:
 def _checked_mapping(
     nodes: list[MappedNode], sections: list[DocSection], req: TopicTreeRequestV2, rc: RunContext
 ) -> list[MappedNode]:
-    """The LLM mapping, or the document's own headings when the mapping collapsed the outline."""
+    """The LLM mapping, or the document's own headings when the mapping collapsed the outline.
+
+    With a topic the mapping may keep only the matching sections, so only an empty mapping counts as collapsed."""
     outline = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
+    if nodes and req.topic:
+        return nodes
     if len(nodes) >= min(req.shape.main_topics.min, len(outline)):
         return nodes
     rc.warn(
@@ -122,9 +126,12 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     docs = structure_documents(req)
     sections = [s for doc in docs for s in _sections(doc)]
     try:
-        mapping = await map_outline(_outline_text(sections, docs, rc), rc)
+        mapping = await map_outline(_outline_text(sections, docs, rc), rc, req.topic)
         mapped = _checked_mapping(mapping.nodes, sections, req, rc)
         order, levels, description = mapping.order, mapping.levels, mapping.description
+        if req.topic and mapped is mapping.nodes and len(mapped) == 1 and mapped[0].children:
+            # One section covers the topic: its subsections become the main topics.
+            mapped, levels = mapped[0].children, levels[1:]
     except LLMStepError as err:
         fallback = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
         if not fallback or len(sections) <= len(docs):

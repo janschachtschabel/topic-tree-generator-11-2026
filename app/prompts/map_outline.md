@@ -2,7 +2,7 @@
 
 ## Gliederung des Strukturdokuments
 {{outline}}
-
+{{narrowing}}
 ## Aufgabe: Themenbaum aus dem Dokument ableiten
 Leite den Themenbaum aus der Gliederung ab. Die Gliederung gibt die Struktur vor; halte dich eng an sie.
 1. Übernimm die verbindlichen fachlichen Abschnitte (Themenfelder, Themen, Fachbegriffe). Lass Vorwort, Hinweise zur

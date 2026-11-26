@@ -23,8 +23,19 @@ class OutlineMapping(BaseModel):
     nodes: list[MappedNode]
 
 
-async def map_outline(outline: str, rc: RunContext) -> OutlineMapping:
-    prompt = render(STEP, context=rc.context, outline=outline)
+def narrowing(topic: str | None) -> str:
+    """With a topic, only the sections that belong to it become nodes (the document may cover far more)."""
+    if not topic:
+        return ""
+    return (
+        f"\n## Eingrenzung auf das Thema\nDas Thema „{topic}“ grenzt das Dokument ein. Übernimm nur Abschnitte, die "
+        f"unmittelbar zu „{topic}“ gehören; Abschnitte, die nur zum übergeordneten Fach passen, fallen weg. Deckt nur "
+        "ein Abschnitt das Thema ab, werden seine Unterabschnitte zu Hauptknoten.\n"
+    )
+
+
+async def map_outline(outline: str, rc: RunContext, topic: str | None = None) -> OutlineMapping:
+    prompt = render(STEP, context=rc.context, outline=outline, narrowing=narrowing(topic))
     line_count = outline.count("\n") + 1
     budget = max(8000, min(32000, 1500 + line_count * 45))
     return await rc.llm.complete_json(STEP, prompt, OutlineMapping, max_tokens=budget)

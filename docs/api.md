@@ -79,6 +79,10 @@ Neue `items` beim Weiterentwickeln brauchen eigene ids: Eine id, die im Baum sch
 Material und bleibt an ihrem Platz (Warnung `ITEM_ALREADY_PLACED`); trägt sie eine andere `nodeId` als im Baum,
 antwortet der Dienst mit `422 ID_CONFLICT`.
 
+Legt eine Text-Rückmeldung einen neuen Knoten neben tieferen Ästen an, ergänzt der Dienst dessen Unterthemen bis zur
+Tiefe der Nachbaräste (Warnung `EXPAND_FAILED` oder `EXPAND_INCOMPLETE`, falls das nicht gelingt). Strukturierte `add`-Änderungen legen genau
+den einen Knoten an.
+
 Änderungsoperationen in `feedback.changes`: `move` ohne `to` (oder mit `to: null`) verschiebt einen Knoten auf die
 Hauptebene.
 
@@ -97,7 +101,7 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
-  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `FEEDBACK_IGNORED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
+  `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `EXPAND_FAILED`, `EXPAND_INCOMPLETE`, `FEEDBACK_IGNORED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`, `REF_*`).
 - `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 

@@ -331,3 +331,91 @@ async def test_changed_frame_replaces_old_frame_values_but_keeps_narrowed_and_lo
     assert ctx("k-optik") == [SEK2] and ctx("k-linsen") == [SEK2]
     assert ctx("k-kraft") == ["http://w3id.org/openeduhub/vocabs/educationalContext/grundschule"]
     assert ctx("k-akustik") == [ex.SEK1] and ctx("k-schall") == [ex.SEK1]
+
+
+async def test_a_new_main_topic_from_text_gets_subtopics_down_to_its_neighbours_depth() -> None:
+    # Live run 2026-11-26: "add a main topic" left a bare leaf next to deeper branches (SHAPE_UNBALANCED).
+    interpretation = {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    expand = {
+        "nodes": [
+            {
+                "key": "k-farben",
+                "children": [
+                    {"title": "Spektrum", "shorttitle": "Spektrum", "children": []},
+                    {"title": "Farbmischung", "shorttitle": "Mischung", "children": []},
+                ],
+            }
+        ]
+    }
+    resp, llm = await run(
+        request({"text": "Farben als Hauptthema"}), {"interpret_feedback": interpretation, "expand_nodes": expand}
+    )
+    farben = by_key(resp.collection, "k-farben")
+    assert [c.title for c in farben.subcollections] == ["Spektrum", "Farbmischung"]
+    assert all(c.status == "new" and c.properties.first("cm:description") for c in farben.subcollections)
+    prompt = llm.prompts("expand_nodes")[0]
+    assert "k-farben" in prompt and "1 Ebene" in prompt
+    assert "SHAPE_UNBALANCED" not in [w.code for w in resp.warnings]
+
+
+async def test_failed_expansion_is_reported_and_keeps_the_new_node() -> None:
+    interpretation = {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    resp, _ = await run(request({"text": "Farben als Hauptthema"}), {"interpret_feedback": interpretation})
+    assert by_key(resp.collection, "k-farben").subcollections == []
+    assert "EXPAND_FAILED" in [w.code for w in resp.warnings]
+
+
+async def test_a_new_leaf_next_to_leaves_is_not_expanded() -> None:
+    interpretation = {"changes": [{"op": "add", "parent": "k-optik", "title": "Farben"}], "questions": []}
+    _, llm = await run(request({"text": "Farben unter Optik"}), {"interpret_feedback": interpretation})
+    assert llm.prompts("expand_nodes") == []
+
+
+async def test_expansion_drops_subtopics_whose_title_already_exists_in_the_tree() -> None:
+    # Live run 2026-11-26: the expansion repeated "Optische Geräte", which already stood elsewhere in the tree.
+    interpretation = {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    expand = {
+        "nodes": [
+            {
+                "key": "k-farben",
+                "children": [
+                    {"title": "Spektrum", "shorttitle": "Spektrum", "children": []},
+                    {"title": "linsen", "shorttitle": "Linsen", "children": []},
+                ],
+            }
+        ]
+    }
+    resp, _ = await run(
+        request({"text": "Farben als Hauptthema"}), {"interpret_feedback": interpretation, "expand_nodes": expand}
+    )
+    assert [c.title for c in by_key(resp.collection, "k-farben").subcollections] == ["Spektrum"]
+
+
+async def test_targets_the_model_leaves_out_are_reported() -> None:
+    interpretation = {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    resp, _ = await run(
+        request({"text": "Farben als Hauptthema"}),
+        {"interpret_feedback": interpretation, "expand_nodes": {"nodes": []}},
+    )
+    assert "EXPAND_INCOMPLETE" in [w.code for w in resp.warnings]
+
+
+async def test_a_partly_built_new_branch_is_completed_at_its_leaves() -> None:
+    current = copy.deepcopy(CURRENT)
+    current["generation"]["shape"]["depth"] = 3
+    current["collection"][0]["subcollections"][0]["subcollections"] = [node("k-sammel", "Sammellinse")]
+    interpretation = {
+        "changes": [
+            {"op": "add", "parent": None, "title": "Farben"},
+            {"op": "add", "parent": "Farben", "title": "Spektrum"},
+        ],
+        "questions": [],
+    }
+    expand = lambda prompt: {
+        "nodes": [{"key": "k-spektrum", "children": [{"title": "Prisma", "shorttitle": "Prisma", "children": []}]}]
+    }
+    data = {"mode": "refine", "use_case": "topic", "current_tree": current, "frame": ex.FRAME}
+    req = TopicTreeRequestV2.model_validate({**data, "feedback": {"text": "Farben mit Spektrum"}})
+    resp, llm = await run(req, {"interpret_feedback": interpretation, "expand_nodes": expand})
+    assert "k-spektrum | Pfad: Farben > Spektrum | 1 Ebene" in llm.prompts("expand_nodes")[0]
+    assert [c.title for c in by_key(resp.collection, "k-spektrum").subcollections] == ["Prisma"]
