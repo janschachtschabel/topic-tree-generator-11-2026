@@ -3,6 +3,11 @@
 ## Unreleased
 
 Changed
+- Leitfaden check (26.11.2026): every log line of a request carries the operator's `x-client-trace-id` as
+  `client_trace_id`; an LLM provider called directly (standalone, `OPENAI_API_KEY`) gets no B3 or
+  `x-client-trace-id` headers; liveness and readiness probes are configurable in the Helm values (`probes.*`);
+  every v2 request and response field has a description in the OpenAPI spec; the Steckbrief matches the current
+  state (live-test run times, image size, proxy header approvals, deviations, open points).
 - Test UI (`/ui/`) rebuilt around a task navigation with combinations as add-ons, line editors for materials and
   folders, a row editor for targeted changes (`refine`), an always-visible editable request JSON, and 18 task-grouped
   examples (new: Kita, Hochschule, topic + document, folders + loose files, contents with sort-in-only items, all

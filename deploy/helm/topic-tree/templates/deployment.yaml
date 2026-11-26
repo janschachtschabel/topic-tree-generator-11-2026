@@ -74,14 +74,8 @@ spec:
             - secretRef:
                 name: {{ .Values.secrets.existingSecret }}
           {{- end }}
-          livenessProbe:
-            httpGet: { path: /health, port: internal }
-            periodSeconds: 15
-            failureThreshold: 3
-          readinessProbe:
-            httpGet: { path: /health, port: http }
-            periodSeconds: 10
-            failureThreshold: 3
+          livenessProbe: {{- toYaml .Values.probes.liveness | nindent 12 }}
+          readinessProbe: {{- toYaml .Values.probes.readiness | nindent 12 }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false

@@ -180,3 +180,33 @@ async def test_permanent_vs_transient_503_from_bapi(detail: str, expected_status
         await orchestrator.run(req, rc, {UseCase.topic: fail_503})
     assert err.value.status == expected_status
     assert bool(err.value.headers and "Retry-After" in err.value.headers) is expect_retry
+
+
+def _reachable_schemas(node: object, schemas: dict, seen: set[str]) -> set[str]:
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "$ref":
+                name = value.rsplit("/", 1)[-1]
+                if name not in seen:
+                    seen.add(name)
+                    _reachable_schemas(schemas[name], schemas, seen)
+            else:
+                _reachable_schemas(value, schemas, seen)
+    elif isinstance(node, list):
+        for value in node:
+            _reachable_schemas(value, schemas, seen)
+    return seen
+
+
+def test_every_v2_field_is_explained_in_openapi(client: TestClient) -> None:
+    # Leitfaden Kap. 1 (Soll): every parameter explained; the spec is the public b-api documentation.
+    spec = client.get("/openapi.json").json()
+    schemas = spec["components"]["schemas"]
+    names = _reachable_schemas(spec["paths"]["/v2/topic-tree"]["post"], schemas, set())
+    missing = [
+        f"{name}.{field}"
+        for name in sorted(names)
+        for field, prop in schemas[name].get("properties", {}).items()
+        if not prop.get("description")
+    ]
+    assert missing == []
