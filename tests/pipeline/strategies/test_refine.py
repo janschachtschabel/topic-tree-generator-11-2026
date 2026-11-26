@@ -419,3 +419,61 @@ async def test_a_partly_built_new_branch_is_completed_at_its_leaves() -> None:
     resp, llm = await run(req, {"interpret_feedback": interpretation, "expand_nodes": expand})
     assert "k-spektrum | Pfad: Farben > Spektrum | 1 Ebene" in llm.prompts("expand_nodes")[0]
     assert [c.title for c in by_key(resp.collection, "k-spektrum").subcollections] == ["Prisma"]
+
+
+async def test_split_of_a_node_removed_earlier_in_the_batch_is_rejected_not_a_crash() -> None:
+    resp, llm = await run(
+        request(
+            {"changes": [{"op": "split", "key": "k-mechanik", "hint": "teilen"}, {"op": "remove", "key": "k-mechanik"}]}
+        ),
+        {},
+    )
+    assert by_key(resp.collection, "k-mechanik") is None
+    assert "CHANGE_REJECTED" in [w.code for w in resp.warnings]
+    assert llm.prompts("split_node") == []
+
+
+async def test_a_second_split_of_the_same_node_is_rejected() -> None:
+    split = {"parts": [{"title": "Kräfte", "child_keys": ["k-kraft"]}, {"title": "Bewegungen"}]}
+    resp, llm = await run(
+        request(
+            {
+                "changes": [
+                    {"op": "split", "key": "k-mechanik", "hint": "teilen"},
+                    {"op": "split", "key": "k-mechanik", "hint": "teilen"},
+                ]
+            }
+        ),
+        {"split_node": split},
+    )
+    assert len(llm.prompts("split_node")) == 1
+    assert "CHANGE_REJECTED" in [w.code for w in resp.warnings]
+
+
+async def test_a_failed_split_is_reported_and_the_rest_of_the_refine_goes_on() -> None:
+    resp, _ = await run(
+        request(
+            {
+                "changes": [
+                    {"op": "split", "key": "k-mechanik", "hint": "teilen"},
+                    {"op": "rename", "key": "k-optik", "title": "Licht"},
+                ]
+            }
+        ),
+        {},
+    )
+    assert by_key(resp.collection, "k-mechanik") is not None
+    assert by_key(resp.collection, "k-optik").title == "Licht"
+    assert "SPLIT_FAILED" in [w.code for w in resp.warnings]
+
+
+async def test_split_parts_do_not_reuse_a_key_removed_in_the_same_batch() -> None:
+    split = {"parts": [{"title": "Akustik"}, {"title": "Bewegungen"}]}
+    resp, _ = await run(
+        request(
+            {"changes": [{"op": "remove", "key": "k-akustik"}, {"op": "split", "key": "k-mechanik", "hint": "teilen"}]}
+        ),
+        {"split_node": split},
+    )
+    assert [n.title for n in resp.collection][1] == "Akustik"
+    assert resp.collection[1].key != "k-akustik"

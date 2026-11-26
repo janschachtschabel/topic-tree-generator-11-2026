@@ -1,7 +1,7 @@
 """Apply change operations (Spec: "Änderungen im Feedback") to the working tree, deterministically.
 
 Every change is validated against the current tree before it is applied: unknown keys, locked nodes (and
-everything below them) and cycles are rejected with a CHANGE_REJECTED warning instead of being guessed.
+everything below them), branches that hold a locked node, and cycles are rejected with a CHANGE_REJECTED warning instead of being guessed.
 `split` needs the LLM and is only collected here.
 """
 
@@ -48,10 +48,12 @@ def _detach(roots: list[Node], key: str) -> Node:
 
 
 class _Applier:
-    def __init__(self, roots: list[Node], locked: set[str], source: ChangeSource) -> None:
+    def __init__(self, roots: list[Node], locked: set[str], source: ChangeSource, taken: set[str]) -> None:
         self.roots = roots
         self.locked = locked
         self.source = source
+        self.taken = taken
+        self.taken.update(index(roots))
         self.result = ApplyResult()
 
     def node(self, key: str | None, editable: bool = True) -> Node:
@@ -61,6 +63,13 @@ class _Applier:
         if editable and key in protected_keys(self.roots, self.locked):
             raise _Rejected(f"{key} ist gesperrt")
         return found
+
+    def whole_branch(self, key: str | None) -> Node:
+        """A node that is replaced or detached together with its branch: nothing in it may be locked."""
+        node = self.node(key)
+        if {n.key for n, _, _ in walk([node])} & protected_keys(self.roots, self.locked):
+            raise _Rejected(f"unter {key} liegt ein gesperrter Knoten")
+        return node
 
     def record(self, change: Change, **overrides: object) -> None:
         data = change.model_dump(exclude={"properties", "hint"}) | overrides
@@ -78,9 +87,8 @@ class _Applier:
 
     def add(self, change: Change) -> None:
         parent = self._resolve_parent(change.parent) if change.parent else None
-        taken = set(index(self.roots))
         new = Node(
-            key=make_key(change.title, taken),
+            key=make_key(change.title, self.taken),
             title=change.title,
             status=NodeStatus.new,
             origin=Origin(type=OriginType.feedback),
@@ -89,7 +97,7 @@ class _Applier:
         self.record(change, key=new.key, parent=parent.key if parent else None)
 
     def remove(self, change: Change) -> None:
-        node = self.node(change.key)
+        node = self.whole_branch(change.key)
         for item, _, _ in walk([node]):
             self.result.released_contents.extend(item.contents)
         _detach(self.roots, node.key)
@@ -130,7 +138,7 @@ class _Applier:
         unique_keys = list(dict.fromkeys(change.keys))
         if len(unique_keys) < 2:
             raise _Rejected("mindestens zwei verschiedene Knoten nötig")
-        nodes = [self.node(key) for key in unique_keys]
+        nodes = [self.node(unique_keys[0]), *(self.whole_branch(key) for key in unique_keys[1:])]
         keys = {n.key for n in nodes}
         for node in nodes:
             below = {n.key for n, _, _ in walk(node.children)}
@@ -150,7 +158,7 @@ class _Applier:
         self.record(change, key=first.key, keys=unique_keys)
 
     def split(self, change: Change) -> None:
-        self.node(change.key)
+        self.whole_branch(change.key)
         self.result.pending_splits.append(change)
 
     def apply(self, change: Change) -> None:
@@ -176,8 +184,12 @@ class _Applier:
             )
 
 
-def apply_changes(roots: list[Node], changes: list[Change], locked: set[str], source: ChangeSource) -> ApplyResult:
-    applier = _Applier(roots, locked, source)
+def apply_changes(
+    roots: list[Node], changes: list[Change], locked: set[str], source: ChangeSource, taken: set[str] | None = None
+) -> ApplyResult:
+    """Apply the changes in order. `taken` holds keys that new nodes must not get (e.g. of removed nodes);
+    it is updated with the keys handed out here."""
+    applier = _Applier(roots, locked, source, taken if taken is not None else set())
     for change in changes:
         applier.apply(change)
     return applier.result
