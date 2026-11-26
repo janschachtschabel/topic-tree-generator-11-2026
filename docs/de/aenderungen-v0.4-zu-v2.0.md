@@ -1,5 +1,7 @@
 # Änderungen gegenüber `backup_old` (`v0.4.0`, Stand 29.10.2026 → `v2.0.0`)
 
+> 🇬🇧 English version: [`../en/changes-v0.4-to-v2.0.md`](../en/changes-v0.4-to-v2.0.md)
+
 Kompakte Übersicht aller funktionalen, architektonischen und betrieblichen Änderungen zwischen dem bisherigen GitLab-Stand **`v0.4.0`** (Branch `backup_old`, Commit `8e702f0` / GitLab `b0942215` vom 29.10.2026) und **`v2.0.0`** (`main` bzw. GitLab-Branch `v2`).
 
 ---

@@ -76,7 +76,7 @@ prometheusRule:
 
 Die Namespaces und Labels oben sind Platzhalter, bis T6 sie benennt. Jeder Wert ist in
 [`values.yaml`](../../deploy/helm/topic-tree/values.yaml) mit `## @param` erklärt. Für Tests ohne Cluster gibt es
-zwei Compose-Dateien (README, Abschnitt *Installation & Docker-Setup*).
+zwei Compose-Dateien (README, Abschnitt *Installation & Docker*).
 
 ## Konfiguration für die Produktion
 
