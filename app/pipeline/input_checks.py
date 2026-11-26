@@ -5,7 +5,7 @@ from collections.abc import Iterator
 
 from app.errors import ApiError
 from app.schemas.common import ItemUse, Mode, UseCase
-from app.schemas.request_v2 import FolderNode, TopicTreeRequestV2, TreeNodeIn
+from app.schemas.request_v2 import FolderNode, MainRange, TopicTreeRequestV2, TreeNodeIn
 from app.settings import Settings
 
 
@@ -87,6 +87,11 @@ def _check_create_inputs(req: TopicTreeRequestV2) -> None:
             raise _missing("use_case 'document' braucht ein Strukturdokument (use: structure) mit Volltext.")
 
 
+def _sent_width(bounds: MainRange) -> int:
+    """The largest width the caller asked for: `max` if sent, else `min` (a missing max is filled later)."""
+    return bounds.max if "max" in bounds.model_fields_set else bounds.min
+
+
 def _check_shape_limits(req: TopicTreeRequestV2, settings: Settings) -> None:
     if "shape" not in req.model_fields_set:
         return
@@ -97,13 +102,13 @@ def _check_shape_limits(req: TopicTreeRequestV2, settings: Settings) -> None:
             "SHAPE_LIMIT_EXCEEDED",
             f"Maximale Baumtiefe ist auf {settings.max_tree_depth} Ebenen begrenzt.",
         )
-    if "main_topics" in sent and req.shape.main_topics.max > settings.max_nodes_per_level:
+    if "main_topics" in sent and _sent_width(req.shape.main_topics) > settings.max_nodes_per_level:
         raise ApiError(
             422,
             "SHAPE_LIMIT_EXCEEDED",
             f"Hauptebene darf höchstens {settings.max_nodes_per_level} Knoten anfordern.",
         )
-    if "children" in sent and req.shape.children.max > settings.max_nodes_per_level:
+    if "children" in sent and _sent_width(req.shape.children) > settings.max_nodes_per_level:
         raise ApiError(
             422,
             "SHAPE_LIMIT_EXCEEDED",

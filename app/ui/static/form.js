@@ -126,6 +126,10 @@
       // assign_only describes the call that made the base, not the tree: carrying it over would block feedback.
       const generation = { ...tree.generation, options: { ...(tree.generation.options || {}), assign_only: false } };
       applySettings(state, generation, setSelectValue);
+    } else if (tree) {
+      // The extra-topic boxes are hidden in refine: without a generation, nothing from an earlier run may linger.
+      $("f-extra-general").checked = false;
+      $("f-extra-methodology").checked = false;
     }
     $("f-current-tree").value = tree ? JSON.stringify(tree, null, 2) : "";
     const count = tree ? P().treeNodeOptions(tree.collection).length : 0;

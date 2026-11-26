@@ -106,3 +106,8 @@ def test_exclude_terms_match_at_word_starts_only() -> None:
     ]
     titles = [n.title for n in outline_mapping(sections, ["Ion"])]
     assert titles == ["Funktionen"]
+
+
+def test_front_matter_quotes_and_comments_before_a_rule_are_not_headings() -> None:
+    text = "---\ntitle: Physik\nauthor: X\n---\n# A\n> Zitat\n---\n<!-- x -->\n---\n| a | b |\n---\n"
+    assert [s.title for s in parse_outline(text)] == ["A"]

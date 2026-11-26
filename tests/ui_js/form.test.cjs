@@ -54,3 +54,12 @@ test("a refine keeps the extra topics of the base instead of sending an empty li
   const payload = adopt({ use_case: "topic", frame: {}, shape, options: { ...OPTIONS, assign_only: false } });
   assert.ok(payload.shape === undefined || payload.shape.extra_topics?.includes("general"));
 });
+
+test("a base without generation clears hidden extra-topic boxes left from an earlier run", () => {
+  const { W, els, state } = load();
+  els["f-extra-general"].checked = true;
+  W.TopicTreeForm.setBase(state, { version: "v1", collection: [{ key: "k-a", title: "A", subcollections: [] }] }, (s, v) => { s.value = v; });
+  els["f-fb-text"].value = "Mehr Beispiele";
+  const payload = W.TopicTreePayload.build(W.TopicTreeForm.readForm(state));
+  assert.ok(!payload.shape?.extra_topics?.length);
+});

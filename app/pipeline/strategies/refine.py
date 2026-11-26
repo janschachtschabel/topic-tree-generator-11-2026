@@ -128,7 +128,7 @@ class _Refiner:
                 "expand_nodes",
             )
             return
-        assign_missing_keys(self.roots)
+        assign_missing_keys(self.roots, self.taken)
         still_bare = [node for node, _ in targets if not node.children]
         if still_bare:
             self.rc.warn(

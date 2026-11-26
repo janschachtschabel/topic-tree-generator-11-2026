@@ -38,11 +38,12 @@ class MainRange(_Model):
     def _ordered(self) -> Self:
         # With one bound sent, the default of the other one yields (e.g. {"max": 4} gives min 4, not an error);
         # the service later fills it from the recommended or inherited range.
+        # Written to __dict__ so the clamped bound does not count as sent (model_fields_set stays as it was).
         sent = self.model_fields_set
         if self.min > self.max and sent == {"max"}:
-            self.min = self.max
+            self.__dict__["min"] = self.max
         elif self.min > self.max and sent == {"min"}:
-            self.max = self.min
+            self.__dict__["max"] = self.min
         if self.min > self.max:
             raise ValueError("min must not exceed max")
         return self

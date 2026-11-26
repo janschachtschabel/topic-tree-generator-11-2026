@@ -12,6 +12,8 @@ _SETEXT = re.compile(r"^\s{0,3}(=+|-+)\s*$")
 _PAGE_SET = re.compile(r"<!--\s*(?:page:\s*(\d+)|PageNumber=\"(\d+)\")\s*-->", re.IGNORECASE)
 _PAGE_BREAK = re.compile(r"<!--\s*(?:page_break|PageBreak)\s*-->", re.IGNORECASE)
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
+# Quotes, HTML (comments), tables and fences before `---`/`===` are not setext titles but block content.
+_NOT_A_TITLE = (">", "<", "|", "`", "~")
 _FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
 # `*` and backticks are always markup; `_` only at word edges, so `snake_case` keeps its underscore.
 _EMPHASIS = re.compile(r"[*`]+|(?<!\w)_+|_+(?!\w)")
@@ -64,7 +66,8 @@ class _Parser:
         """`Title` followed by `===` (level 1) or `---` (level 2); a `---` after a blank line stays a rule."""
         match = _SETEXT.match(line)
         body = self.body
-        if not match or not body or not body[-1].strip() or _LIST_ITEM.match(body[-1]):
+        previous = body[-1].strip() if body else ""
+        if not match or not previous or _LIST_ITEM.match(body[-1]) or previous[0] in _NOT_A_TITLE:
             return False
         title = body.pop()
         if self.heading(1 if match.group(1)[0] == "=" else 2, title):
@@ -91,8 +94,16 @@ class _Parser:
         self.body.append(line)
 
 
+def _without_front_matter(lines: list[str]) -> list[str]:
+    """A leading YAML block (`---` … `---` or `...`) is metadata, not outline."""
+    if not lines or lines[0].strip() != "---":
+        return lines
+    end = next((i for i, line in enumerate(lines[1:], 1) if line.strip() in ("---", "...")), None)
+    return lines[end + 1 :] if end is not None else lines
+
+
 def parse_outline(text: str, fallback_title: str = "Dokument") -> list[Section]:
-    lines = _split_form_feeds(text)
+    lines = _without_front_matter(_split_form_feeds(text))
     parser = _Parser(any(_PAGE_BREAK.search(line) for line in lines))
     for line in lines:
         parser.feed(line)

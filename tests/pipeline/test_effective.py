@@ -172,3 +172,21 @@ def test_a_range_with_one_bound_takes_the_other_from_the_recommendation() -> Non
     assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (15, 15)
     eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 3}}}), Settings(_env_file=None))
     assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (3, 15)
+
+
+def test_one_bound_ranges_take_the_other_bound_from_the_recommendation_or_generation() -> None:
+    base = {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}}
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 13}}}), Settings(_env_file=None))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (13, 15)
+    shape = {"depth": 2, "main_topics": {"min": 3, "max": 10}, "children": {"min": 2, "max": 6}}
+    eff = effective_request(_refine({"shape": shape}, shape={"main_topics": {"max": 5}}))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (3, 5)
+
+
+def test_a_range_with_only_min_is_not_checked_against_the_default_max() -> None:
+    from app.pipeline.input_checks import check_request
+
+    req = _req(
+        {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}, "shape": {"main_topics": {"min": 3}}}
+    )
+    check_request(req, Settings(_env_file=None, max_nodes_per_level=10))

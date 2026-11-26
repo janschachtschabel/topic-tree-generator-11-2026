@@ -477,3 +477,22 @@ async def test_split_parts_do_not_reuse_a_key_removed_in_the_same_batch() -> Non
     )
     assert [n.title for n in resp.collection][1] == "Akustik"
     assert resp.collection[1].key != "k-akustik"
+
+
+async def test_expanded_subtopics_do_not_reuse_a_key_removed_in_the_same_request() -> None:
+    interpret = {"changes": [{"op": "add", "title": "Farben"}], "questions": []}
+    expand = lambda prompt: {
+        "nodes": [
+            {
+                "key": prompt.split("- key: ")[1].split(" |")[0],
+                "children": [{"title": "Echo", "shorttitle": "Echo"}, {"title": "Spektrum", "shorttitle": "S"}],
+            }
+        ]
+    }
+    resp, _ = await run(
+        request({"changes": [{"op": "remove", "key": "k-echo"}], "text": "Ergänze Farben."}),
+        {"interpret_feedback": interpret, "expand_nodes": expand},
+    )
+    farben = next(n for n in resp.collection if n.title == "Farben")
+    assert "Echo" in [c.title for c in farben.subcollections]
+    assert "k-echo" not in [c.key for c in farben.subcollections]
