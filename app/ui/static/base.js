@@ -12,6 +12,10 @@
     $("f-fb-locked").value = [...state.lockedKeys].join(", ");
     refresh();
     renderBase();
+    // renderBase() replaced the tree (a lock on a result moved it into the base): keep focus on this node's button.
+    const lockBtn = Array.from($("base-tree").querySelectorAll(".tree-node"))
+      .find((item) => item.dataset.key === key)?.querySelector(":scope > .node-head > .lock-btn:not(.edit-btn)");
+    if (lockBtn) lockBtn.focus();
     return state.lockedKeys.has(key);
   }
 

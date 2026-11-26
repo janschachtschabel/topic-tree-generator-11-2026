@@ -175,6 +175,7 @@
   async function submitForm() {
     showFormError("");
     let payload;
+    let focusId = null;
     try { payload = currentPayload(); } catch (err) { showFormError(errorText(err)); return; }
     state.lastRequest = payload;
     state.controller = new AbortController();
@@ -191,14 +192,20 @@
       try { body = await res.json(); } catch { body = null; }
       if (res.ok) renderSuccess(body, (performance.now() - startedAt) / 1000);
       else renderError(res.status, body);
+      focusId = res.ok ? "result-heading" : "error-title";
     } catch (err) {
       if (err.name === "AbortError") setStatus("status.aborted");
-      else renderError(0, { error: { code: "NETWORK_ERROR", message: t("error.unreachable") } });
+      else {
+        renderError(0, { error: { code: "NETWORK_ERROR", message: t("error.unreachable") } });
+        focusId = "error-title";
+      }
     } finally {
       setLoading(false, startedAt);
       state.controller = null;
       renderBase();
     }
+    // The submit button sits in the sidebar; move keyboard and screen reader users to the answer.
+    if (focusId) $(focusId).focus();
   }
 
   function renderSuccess(resp, seconds) {

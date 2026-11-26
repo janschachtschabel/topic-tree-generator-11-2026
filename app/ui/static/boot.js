@@ -153,6 +153,7 @@
     state.changes = window.TopicTreeChanges.mount($("changes-editor"), {
       getNodes: () => window.TopicTreeParsers.treeNodeOptions(state.currentTree ? state.currentTree.collection : []),
       onChange: () => app.refresh(),
+      focusFallback: () => $("btn-add-change"),
     });
     wireEvents();
     wireResultEvents();

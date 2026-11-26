@@ -372,3 +372,16 @@ def test_assign_flow_says_inhalte_consistently() -> None:
     i18n = (Path("app/ui/static") / "i18n.js").read_text(encoding="utf-8")
     assert "Nur Materialien einsortieren" not in i18n
     assert '"opt.assignOnly": "Nur Inhalte einsortieren, Struktur nicht ändern"' in i18n
+
+
+def test_answer_headings_can_take_focus_after_a_request() -> None:
+    # Regression: after submit the focus stayed on the (disabled) submit button or fell back to <body>.
+    import re
+    from pathlib import Path
+
+    static = Path("app/ui/static")
+    html = (static / "index.html").read_text(encoding="utf-8")
+    for ident in ("result-heading", "error-title"):
+        assert 'tabindex="-1"' in re.search(rf'<[^>]*\bid="{ident}"[^>]*>', html).group(0), ident
+    app = (static / "app.js").read_text(encoding="utf-8")
+    assert '"result-heading" : "error-title"' in app and "$(focusId).focus()" in app

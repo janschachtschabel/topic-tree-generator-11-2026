@@ -89,6 +89,8 @@
     lockBtn.type = "button";
     lockBtn.setAttribute("aria-pressed", String(isLocked));
     lockBtn.title = t("tree.lockTitle");
+    // A node-specific name; the lock state itself is announced through aria-pressed.
+    lockBtn.setAttribute("aria-label", t("tree.lockAria", { title: node.title }));
     lockBtn.addEventListener("click", () => {
       const nowLocked = ctx.onToggleLock(node.key);
       lockBtn.setAttribute("aria-pressed", String(nowLocked));
@@ -99,6 +101,7 @@
       const editBtn = el("button", "lock-btn edit-btn", t("tree.edit"));
       editBtn.type = "button";
       editBtn.title = t("tree.editTitle");
+      editBtn.setAttribute("aria-label", t("tree.editAria", { title: node.title }));
       editBtn.addEventListener("click", () => ctx.onEditNode(node.key));
       actions.push(editBtn);
     }
