@@ -107,6 +107,11 @@ def markdown_table(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _save(path: Path, data: Any) -> None:
+    """UTF-8 regardless of the platform's default encoding (cp1252 on Windows)."""
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def _post(client: httpx.Client, url: str, body: dict) -> tuple[dict, float]:
     started = time.monotonic()
     resp = client.post(f"{url}/v2/topic-tree", json=body)
@@ -136,7 +141,7 @@ def run(url: str, only: set[str] | None, out: Path, timeout: float) -> list[dict
             except (RuntimeError, httpx.HTTPError) as exc:
                 rows.append({"id": preset["id"], "task": preset["task"], "error": str(exc)[:80]})
                 continue
-            (out / f"{preset['id']}.json").write_text(json.dumps(answer, ensure_ascii=False, indent=2))
+            _save(out / f"{preset['id']}.json", answer)
             rows.append(summarize(preset["id"], preset["task"], body, answer, seconds))
             if chain_base is None and preset["task"] == "topic":
                 chain_base = answer
@@ -144,11 +149,11 @@ def run(url: str, only: set[str] | None, out: Path, timeout: float) -> list[dict
             body = chain_request(chain_base)
             try:
                 answer, seconds = _post(client, url, body)
-                (out / "chain_refine.json").write_text(json.dumps(answer, ensure_ascii=False, indent=2))
+                _save(out / "chain_refine.json", answer)
                 rows.append(summarize("chain_refine", "refine", body, answer, seconds))
             except (RuntimeError, httpx.HTTPError) as exc:
                 rows.append({"id": "chain_refine", "task": "refine", "error": str(exc)[:80]})
-    (out / "summary.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2))
+    _save(out / "summary.json", rows)
     return rows
 
 

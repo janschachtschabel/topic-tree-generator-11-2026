@@ -52,3 +52,13 @@ def test_preset_summary_counts_levels_descriptions_duplicates_and_assignment() -
     assert row["assigned"] == 1
     assert row["warnings"] == ["DESCRIBE_FAILED"]
     assert "| p | topic | 3 (2/1/0) | 67 % | 1 | 1 / 0 | DESCRIBE_FAILED | 3 | 120 (0) |" in markdown_table([row])
+
+
+def test_preset_runs_are_saved_as_utf8_whatever_the_platform_default(tmp_path, monkeypatch) -> None:
+    import locale
+
+    from scripts.run_presets import _save
+
+    monkeypatch.setattr(locale, "getpreferredencoding", lambda *_: "cp1252")
+    _save(tmp_path / "a.json", {"title": "Größe – Lichtbrechung"})
+    assert "Größe – Lichtbrechung" in (tmp_path / "a.json").read_bytes().decode("utf-8")
