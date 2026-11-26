@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 # Build stage: resolve the locked runtime dependencies into /app/.venv (no dev tools, no compilers in the result).
-# Base images pinned by multi-arch digest (Leitfaden Kap. 4); Dependabot updates them automatically.
+# Base images pinned by multi-arch digest (Leitfaden Kap. 4). Dependabot version PRs are paused
+# (open-pull-requests-limit: 0 in .github/dependabot.yml): raise the limit or bump the digests by hand.
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca AS build
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
 WORKDIR /app

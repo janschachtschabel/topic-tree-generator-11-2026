@@ -13,7 +13,8 @@ tests
 docs
 deploy
 scripts
-compose.yml
+docker-compose*.yml
+.env.example
 README.md
 CHANGELOG.md
 AGENTS.md
