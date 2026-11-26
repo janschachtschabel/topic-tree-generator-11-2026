@@ -22,7 +22,7 @@ function load() {
   const document = { getElementById: (id) => (els[id] ||= element()), querySelectorAll: () => [], createElement: element };
   const ctx = { window: {}, document, Option: function () {}, console };
   vm.createContext(ctx);
-  for (const file of ["parsers.js", "payload.js", "changes.js", "form.js"]) {
+  for (const file of ["parsers.js", "payload.js", "changes.js", "presetitems.js", "form.js"]) {
     const source = fs.readFileSync(path.join(STATIC, file), "utf8").replace('typeof module === "object" && module.exports', "false");
     vm.runInContext(source, ctx);
   }
@@ -93,4 +93,38 @@ test("a preset whose folder files carry more than a title needs the JSON view", 
     items: [{ id: "f1", properties: { "cm:title": ["Spiegel"], "cclom:general_keyword": ["Reflexion"] } }],
   };
   assert.equal(W.TopicTreeForm.applyPreset(state, { task: "folders", payload }, (s, v) => { s.value = v; }), false);
+});
+
+const FOREIGN = { title: "Physik", collection: [{ title: "Licht", nodeId: "n1", subcollections: [{ title: "Linsen", nodeId: "n2" }] }] };
+
+test("a preset that only fits the JSON view still shows its base", () => {
+  // Regression: the JSON path skipped setBase, so the base view said "no base" although current_tree was sent.
+  const { W, els, state } = load();
+  state.task = "assign";
+  const payload = { mode: "refine", use_case: "topic", frame: {}, current_tree: FOREIGN, items: [{ id: "x", nodeId: "n9" }] };
+  assert.equal(W.TopicTreeForm.applyPreset(state, { task: "assign", payload }, (s, v) => { s.value = v; }), false);
+  assert.equal(state.currentTree, FOREIGN);
+  assert.equal(els["base-summary"].textContent, "base.summary");
+});
+
+test("renderBaseSummary rebuilds the summary from state (language switch)", () => {
+  const { W, els, state } = load();
+  W.TopicTreeForm.setBase(state, FOREIGN);
+  els["base-summary"].textContent = "stale";
+  W.TopicTreeForm.renderBaseSummary(state);
+  assert.equal(els["base-summary"].textContent, "base.summary");
+  W.TopicTreeForm.setBase(state, null);
+  assert.equal(els["base-summary"].textContent, "base.none");
+});
+
+test("a keyless base in refine explains how its nodes get keys", () => {
+  const { W, els, state } = load();
+  W.TopicTreeForm.setBase(state, FOREIGN);
+  assert.equal(els["keyless-hint"].hidden, false);
+  assert.equal(els["keyless-hint"].textContent, "base.keyless");
+  W.TopicTreeForm.setBase(state, { version: "v2", collection: [{ key: "k-a", title: "A" }] });
+  assert.equal(els["keyless-hint"].hidden, true);
+  state.task = "assign";
+  W.TopicTreeForm.setBase(state, FOREIGN);
+  assert.equal(els["keyless-hint"].hidden, true);
 });

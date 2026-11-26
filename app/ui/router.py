@@ -19,8 +19,10 @@ _ASSETS: dict[str, str] = {
     "tree.js": "application/javascript; charset=utf-8",
     "changes.js": "application/javascript; charset=utf-8",
     "result.js": "application/javascript; charset=utf-8",
+    "presetitems.js": "application/javascript; charset=utf-8",
     "form.js": "application/javascript; charset=utf-8",
     "app.js": "application/javascript; charset=utf-8",
+    "base.js": "application/javascript; charset=utf-8",
     "boot.js": "application/javascript; charset=utf-8",
 }
 

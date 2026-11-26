@@ -73,7 +73,8 @@
     return input;
   }
 
-  function mount(container, { getNodes, onChange }) {
+  /** `focusFallback()` returns the element that gets the focus once the last row is removed. */
+  function mount(container, { getNodes, onChange, focusFallback }) {
     let rows = [];
 
     function renderRow(row, index) {
@@ -84,12 +85,16 @@
       op.setAttribute("aria-label", t("change.op"));
       for (const name of OPS) op.appendChild(new Option(t(`change.op.${name}`), name));
       op.value = row.op;
-      op.addEventListener("change", () => { row.op = op.value; render(); });
+      op.addEventListener("change", () => { row.op = op.value; render(); focusRow(index); });
       head.appendChild(op);
       const remove = el("button", "change-remove", "×");
       remove.type = "button";
       remove.setAttribute("aria-label", t("change.removeRow", { n: index + 1 }));
-      remove.addEventListener("click", () => { rows.splice(index, 1); render(); });
+      remove.addEventListener("click", () => {
+        rows.splice(index, 1);
+        render();
+        focusRow(Math.min(index, rows.length - 1));
+      });
       head.appendChild(remove);
       box.appendChild(head);
       const nodes = getNodes();
@@ -103,6 +108,13 @@
       return box;
     }
 
+    // render() replaces every row; keyboard users keep their place on the same (or the nearest) row.
+    function focusRow(index) {
+      const row = index >= 0 ? container.children[index] : null;
+      const target = row ? row.querySelector("select.change-op") : focusFallback && focusFallback();
+      if (target) target.focus({ preventScroll: true });
+    }
+
     function render() {
       container.replaceChildren(...rows.map(renderRow));
       container.hidden = rows.length === 0;
@@ -112,7 +124,7 @@
     return {
       rows: () => rows.map(toPayloadRow),
       setChanges(changes) { rows = (changes || []).map(rowFromChange); render(); },
-      addRow(row) { rows.push({ op: "rename", ...row }); render(); },
+      addRow(row) { rows.push({ op: "rename", ...row }); render(); focusRow(rows.length - 1); },
       refresh: render,
     };
   }

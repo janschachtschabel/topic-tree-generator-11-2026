@@ -39,6 +39,7 @@
     state.changes.refresh();
     renderTaskCards();
     refresh();
+    A().renderBase();
     if (state.lastResponse && !$("result-area").hidden) renderSuccess(state.lastResponse, state.lastSeconds);
     setStatus(...state.status);
   }
@@ -95,9 +96,9 @@
     $("f-fb-locked").addEventListener("input", (e) => {
       state.lockedKeys = new Set(e.target.value.split(",").map((s) => s.trim()).filter(Boolean));
     });
-    $("f-current-tree").addEventListener("change", app.readBaseJson);
-    $("btn-adopt").addEventListener("click", app.adoptResult);
-    $("btn-use-refine").addEventListener("click", app.adoptResult);
+    $("f-current-tree").addEventListener("change", window.TopicTreeBase.readBaseJson);
+    $("btn-adopt").addEventListener("click", () => window.TopicTreeBase.adoptResult());
+    $("btn-use-refine").addEventListener("click", () => window.TopicTreeBase.adoptResult("refine"));
     $("btn-add-change").addEventListener("click", () => state.changes.addRow({}));
     $("btn-json-edit").addEventListener("click", () => { app.setJsonOverride(true); $("f-json").focus(); });
     $("btn-json-reset").addEventListener("click", () => { app.setJsonOverride(false); app.refresh(); });
@@ -152,6 +153,7 @@
     state.changes = window.TopicTreeChanges.mount($("changes-editor"), {
       getNodes: () => window.TopicTreeParsers.treeNodeOptions(state.currentTree ? state.currentTree.collection : []),
       onChange: () => app.refresh(),
+      focusFallback: () => $("btn-add-change"),
     });
     wireEvents();
     wireResultEvents();

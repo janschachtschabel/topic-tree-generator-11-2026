@@ -119,6 +119,16 @@
     return out;
   }
 
+  /** Nodes without a service key: the change editor and the tree actions cannot address them yet. */
+  function countKeyless(collection) {
+    return (collection || []).reduce((n, node) => n + (node.key ? 0 : 1) + countKeyless(node.subcollections), 0);
+  }
+
+  /** Option text of a preset; inside the "Kombinationen" group the "Kombination:" prefix only repeats the group. */
+  function presetOptionLabel(title, inComboGroup) {
+    return inComboGroup ? String(title).replace(/^Kombination:\s*/, "") : String(title);
+  }
+
   /** All nodes of a collection, with or without a service key (a tree from the repository has none). */
   function countNodes(collection) {
     return (collection || []).reduce((n, node) => n + 1 + countNodes(node.subcollections), 0);
@@ -126,6 +136,7 @@
 
   const api = {
     parseMaterialLines, materialLinesFromItems, parseFolderOutline, folderOutlineFromPayload, treeNodeOptions, countNodes,
+    countKeyless, presetOptionLabel,
   };
   if (typeof module === "object" && module.exports) module.exports = api;
   if (typeof window === "object") window.TopicTreeParsers = api;

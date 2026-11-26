@@ -74,7 +74,7 @@
         <section id="sec-refine" class="task-section" data-tasks="refine assign">
           <div class="field">
             <span class="field-label" data-i18n="field.base">Basis (Ist-Stand)</span>
-            <p id="base-summary" class="base-summary" data-i18n="base.none">Noch keine Basis. Beispiel laden, ein Ergebnis übernehmen oder JSON einfügen.</p>
+            <p id="base-summary" class="base-summary">Noch keine Basis. Beispiel laden, ein Ergebnis übernehmen oder JSON einfügen.</p>
             <div class="inline-actions">
               <button type="button" id="btn-adopt" class="btn-outline" data-i18n="btn.adoptLast" disabled>Letztes Ergebnis übernehmen</button>
             </div>
@@ -86,6 +86,7 @@
           <div class="field" data-tasks="refine">
             <span class="field-label" data-i18n="field.changes">Gezielte Änderungen</span>
             <div id="changes-editor" class="changes-editor"></div>
+            <p id="keyless-hint" class="help-text keyless-hint" hidden></p>
             <button type="button" id="btn-add-change" class="btn-outline" data-i18n="btn.addChange">+ Änderung hinzufügen</button>
             <p class="help-text" data-i18n="help.changes">Wirken vor der Freitext-Rückmeldung. Knoten lassen sich auch im Baum rechts über „Ändern …“ wählen.</p>
           </div>
@@ -272,7 +273,7 @@
 
       <section id="error-panel" class="card error-card" role="alert" hidden>
         <div class="card-head-row">
-          <h2 id="error-title" class="error-heading"></h2>
+          <h2 id="error-title" class="error-heading" tabindex="-1"></h2>
           <button type="button" id="btn-retry" class="btn-outline" data-i18n="btn.retry">Erneut versuchen</button>
         </div>
         <p id="error-message" class="error-msg"></p>
@@ -293,14 +294,15 @@
           <h2 id="base-heading" class="result-title"></h2>
         </div>
         <details class="card fold" open>
-          <summary><span id="base-tree-label" data-i18n="base.tree">Basis-Baum: sperren oder ändern</span></summary>
-          <div id="base-tree" class="tree-root compact-tree" role="tree"></div>
+          <summary><span id="base-tree-label">Basis-Baum: sperren oder ändern</span></summary>
+          <p id="base-keyless-hint" class="help-text keyless-hint" hidden></p>
+          <div id="base-tree" class="tree-root compact-tree" role="tree" aria-labelledby="base-tree-label"></div>
         </details>
       </section>
 
       <section id="result-area" hidden>
         <div class="result-head">
-          <h2 id="result-heading" class="result-title"></h2>
+          <h2 id="result-heading" class="result-title" tabindex="-1"></h2>
           <div class="result-actions">
             <button type="button" id="btn-use-refine" class="btn-outline" data-i18n="btn.useRefine">Als Basis für Änderungen</button>
             <button type="button" id="btn-copy-json" class="btn-outline" data-i18n="btn.copyJson">JSON kopieren</button>
@@ -343,8 +345,10 @@
   <script src="/ui/assets/tree.js" defer></script>
   <script src="/ui/assets/changes.js" defer></script>
   <script src="/ui/assets/result.js" defer></script>
+  <script src="/ui/assets/presetitems.js" defer></script>
   <script src="/ui/assets/form.js" defer></script>
   <script src="/ui/assets/app.js" defer></script>
+  <script src="/ui/assets/base.js" defer></script>
   <script src="/ui/assets/boot.js" defer></script>
 </body>
 </html>

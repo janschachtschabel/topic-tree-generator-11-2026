@@ -49,8 +49,10 @@ def test_ui_enabled_serves_self_hosted_html_and_assets_without_exposing_in_opena
         ("tree.js", "javascript"),
         ("changes.js", "javascript"),
         ("result.js", "javascript"),
+        ("presetitems.js", "javascript"),
         ("form.js", "javascript"),
         ("app.js", "javascript"),
+        ("base.js", "javascript"),
         ("boot.js", "javascript"),
     ):
         asset = client.get(f"/ui/assets/{name}")
@@ -191,8 +193,10 @@ def test_ui_provides_de_en_toggle_and_duplicate_node_highlighting() -> None:
         "tree.js",
         "changes.js",
         "result.js",
+        "presetitems.js",
         "form.js",
         "app.js",
+        "base.js",
         "boot.js",
     ]
     positions = [html.index(f"/ui/assets/{name}") for name in order]
@@ -343,3 +347,46 @@ def test_preset_picker_groups_basic_examples_and_combinations() -> None:
 
     js = (Path("app/ui/static") / "app.js").read_text(encoding="utf-8")
     assert "optgroup" in js and "preset.group.combo" in js
+    # The "Kombinationen" group already says what the options are; their labels drop the "Kombination:" prefix.
+    assert "presetOptionLabel(" in js
+
+
+def test_base_texts_are_rendered_from_state_not_static_i18n() -> None:
+    # Regression: data-i18n on the base summary/label reset them on a language switch ("No base yet").
+    import re
+    from pathlib import Path
+
+    static = Path("app/ui/static")
+    html = (static / "index.html").read_text(encoding="utf-8")
+    for ident in ("base-summary", "base-tree-label"):
+        tag = re.search(rf'<[^>]*\bid="{ident}"[^>]*>', html).group(0)
+        assert "data-i18n" not in tag, ident
+    base_tree = re.search(r'<[^>]*\bid="base-tree"[^>]*>', html).group(0)
+    assert 'aria-labelledby="base-tree-label"' in base_tree
+    assert 'id="keyless-hint"' in html
+    boot = (static / "boot.js").read_text(encoding="utf-8")
+    assert "renderBase()" in boot.split("function switchLanguage", 1)[1].split("\n  }\n", 1)[0]
+
+
+def test_assign_flow_says_inhalte_consistently() -> None:
+    from pathlib import Path
+
+    i18n = (Path("app/ui/static") / "i18n.js").read_text(encoding="utf-8")
+    assert "Nur Materialien einsortieren" not in i18n
+    assert '"opt.assignOnly": "Nur Inhalte einsortieren, Struktur nicht ändern"' in i18n
+    assert '"field.materialsB.assign": "Inhalte zum Einsortieren"' in i18n
+    form = (Path("app/ui/static") / "form.js").read_text(encoding="utf-8")
+    assert '"field.materialsB.assign"' in form
+
+
+def test_answer_headings_can_take_focus_after_a_request() -> None:
+    # Regression: after submit the focus stayed on the (disabled) submit button or fell back to <body>.
+    import re
+    from pathlib import Path
+
+    static = Path("app/ui/static")
+    html = (static / "index.html").read_text(encoding="utf-8")
+    for ident in ("result-heading", "error-title"):
+        assert 'tabindex="-1"' in re.search(rf'<[^>]*\bid="{ident}"[^>]*>', html).group(0), ident
+    app = (static / "app.js").read_text(encoding="utf-8")
+    assert '"result-heading" : "error-title"' in app and "$(focusId).focus()" in app
