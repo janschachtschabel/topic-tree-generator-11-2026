@@ -389,3 +389,33 @@ async def test_expansion_drops_subtopics_whose_title_already_exists_in_the_tree(
         request({"text": "Farben als Hauptthema"}), {"interpret_feedback": interpretation, "expand_nodes": expand}
     )
     assert [c.title for c in by_key(resp.collection, "k-farben").subcollections] == ["Spektrum"]
+
+
+async def test_targets_the_model_leaves_out_are_reported() -> None:
+    interpretation = {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    resp, _ = await run(
+        request({"text": "Farben als Hauptthema"}),
+        {"interpret_feedback": interpretation, "expand_nodes": {"nodes": []}},
+    )
+    assert "EXPAND_INCOMPLETE" in [w.code for w in resp.warnings]
+
+
+async def test_a_partly_built_new_branch_is_completed_at_its_leaves() -> None:
+    current = copy.deepcopy(CURRENT)
+    current["generation"]["shape"]["depth"] = 3
+    current["collection"][0]["subcollections"][0]["subcollections"] = [node("k-sammel", "Sammellinse")]
+    interpretation = {
+        "changes": [
+            {"op": "add", "parent": None, "title": "Farben"},
+            {"op": "add", "parent": "Farben", "title": "Spektrum"},
+        ],
+        "questions": [],
+    }
+    expand = lambda prompt: {
+        "nodes": [{"key": "k-spektrum", "children": [{"title": "Prisma", "shorttitle": "Prisma", "children": []}]}]
+    }
+    data = {"mode": "refine", "use_case": "topic", "current_tree": current, "frame": ex.FRAME}
+    req = TopicTreeRequestV2.model_validate({**data, "feedback": {"text": "Farben mit Spektrum"}})
+    resp, llm = await run(req, {"interpret_feedback": interpretation, "expand_nodes": expand})
+    assert "k-spektrum | Pfad: Farben > Spektrum | 1 Ebene" in llm.prompts("expand_nodes")[0]
+    assert [c.title for c in by_key(resp.collection, "k-spektrum").subcollections] == ["Prisma"]

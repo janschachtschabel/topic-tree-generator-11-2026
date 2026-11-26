@@ -27,11 +27,21 @@ def _height(node: Node) -> int:
     return 1 + max((_height(child) for child in node.children), default=0)
 
 
-def missing_levels(node: Node, siblings: list[Node]) -> int:
-    """Levels a new leaf lacks compared with its deepest sibling branch (0 when nothing is missing)."""
-    if node.children:
-        return 0
-    return max((_height(s) for s in siblings if s is not node), default=1) - 1
+def shallow_leaves(node: Node, siblings: list[Node]) -> list[tuple[Node, int]]:
+    """Leaves of a new branch with the levels each lacks against the deepest sibling branch."""
+    target = max((_height(s) for s in siblings if s is not node), default=1)
+    found: list[tuple[Node, int]] = []
+
+    def visit(current: Node, depth: int) -> None:
+        if not current.children:
+            if target - depth > 0:
+                found.append((current, target - depth))
+            return
+        for child in current.children:
+            visit(child, depth + 1)
+
+    visit(node, 1)
+    return found
 
 
 def _fold(title: str) -> str:

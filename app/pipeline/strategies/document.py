@@ -129,6 +129,9 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         mapping = await map_outline(_outline_text(sections, docs, rc), rc, req.topic)
         mapped = _checked_mapping(mapping.nodes, sections, req, rc)
         order, levels, description = mapping.order, mapping.levels, mapping.description
+        if req.topic and mapped is mapping.nodes and len(mapped) == 1 and mapped[0].children:
+            # One section covers the topic: its subsections become the main topics.
+            mapped, levels = mapped[0].children, levels[1:]
     except LLMStepError as err:
         fallback = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
         if not fallback or len(sections) <= len(docs):
@@ -143,8 +146,6 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         order, levels, description = "Gliederung", [], ""
 
     converter = _Converter({s.ref: s for s in sections}, docs[0].id, req)
-    if req.topic and len(mapped) == 1 and mapped[0].children:
-        mapped = mapped[0].children  # one section covers the topic: its subsections are the main topics
     roots = converter.nodes(mapped, req.shape.depth, req.shape.main_topics.max)
     if converter.too_deep:
         rc.warn("SHAPE_DEPTH", "Der abgeleitete Baum war zu tief und wurde gekürzt.", step="map_outline")

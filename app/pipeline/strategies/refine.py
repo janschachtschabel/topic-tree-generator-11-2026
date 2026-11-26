@@ -10,7 +10,7 @@ from app.llm.client import LLMStepError
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.describe_nodes import describe_nodes
-from app.pipeline.steps.expand_nodes import expand_nodes, missing_levels
+from app.pipeline.steps.expand_nodes import expand_nodes, shallow_leaves
 from app.pipeline.steps.interpret_feedback import interpret_feedback
 from app.pipeline.steps.split_node import split_node
 from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
@@ -95,9 +95,9 @@ class _Refiner:
             if record.op != ChangeOp.add or record.source != ChangeSource.feedback_text or node is None:
                 continue
             parent = parent_of(self.roots, node.key)
-            levels = missing_levels(node, parent.children if parent else self.roots)
-            if levels > 0:
-                targets.append((node, levels))
+            for leaf, levels in shallow_leaves(node, parent.children if parent else self.roots):
+                if all(leaf is not known for known, _ in targets):
+                    targets.append((leaf, levels))
         if not targets:
             return
         try:
@@ -111,6 +111,14 @@ class _Refiner:
             )
             return
         assign_missing_keys(self.roots)
+        still_bare = [node for node, _ in targets if not node.children]
+        if still_bare:
+            self.rc.warn(
+                "EXPAND_INCOMPLETE",
+                f"{len(still_bare)} neue Knoten blieben ohne Unterthemen, obwohl die Nachbaräste tiefer sind.",
+                still_bare[0].key,
+                "expand_nodes",
+            )
 
 
 _FRAME_FIELDS = (

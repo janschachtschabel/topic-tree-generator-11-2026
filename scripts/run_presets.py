@@ -91,13 +91,14 @@ def chain_request(base_response: dict) -> dict:
 
 
 def markdown_table(rows: list[dict]) -> str:
-    head = "| Beispiel | Aufgabe | Knoten (E1/E2/E3) | beschr. | Dupl. | zugeord. / nicht | Warnungen | Calls | Tokens (Cache) | Zeit s |"
+    head = "| Beispiel | Aufgabe | Knoten (je Ebene) | beschr. | Dupl. | zugeord. / nicht | Warnungen | Calls | Tokens (Cache) | Zeit s |"
     lines = [head, "|" + "---|" * 10]
     for r in rows:
         if "error" in r:
             lines.append(f"| {r['id']} | {r['task']} | Fehler: {r['error']} | | | | | | | {r.get('wall_s', '')} |")
             continue
-        levels = "/".join(str(r["levels"].get(k, r["levels"].get(str(k), 0))) for k in (1, 2, 3))
+        depth = max([3, *(int(k) for k in r["levels"])])
+        levels = "/".join(str(r["levels"].get(k, r["levels"].get(str(k), 0))) for k in range(1, depth + 1))
         tokens = r["prompt_tokens"] + r["completion_tokens"]
         lines.append(
             f"| {r['id']} | {r['task']} | {r['nodes']} ({levels}) | {r['described_pct']} % | {r['duplicates']} | "
@@ -117,11 +118,10 @@ def _post(client: httpx.Client, url: str, body: dict) -> tuple[dict, float]:
     resp = client.post(f"{url}/v2/topic-tree", json=body)
     seconds = time.monotonic() - started
     if resp.status_code != 200:
-        code = (
-            (resp.json().get("error") or {}).get("code", "")
-            if resp.headers.get("content-type", "").startswith("application/json")
-            else ""
-        )
+        try:
+            code = (resp.json().get("error") or {}).get("code", "")
+        except ValueError:
+            code = ""
         raise RuntimeError(f"HTTP {resp.status_code} {code}".strip())
     return resp.json(), seconds
 
@@ -160,7 +160,9 @@ def run(url: str, only: set[str] | None, out: Path, timeout: float) -> list[dict
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--url", default="http://localhost:8000")
-    parser.add_argument("--only", default="", help="comma-separated preset ids (plus chain_refine)")
+    parser.add_argument(
+        "--only", default="", help="comma-separated preset ids; chain_refine also needs a topic preset in the list"
+    )
     parser.add_argument("--out", default="preset-runs")
     parser.add_argument("--timeout", type=float, default=300)
     args = parser.parse_args()

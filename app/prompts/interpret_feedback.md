@@ -15,8 +15,8 @@
 Regeln:
 - Setze alle für eine Operation nicht benötigten Felder auf `null`.
 - Für bestehende Knoten nur Schlüssel (`k-...`) aus „Aktueller Baum“ verwenden; Knoten mit `[gesperrt]` und deren Unterknoten niemals ändern.
-- Neue Knoten erhalten Unterknoten bis zur Tiefe ihrer Nachbaräste im „Aktuellen Baum“ (je 3 bis 4, über
-  Kinder-`add`s wie oben), es sei denn, die Rückmeldung verlangt ausdrücklich nur den einen Knoten.
+- Neue Knoten erhalten Unterknoten bis zur Tiefe ihrer Nachbaräste im „Aktuellen Baum“ (Anzahl nach der Breite im
+  Anfragekontext, über Kinder-`add`s wie oben), es sei denn, die Rückmeldung verlangt ausdrücklich nur den einen Knoten.
 - Stelle niemals technische Rückfragen nach Knotenschlüsseln (`key`). Nutze `questions` nur, wenn der fachliche Wunsch selbst mehrdeutig oder widersprüchlich ist.
 {{already}}
 ## Rückmeldung
