@@ -134,3 +134,30 @@ def test_explicit_shape_fields_are_preserved_while_omitted_siblings_get_defaults
     eff = effective_request(req, Settings(_env_file=None))
     assert eff.shape.depth == 3
     assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (5, 10)
+
+
+def _refine(generation: dict, **extra) -> TopicTreeRequestV2:
+    tree = {"version": "v2", "collection": [{"title": "Optik"}], "generation": {"use_case": "topic", **generation}}
+    return _req({"mode": "refine", "use_case": "topic", "frame": {}, "current_tree": tree, **extra})
+
+
+def test_partly_sent_options_keep_the_other_inherited_options() -> None:
+    req = _refine({"options": {"multi_assign": False, "min_confidence": 0.9}}, options={"assign_only": True})
+    eff = effective_request(req)
+    assert eff.options.assign_only is True
+    assert eff.options.multi_assign is False
+    assert eff.options.min_confidence == 0.9
+
+
+def test_sent_options_override_inherited_ones_but_assign_only_is_never_inherited() -> None:
+    req = _refine({"options": {"assign_only": True, "min_confidence": 0.9}}, options={"min_confidence": 0.5})
+    eff = effective_request(req)
+    assert eff.options.min_confidence == 0.5
+    assert eff.options.assign_only is False
+
+
+def test_partly_sent_hints_keep_the_other_inherited_hints() -> None:
+    inherited = {"order": "Epochen", "exclude": ["Krieg"], "description_length": 120, "context": "alt"}
+    eff = effective_request(_refine({"hints": inherited}, hints={"context": "Klasse 8"}))
+    assert eff.hints.context == "Klasse 8"
+    assert (eff.hints.order, eff.hints.exclude, eff.hints.description_length) == ("Epochen", ["Krieg"], 120)

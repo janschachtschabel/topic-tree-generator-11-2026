@@ -196,6 +196,10 @@ async def run(
     req: TopicTreeRequestV2, rc: RunContext, strategies: Mapping[UseCase, Strategy] | None = None
 ) -> TopicTreeResponseV2:
     started = time.perf_counter()
+    if req.mode != Mode.refine and req.current_tree is not None:
+        # A fresh tree must not inherit settings, history or versions from an earlier one.
+        rc.warn("INPUT_IGNORED", "current_tree wird nur bei mode 'refine' genutzt und wurde ignoriert.", step="input")
+        req = req.model_copy(update={"current_tree": None})
     check_request(req, rc.settings)
     resolved = await resolve_refs(req, rc.settings)
     if resolved is not req:

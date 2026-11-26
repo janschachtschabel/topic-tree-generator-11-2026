@@ -10,6 +10,8 @@ Guidelines ("Gestaltungs- und Ordnungskriterien für Themenbäume"):
 Every recommended default is clamped to the operator's hard caps (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`).
 """
 
+from pydantic import BaseModel
+
 from app.pipeline.run_context import ExplicitShape
 from app.schemas.common import ItemUse, UseCase
 from app.schemas.request_v2 import ChildRange, MainRange, Shape, TopicTreeRequestV2
@@ -118,6 +120,13 @@ def _resolve_shape(
     return req.shape.model_copy(update=updates) if updates else req.shape
 
 
+def _inherit[M: BaseModel](inherited: M, sent: M, was_sent: bool) -> M:
+    """The inherited settings, overridden field by field by the ones the request actually sent."""
+    if not was_sent:
+        return inherited
+    return inherited.model_copy(update={name: getattr(sent, name) for name in sent.model_fields_set})
+
+
 def effective_request(req: TopicTreeRequestV2, settings: Settings | None = None) -> TopicTreeRequestV2:
     generation = req.current_tree.generation if req.current_tree else None
     sent = req.model_fields_set
@@ -125,11 +134,15 @@ def effective_request(req: TopicTreeRequestV2, settings: Settings | None = None)
     if generation is not None:
         if "topic" not in sent and generation.topic:
             updates["topic"] = generation.topic
-        if "hints" not in sent and generation.hints is not None:
-            updates["hints"] = generation.hints
-        if "options" not in sent and generation.options is not None:
+        if generation.hints is not None:
+            updates["hints"] = _inherit(generation.hints, req.hints, "hints" in sent)
+        if generation.options is not None:
+            options = _inherit(generation.options, req.options, "options" in sent)
             # `assign_only` describes one call, not the tree: inheriting it would silently drop the next feedback.
-            updates["options"] = generation.options.model_copy(update={"assign_only": False})
+            sent_assign_only = "options" in sent and "assign_only" in req.options.model_fields_set
+            updates["options"] = options.model_copy(
+                update={"assign_only": sent_assign_only and req.options.assign_only}
+            )
         if "frame" in sent and not any(req.frame.model_dump().values()) and generation.frame is not None:
             updates["frame"] = generation.frame
 
