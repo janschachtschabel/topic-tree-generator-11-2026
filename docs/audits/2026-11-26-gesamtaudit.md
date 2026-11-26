@@ -27,7 +27,7 @@ die Release-Kette, die für `v2.0.0` nie ein Image oder Chart veröffentlicht ha
 | # | Schwere | Bereich | Befund | Fix |
 |---|---|---|---|---|
 | 1 | Mittel | LLM-Client | Der HTTP-Client wird von allen Anfragen eines Workers geteilt und speicherte Cookies: ein `Set-Cookie` der b-api aus Anfrage A ging mit dem Token von B mit. | Cookie-Speicher, der nie etwas annimmt. |
-| 2 | Mittel | Verweise | Kein Gesamtlimit für `fulltext.ref`: 300 Items mit derselben 2-MB-URL luden 300-mal (~600 MB, über dem Pod-Limit). | Jede URL einmal; alle Volltexte einer Anfrage zusammen höchstens 8 Mio. Zeichen (`422 REF_TOO_LARGE`). |
+| 2 | Mittel | Verweise | Kein Gesamtlimit für `fulltext.ref`: 300 Items mit derselben 2-MB-URL luden 300-mal (~600 MB, über dem Pod-Limit). | Jede URL einmal; alle Volltexte einer Anfrage zusammen höchstens 10 Mio. Zeichen (`422 REF_TOO_LARGE`). |
 | 3 | Mittel | Verweise | Gzip-Antworten: Größenprüfung sah komprimierte Bytes, httpx entpackte jeden Block vollständig (148 MB Spitze bei 1 MB Limit). | `Accept-Encoding: identity`, Entpacken selbst mit begrenzter Größe. |
 | 4 | Mittel | refine | Ein geerbtes `assign_contents: false` ließ neue Inhalte spurlos verschwinden (keine Warnung). | Prüfung mit den geerbten Optionen, `INPUT_IGNORED`. |
 | 5 | Mittel | Test-UI | Eine refine-Basis mit zwei Bildungsstufen/Zielgruppen behielt nur die erste; der Dienst schrieb das auf alle Knoten. | Die Auswahl behält alle geladenen Werte, solange sie den ersten zeigt. |
@@ -55,11 +55,18 @@ die Release-Kette, die für `v2.0.0` nie ein Image oder Chart veröffentlicht ha
 
 Das Review des Fix-PRs fand sieben Punkte, alle behoben und mit Test: Daten nach dem Ende eines gzip-Stroms wurden
 nicht begrenzt (jetzt zählen auch die Rohbytes); rohes deflate wurde abgelehnt; das Gesamtlimit für Volltexte war mit
-8 Mio. Zeichen zu knapp (jetzt 20 Mio.); Titel von Inhalten, Abschnitten und Knoten konnten in einigen Prompts noch
+8 Mio. Zeichen zu knapp (jetzt 10 Mio., fünf Dokumente der Höchstgröße); Titel von Inhalten, Abschnitten und Knoten konnten in einigen Prompts noch
 Zeilen vortäuschen; bereits einsortierte Inhalte wurden bei geerbtem `assign_contents: false` als ausgelassen
 gemeldet; die Veröffentlichungssperre fragte das Chart ohne Anmeldung ab und hätte nach einem halben Release jeden
 neuen Lauf blockiert (jetzt wird nur der fehlende Teil veröffentlicht); der Prüf-Job `audit` färbte die CI rot,
 obwohl er nur melden soll.
+
+Ein zweites Review der Nachbesserungen fand weitere Punkte, ebenfalls behoben: Titel aus der Anfrage (Ordner, Knoten,
+Änderungen) werden schon bei der Prüfung auf eine Zeile gebracht, damit kein Prompt einen Zeilenumbruch sieht; rohes
+deflate in sehr kleinen Blöcken wird erkannt; eine Tabelle in `datenformat.md` war durch doppelt maskierte `|`
+zerbrochen (jetzt mit Test); `api.md` nannte `generation.based_on` statt `metadata.based_on` und versprach bei
+Rückfragen einen unveränderten Baum (umgesetzt wird der klare Teil); die README nennt beim nächsten Durchlauf auch
+Titel und Beschreibung.
 
 ## Geprüft, aber nicht geändert
 

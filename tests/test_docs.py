@@ -98,3 +98,16 @@ def test_examples_cover_combinations_and_every_change_op() -> None:
     assert ops == {"add", "remove", "rename", "edit", "move", "merge", "split"}
     assert "folders_use" in examples["combo_topic_folders"]
     assert (ROOT / "docs" / "datenformat.md").exists()
+
+
+def test_field_reference_tables_have_five_cells_per_row() -> None:
+    # Re-review: enum types were escaped twice ("\\|"), which split a generated table row.
+    rows = [
+        line
+        for line in (ROOT / "docs" / "datenformat.md").read_text(encoding="utf-8").splitlines()
+        if line.startswith("| ")
+    ]
+    assert rows
+    for row in rows:
+        cells = re.split(r"(?<!\\)\|", row)[1:-1]
+        assert len(cells) == 5 and "\\\\|" not in row, row

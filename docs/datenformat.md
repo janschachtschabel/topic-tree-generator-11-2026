@@ -425,7 +425,7 @@ Freie Schlüssel; Werte: Liste von Text.
 |---|---|---|---|---|
 | `order` | Text | ja |  | Ordnungsprinzip des Baums |
 | `levels` | Liste von Text |  |  | Bedeutung der Ebenen, von oben nach unten |
-| `source` | `hint` \\| `detected` \\| `input` | ja |  | Herkunft der Ordnung: hint (aus hints.order), detected (erkannt) oder input (aus der Eingabe) |
+| `source` | `hint` \| `detected` \| `input` | ja |  | Herkunft der Ordnung: hint (aus hints.order), detected (erkannt) oder input (aus der Eingabe) |
 
 ### Unassigned (Antwort)
 

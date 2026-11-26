@@ -26,7 +26,7 @@ Fixed (full audit 26.11.2026, `docs/audits/2026-11-26-gesamtaudit.md`)
   `uvicorn[standard]` (the extras pulled in unused CLI, template, form and e-mail packages), FastAPI/Starlette are
   updated (Starlette 1.10), and the `httpx2` loggers are muted like `httpx` (they would log request URLs).
 - From the independent review: compressed refs are also bounded by their raw size (data after the end of a gzip
-  stream), raw deflate is accepted, the total full-text cap is 20 million characters; item, section and node titles
+  stream), raw deflate is accepted, the total full-text cap is 10 million characters; item, section and node titles
   stay on one line in every prompt; items already in `current_tree` are not reported as left out.
 - Docs: `docs/datenformat.md` lists every request and response field (generated, with a test); `docs/api.md` and the
   README explain how to submit changes (all seven ops) and how to read the response; new examples for every change

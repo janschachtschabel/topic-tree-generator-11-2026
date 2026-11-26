@@ -243,7 +243,7 @@ Every field of request and response, with type, default and meaning, is listed i
 | `collection[]` | The tree: per node `key` (stable across runs), `title`, `shorttitle`, `status`, `origin`, edu-sharing `properties`, `contents[]` (`id`, `nodeId`, `confidence`), `subcollections[]` |
 | `unassigned[]` | Items not sorted in, with `reason` (`off_topic`, `low_confidence`, `no_matching_node`, `excluded`) |
 | `changes[]` | Applied (refine) or proposed (`folders` + `improve`) changes |
-| `questions[]` | Questions about unclear feedback (the tree stays unchanged) |
+| `questions[]` | Questions about unclear feedback; the unclear part is not applied |
 | `warnings[]` | Everything that failed or stood out, with a fixed `code` (never a silent gap) |
 
 A full request/response pair: [`docs/examples/topic_with_items.json`](docs/examples/topic_with_items.json) →
@@ -413,7 +413,8 @@ All seven in one request: `curl -s http://localhost:8000/v2/topic-tree -H 'Conte
 Locked keys (`feedback.locked`) and their branches never change; a change that would touch them is rejected with
 `CHANGE_REJECTED`. The response marks each node's `status` (`new`, `changed`, `moved`, `unchanged`), lists the
 applied `changes` and counts the version up (`v1` → `v2`). For the next run send back `collection`,
-`metadata.version` and `metadata.generation` as `current_tree` (see `docs/api.md`, "Änderungen an einem Baum einreichen").
+`metadata.version`, `metadata.generation` and (to keep them) `metadata.title`/`metadata.description` as
+`current_tree` (see `docs/api.md`, "Änderungen an einem Baum einreichen").
 
 ### 6. `refine` + `assign_only` – Sort new items into a fixed tree
 

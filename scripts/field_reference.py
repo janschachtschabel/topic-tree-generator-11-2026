@@ -28,7 +28,7 @@ def _type(spec: dict[str, Any], suffix: str = "") -> str:
         parts = [_type(s, suffix) for s in spec["anyOf"] if s.get("type") != "null"]
         return " oder ".join(parts) + (" oder null" if any(s.get("type") == "null" for s in spec["anyOf"]) else "")
     if "enum" in spec:
-        return " \\| ".join(f"`{v}`" for v in spec["enum"])
+        return " | ".join(f"`{v}`" for v in spec["enum"])
     kind = spec.get("type", "beliebig")
     if kind == "array":
         return f"Liste von {_type(spec.get('items', {}), suffix)}"

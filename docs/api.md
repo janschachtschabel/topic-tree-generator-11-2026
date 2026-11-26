@@ -148,7 +148,7 @@ gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema +
    `current_tree.version`, `metadata.generation` → `current_tree.generation` (siehe „Nächster Durchlauf“).
 2. Den Wunsch in `feedback` beschreiben, frei oder gezielt (beides geht in einer Anfrage):
    - `feedback.text`: Freitext, z. B. „Farben als eigenes Hauptthema“. Das Sprachmodell setzt ihn in Änderungen um;
-     ist er unklar, kommen `questions` zurück und der Baum bleibt unverändert.
+     was daran unklar ist, kommt als `questions` zurück und wird nicht umgesetzt (der Rest schon).
    - `feedback.changes`: gezielte Änderungen, ohne Sprachmodell umgesetzt (außer `split`).
    - `feedback.locked`: Schlüssel von Knoten, die mit ihrem Ast unverändert bleiben.
 3. Neue Inhalte zum Einsortieren als `items` mitschicken (eigene ids).
@@ -182,7 +182,7 @@ gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema +
 
 Alle sieben Operationen zusammen: `docs/examples/refine_changes.json`. In der Antwort steht jede umgesetzte Änderung
 in `changes` (mit `from`: `feedback_changes`, `feedback_text` oder `service`), jeder Knoten trägt `status` (`new`,
-`changed`, `moved`, `unchanged`, `suggested`), die Version zählt hoch (`v1` → `v2`, `generation.based_on`).
+`changed`, `moved`, `unchanged`, `suggested`), die Version zählt hoch (`v1` → `v2`, `metadata.based_on` nennt die Vorversion).
 Abgelehnte Änderungen melden `CHANGE_REJECTED`.
 
 ## Seitenmarken im Markdown (use_case document)
@@ -214,7 +214,7 @@ Beispiel: `docs/examples/responses/topic_with_items.json`; alle Felder: [`datenf
   `INPUT_IGNORED` meldet gesendete, aber nicht genutzte Eingaben (z. B. Gliederungsdokumente bei `folders` ohne
   `options.improve`, Ordner mit `folders_use: []`, Inhalte bei `assign_contents: false`). `OUTLINE_TRUNCATED` meldet
   auch ein Dokument ohne Überschriften, von dem nur ein Auszug einfloss.
-- `questions[]`: Rückfragen zu unklarem Feedback; der Baum bleibt dafür unverändert.
+- `questions[]`: Rückfragen zu unklarem Feedback; der unklare Teil wird nicht umgesetzt.
 - `metadata.generation.usage`: LLM-Aufrufe, Tokens (davon aus dem Cache), Dauer.
 
 ## Fehler
@@ -222,7 +222,7 @@ Beispiel: `docs/examples/responses/topic_with_items.json`; alle Felder: [`datenf
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
 (`MISSING_INPUT`, `INVALID_INPUT`, `INVALID_OPTION`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`,
 `ITEMS_TOO_LARGE`, `REF_NOT_ALLOWED`, `REF_INVALID`, `REF_TOO_LARGE` – ein Verweis oder alle Volltexte einer Anfrage
-zusammen zu groß –, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
+zusammen (über 10 Mio. Zeichen) zu groß –, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
 404 `NOT_FOUND` und 405 `METHOD_NOT_ALLOWED` für unbekannte Pfade oder Methoden unter `/v2/`,
 413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
 401 `UNAUTHORIZED` / 403 `FORBIDDEN` Anmeldung bzw. fehlende b-api-Berechtigung, 501 `NOT_IMPLEMENTED`, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.
