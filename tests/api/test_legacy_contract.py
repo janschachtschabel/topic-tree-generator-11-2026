@@ -153,3 +153,16 @@ def test_legacy_endpoints_keep_the_router_and_their_default_route(monkeypatch) -
 def test_legacy_endpoints_follow_a_configured_route(monkeypatch) -> None:
     calls = _legacy_calls(monkeypatch, {"b_api_route": "openai/gpt-6-luna"})
     assert {c["model"] for c in calls} == {"openai/gpt-6-luna"}
+
+
+def test_legacy_calls_are_bounded_by_the_llm_timeout(monkeypatch) -> None:
+    # Regression: v1 used the SDK default (600 s read timeout), far beyond the proxy's 310 s.
+    calls = _legacy_calls(monkeypatch, {"llm_timeout_seconds": "45"})
+    assert {c["timeout"] for c in calls} == {45.0}
+
+
+async def test_the_real_legacy_client_gets_the_llm_timeout() -> None:
+    from app.legacy.auth import LegacyTarget
+
+    client = legacy._build_openai_client(LegacyTarget("k", "https://b-api.example.org/", "r", 2, timeout=45.0))
+    assert client.timeout == 45.0

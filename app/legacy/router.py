@@ -64,13 +64,15 @@ def _build_openai_client(target: LegacyTarget) -> Any:
     if AsyncOpenAI is _REAL_ASYNC_OPENAI:
         kwargs["default_headers"] = headers
         kwargs["http_client"] = shared_http_client()
-        return AsyncOpenAI(**kwargs)
+        return AsyncOpenAI(**kwargs, timeout=target.timeout)
     try:
         params = inspect.signature(AsyncOpenAI).parameters
     except (TypeError, ValueError):
         return AsyncOpenAI(**kwargs)
     if "default_headers" in params:
         kwargs["default_headers"] = headers
+    if "timeout" in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        kwargs["timeout"] = target.timeout
     return AsyncOpenAI(**kwargs)
 
 
