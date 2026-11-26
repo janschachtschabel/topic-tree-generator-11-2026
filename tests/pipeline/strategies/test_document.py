@@ -335,3 +335,15 @@ async def test_topic_narrows_the_document_and_a_narrow_mapping_is_kept() -> None
     prompt = llm.prompts("map_outline")[0]
     assert "Das Thema „Optik: Licht an Grenzflächen“ grenzt das Dokument ein" in prompt
     assert narrowing(None) == ""
+
+
+async def test_a_topic_covered_by_one_section_makes_its_subsections_the_main_topics() -> None:
+    single = {
+        "order": "Themenfelder",
+        "levels": ["Themenfeld", "Fachbegriff"],
+        "description": "Grenzflächen",
+        "nodes": [MAPPING["nodes"][1]],
+    }
+    llm = FakeLLM({"map_outline": single, "describe_nodes": describe})
+    result = await build(req([doc()], topic="Licht an Grenzflächen"), rc(llm))
+    assert [r.title for r in result.roots] == ["Reflexion", "Brechung"]

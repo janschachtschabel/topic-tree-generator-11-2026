@@ -13,9 +13,10 @@ Changed
 - Items accept `"use": []` (neither structure nor content); before, an empty list fell back to the use case
   default. A structure document may also be content; the test UI has "also sort the document in as content".
 - Live test against OpenAI (all UI presets plus a refine chain, `scripts/run_presets.py`) and fixes from it:
-  - `document` with a `topic` keeps only the sections that belong to the topic.
+  - `document` with a `topic` keeps only the sections that belong to the topic; if one section covers it, its
+    subsections become the main topics.
   - Text feedback that adds a node next to deeper branches now also plans its subtopics (one call, warning
-    `EXPAND_FAILED` if that fails).
+    `EXPAND_FAILED` if that fails); proposed subtopics that already stand in the tree are dropped.
   - Node descriptions use one neutral voice (no "du"/"Sie", no imperatives) and start with the subject itself.
 
 ## 2.0.0 (2026-11-25)

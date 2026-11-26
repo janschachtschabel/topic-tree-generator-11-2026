@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from app.domain.tree import Node, path
+from app.domain.tree import Node, path, walk
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.describe_nodes import render_tree_outline
 from app.pipeline.steps.node_conversion import Cut
@@ -34,6 +34,22 @@ def missing_levels(node: Node, siblings: list[Node]) -> int:
     return max((_height(s) for s in siblings if s is not node), default=1) - 1
 
 
+def _fold(title: str) -> str:
+    return " ".join(title.casefold().split())
+
+
+def _without_known(nodes: list[Node], known: set[str]) -> list[Node]:
+    """Drop proposed subtopics whose title already stands in the tree (and repeats within the proposal)."""
+    kept = []
+    for node in nodes:
+        if _fold(node.title) in known:
+            continue
+        known.add(_fold(node.title))
+        node.children = _without_known(node.children, known)
+        kept.append(node)
+    return kept
+
+
 def _mark(nodes: list[Node]) -> None:
     for node in nodes:
         node.origin = Origin(type=OriginType.feedback)
@@ -57,12 +73,13 @@ async def expand_nodes(
     )
     result = await rc.llm.complete_json(STEP, prompt, ExpandResult, max_tokens=3000)
     by_key = {node.key: (node, levels) for node, levels in targets}
+    known = {_fold(node.title) for node, _, _ in walk(roots)}
     added: list[Node] = []
     for item in result.nodes:
         if item.key.strip() not in by_key or by_key[item.key.strip()][0].children:
             continue
         node, levels = by_key[item.key.strip()]
-        node.children = convert_children(item.children, levels, width[1], Cut())
+        node.children = _without_known(convert_children(item.children, levels, width[1], Cut()), known)
         _mark(node.children)
         added.extend(node.children)
     return added

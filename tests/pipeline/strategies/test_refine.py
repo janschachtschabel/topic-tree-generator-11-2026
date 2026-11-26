@@ -369,3 +369,23 @@ async def test_a_new_leaf_next_to_leaves_is_not_expanded() -> None:
     interpretation = {"changes": [{"op": "add", "parent": "k-optik", "title": "Farben"}], "questions": []}
     _, llm = await run(request({"text": "Farben unter Optik"}), {"interpret_feedback": interpretation})
     assert llm.prompts("expand_nodes") == []
+
+
+async def test_expansion_drops_subtopics_whose_title_already_exists_in_the_tree() -> None:
+    # Live run 2026-11-26: the expansion repeated "Optische Geräte", which already stood elsewhere in the tree.
+    interpretation = {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    expand = {
+        "nodes": [
+            {
+                "key": "k-farben",
+                "children": [
+                    {"title": "Spektrum", "shorttitle": "Spektrum", "children": []},
+                    {"title": "linsen", "shorttitle": "Linsen", "children": []},
+                ],
+            }
+        ]
+    }
+    resp, _ = await run(
+        request({"text": "Farben als Hauptthema"}), {"interpret_feedback": interpretation, "expand_nodes": expand}
+    )
+    assert [c.title for c in by_key(resp.collection, "k-farben").subcollections] == ["Spektrum"]

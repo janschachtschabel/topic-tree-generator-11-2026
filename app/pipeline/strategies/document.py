@@ -143,6 +143,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         order, levels, description = "Gliederung", [], ""
 
     converter = _Converter({s.ref: s for s in sections}, docs[0].id, req)
+    if req.topic and len(mapped) == 1 and mapped[0].children:
+        mapped = mapped[0].children  # one section covers the topic: its subsections are the main topics
     roots = converter.nodes(mapped, req.shape.depth, req.shape.main_topics.max)
     if converter.too_deep:
         rc.warn("SHAPE_DEPTH", "Der abgeleitete Baum war zu tief und wurde gekürzt.", step="map_outline")
