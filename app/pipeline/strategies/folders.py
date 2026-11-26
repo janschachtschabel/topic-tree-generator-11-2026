@@ -48,6 +48,12 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     assign_missing_keys(roots)
     titles = item_titles(req.items or [])
     changes = []
+    if not req.options.improve and any(ItemUse.structure in req.effective_use(i) for i in req.items or []):
+        rc.warn(
+            "INPUT_IGNORED",
+            "Gliederungsdokumente fließen bei use_case 'folders' nur mit options.improve ein und wurden ignoriert.",
+            step="folders",
+        )
     if req.options.improve:
         try:
             applied = await improve_folders(roots, titles, rc, inputs_block=structure_inputs_block(req, rc))

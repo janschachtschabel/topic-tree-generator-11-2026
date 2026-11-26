@@ -126,3 +126,12 @@ async def test_existing_assignment_is_not_duplicated() -> None:
     await assign_contents(roots, [item(1)], rc(llm), Options())
     await assign_contents(roots, [item(1)], rc(llm), Options())
     assert len(find(roots, "k-linsen").contents) == 1
+
+
+async def test_items_the_model_leaves_out_are_reported_not_silently_unassigned() -> None:
+    answer = {"items": [{"id": "c1", "nodes": [{"key": "k-linsen", "confidence": 0.9}]}]}
+    context = rc(FakeLLM({"assign_contents": answer}))
+    unassigned = await assign_contents(tree(), [item(1), item(2)], context, Options())
+    assert [u.id for u in unassigned] == ["c2"]
+    assert [w.code for w in context.warnings] == ["ASSIGN_FAILED"]
+    assert "1 Inhalte ohne Antwort" in context.warnings[0].message
