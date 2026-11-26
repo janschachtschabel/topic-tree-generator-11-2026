@@ -201,7 +201,7 @@ async def run(
         rc.warn("INPUT_IGNORED", "current_tree wird nur bei mode 'refine' genutzt und wurde ignoriert.", step="input")
         req = req.model_copy(update={"current_tree": None})
     check_request(req, rc.settings)
-    resolved = await resolve_refs(req, rc.settings)
+    resolved = await resolve_refs(req, rc.settings, rc.deadline)
     if resolved is not req:
         req = resolved
         check_request(req, rc.settings, loaded=True)

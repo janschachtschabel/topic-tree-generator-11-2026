@@ -3,6 +3,7 @@ REF_ALLOWED_HOSTS only (exact, or `.suffix` for subdomains), no redirects, size 
 
 import asyncio
 import json
+import time
 from urllib.parse import urlsplit
 
 import httpx
@@ -102,13 +103,32 @@ async def _with_fulltext(item: Item, settings: Settings, client: httpx.AsyncClie
     return item.model_copy(update={"fulltext": Fulltext(format=item.fulltext.format, text=text)})
 
 
-async def resolve_refs(req: TopicTreeRequestV2, settings: Settings) -> TopicTreeRequestV2:
-    """Return the request with referenced data loaded inline (same object if there is nothing to load)."""
+async def resolve_refs(
+    req: TopicTreeRequestV2, settings: Settings, deadline: float | None = None
+) -> TopicTreeRequestV2:
+    """Return the request with referenced data loaded inline (same object if there is nothing to load).
+
+    `deadline` (time.monotonic()) bounds all loading together, so slow refs cannot outlast the request."""
     has_inline_refs = any(
         i.fulltext and i.fulltext.ref and ItemUse.structure in req.effective_use(i) for i in req.items or []
     )
     if not req.items_ref and not has_inline_refs:
         return req
+    remaining = None if deadline is None else max(0.0, deadline - time.monotonic())
+    try:
+        async with asyncio.timeout(remaining):
+            items = await _load_all(req, settings)
+    except TimeoutError as exc:
+        raise ApiError(
+            422,
+            "REF_FAILED",
+            "Verweise konnten nicht innerhalb der Frist der Anfrage geladen werden.",
+            details={"reason": "deadline"},
+        ) from exc
+    return req.model_copy(update={"items": items, "items_ref": None})
+
+
+async def _load_all(req: TopicTreeRequestV2, settings: Settings) -> list[Item]:
     async with client_factory() as client:
         items = await _load_items(str(req.items_ref), settings, client) if req.items_ref else req.items
         probe = req.model_copy(update={"items": items})
@@ -118,5 +138,4 @@ async def resolve_refs(req: TopicTreeRequestV2, settings: Settings) -> TopicTree
         gate = asyncio.Semaphore(MAX_CONCURRENT_REFS)
         loaded = await asyncio.gather(*(_with_fulltext(i, settings, client, gate) for i in needs_text))
     replaced = {i.id: i for i in loaded}
-    items = [replaced.get(i.id, i) for i in items or []]
-    return req.model_copy(update={"items": items, "items_ref": None})
+    return [replaced.get(i.id, i) for i in items or []]
