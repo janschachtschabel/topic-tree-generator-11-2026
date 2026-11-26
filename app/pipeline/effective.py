@@ -99,6 +99,16 @@ def _clamp_shape(shape: Shape, settings: Settings | None) -> Shape:
     )
 
 
+def _complete_range[R: MainRange](sent: R, base: R) -> R:
+    """A range with one bound sent takes the other from the base range, moved so the sent bound holds."""
+    given = sent.model_fields_set
+    if given >= {"min", "max"} or not given:
+        return sent
+    if given == {"min"}:
+        return sent.model_copy(update={"max": max(base.max, sent.min)})
+    return sent.model_copy(update={"min": min(base.min, sent.max)})
+
+
 def _resolve_shape(
     req: TopicTreeRequestV2, merged: TopicTreeRequestV2, inherited: Shape | None, settings: Settings | None
 ) -> Shape:
@@ -113,10 +123,10 @@ def _resolve_shape(
     updates = {}
     if "depth" not in sent:
         updates["depth"] = base.depth
-    if "main_topics" not in sent:
-        updates["main_topics"] = base.main_topics
-    if "children" not in sent:
-        updates["children"] = base.children
+    for name in ("main_topics", "children"):
+        updates[name] = (
+            _complete_range(getattr(req.shape, name), getattr(base, name)) if name in sent else getattr(base, name)
+        )
     return req.shape.model_copy(update=updates) if updates else req.shape
 
 

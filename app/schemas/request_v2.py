@@ -36,6 +36,13 @@ class MainRange(_Model):
 
     @model_validator(mode="after")
     def _ordered(self) -> Self:
+        # With one bound sent, the default of the other one yields (e.g. {"max": 4} gives min 4, not an error);
+        # the service later fills it from the recommended or inherited range.
+        sent = self.model_fields_set
+        if self.min > self.max and sent == {"max"}:
+            self.min = self.max
+        elif self.min > self.max and sent == {"min"}:
+            self.max = self.min
         if self.min > self.max:
             raise ValueError("min must not exceed max")
         return self

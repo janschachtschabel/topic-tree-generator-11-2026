@@ -161,3 +161,14 @@ def test_partly_sent_hints_keep_the_other_inherited_hints() -> None:
     eff = effective_request(_refine({"hints": inherited}, hints={"context": "Klasse 8"}))
     assert eff.hints.context == "Klasse 8"
     assert (eff.hints.order, eff.hints.exclude, eff.hints.description_length) == ("Epochen", ["Krieg"], 120)
+
+
+def test_a_range_with_one_bound_takes_the_other_from_the_recommendation() -> None:
+    base = {"mode": "create", "use_case": "topic", "topic": "Optik", "frame": {}}
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"max": 4}, "children": {"max": 2}}}))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (4, 4)
+    assert (eff.shape.children.min, eff.shape.children.max) == (2, 2)
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 15}}}), Settings(_env_file=None))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (15, 15)
+    eff = effective_request(_req({**base, "shape": {"main_topics": {"min": 3}}}), Settings(_env_file=None))
+    assert (eff.shape.main_topics.min, eff.shape.main_topics.max) == (3, 15)
