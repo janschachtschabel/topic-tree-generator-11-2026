@@ -148,7 +148,9 @@
     }
     const itemsRef = text(form.itemsRef);
     if (itemsRef && items.length) throw fail("err.itemsAndRef");
-    if (task === "contents" && !itemsRef && !items.length) throw fail("err.materialsRequired");
+    // contents needs items that shape the grouping; folder files alone are only sorted in.
+    const shaping = items.some((i) => (i.use || []).includes("structure"));
+    if (task === "contents" && !itemsRef && !shaping) throw fail("err.materialsRequired");
     if (itemsRef) payload.items_ref = itemsRef;
     if (task === "refine") renameColliding(items, placedIds(form.currentTree));
     if (items.length) payload.items = items;
