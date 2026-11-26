@@ -87,6 +87,23 @@ def test_default_render_has_two_ports_probes_and_restricted_security() -> None:
     assert ports == {"http": 8000, "internal": 9000}
 
 
+def test_probes_are_configurable_in_values() -> None:
+    # Leitfaden Kap. 4: values.yaml maps every setting, probes included.
+    values = yaml.safe_load((CHART / "values.yaml").read_text(encoding="utf-8"))
+    assert values["probes"]["liveness"]["httpGet"] == {"path": "/health", "port": "internal"}
+    assert values["probes"]["readiness"]["httpGet"] == {"path": "/health", "port": "http"}
+    template = (CHART / "templates" / "deployment.yaml").read_text(encoding="utf-8")
+    assert ".Values.probes.liveness" in template and ".Values.probes.readiness" in template
+
+
+@needs_helm
+def test_probe_overrides_reach_the_deployment() -> None:
+    docs = kinds(render("--set", "probes.readiness.periodSeconds=7", "--set", "probes.liveness.failureThreshold=5"))
+    container = docs["Deployment"]["spec"]["template"]["spec"]["containers"][0]
+    assert container["readinessProbe"]["periodSeconds"] == 7
+    assert container["livenessProbe"]["failureThreshold"] == 5
+
+
 @needs_helm
 def test_optional_parts_render_when_enabled() -> None:
     docs = kinds(render(*ALL_ON))
