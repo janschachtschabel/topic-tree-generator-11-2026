@@ -25,8 +25,14 @@ Fixed (full audit 26.11.2026, `docs/audits/2026-11-26-gesamtaudit.md`)
   0.45, urllib3, python-multipart, jinja2, dnspython, pygments). `fastapi[standard]` is replaced by `fastapi` plus
   `uvicorn[standard]` (the extras pulled in unused CLI, template, form and e-mail packages), FastAPI/Starlette are
   updated (Starlette 1.10), and the `httpx2` loggers are muted like `httpx` (they would log request URLs).
-- CI: a release tag never moves `latest`, a version is never published twice, `uv lock --check`, and a report-only
-  `pip-audit` job. `docs/api.md` lists every warning and error code (with a test).
+- From the independent review: compressed refs are also bounded by their raw size (data after the end of a gzip
+  stream), raw deflate is accepted, the total full-text cap is 20 million characters; item, section and node titles
+  stay on one line in every prompt; items already in `current_tree` are not reported as left out.
+- Docs: `docs/datenformat.md` lists every request and response field (generated, with a test); `docs/api.md` and the
+  README explain how to submit changes (all seven ops) and how to read the response; new examples for every change
+  op, combinations with `folders_use` and a request/response pair.
+- CI: a release tag never moves `latest`, a version is never published twice (a partial publish is completed on a
+  re-run), `uv lock --check`, and a report-only `pip-audit` job. `docs/api.md` lists every warning and error code (with a test).
 
 Changed
 - Combinations without silent gaps (26.11.2026): the new field `folders_use` gives the whole folder structure a role

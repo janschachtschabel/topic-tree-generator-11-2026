@@ -11,7 +11,7 @@ gezählt). Ergebnis: Release `v2.1.0`.
   (3) Test-UI und Beispiele (Playwright gegen den OpenAI-Stub), (4) Deploy, CI, Release-Fähigkeit, Doku und Steckbrief.
 - Vorher: `uv run pytest -q` 597 grün, 5 übersprungen (Helm-Tests ohne `helm`); ruff sauber.
 - Jeder Befund wurde mit einer Probe bestätigt; jeder Fix hat einen Regressionstest, der vorher fehlschlug.
-- Nachher: 619 grün, 5 übersprungen; 33 Node-Tests der UI grün.
+- Nachher: 626 grün, 5 übersprungen; 33 Node-Tests der UI grün; `pip-audit` ohne bekannte Lücken.
 - Nicht geprüft werden konnte lokal: `pip-audit` (läuft jetzt als eigener CI-Job) und `helm` (läuft in der CI).
 - Nicht als Befund gewertet (Vorgabe Jan): Binärdateien in `fulltext.ref`; die Umwandlung (z. B. PDF) passiert vorher.
 
@@ -48,6 +48,18 @@ die Release-Kette, die für `v2.0.0` nie ein Image oder Chart veröffentlicht ha
 | 20 | Niedrig | Doku | `docs/api.md` fehlten 7 Warn- und 6 Fehlercodes. | Ergänzt, Test hält die Liste synchron. |
 | 21 | Niedrig | Doku | Steckbrief: „noch kein Tag“, Testzahl, `GET /` fehlte, Dependabot als aktiv beschrieben (PRs pausiert). | Korrigiert, Version `2.1.0`. |
 | 22 | Niedrig | Deploy | `.dockerignore` nannte das nicht mehr vorhandene `compose.yml`. | `docker-compose*.yml`, `.env.example`. |
+| 23 | Hoch | Abhängigkeiten | Der neue `pip-audit`-Job fand 46 bekannte Lücken (u. a. Starlette 0.45, urllib3, python-multipart, jinja2). | `fastapi[standard]` → `fastapi` + `uvicorn[standard]` (ungenutzte Pakete entfallen), FastAPI 0.165 / Starlette 1.10; `httpx2`-Logger stumm wie `httpx`. |
+| 24 | Mittel | Doku | README/`api.md` beschrieben nicht alle Ein- und Ausgabefelder, keine gezielten Änderungen (`feedback.changes`) mit Pflichtfeldern, kein Antwortbeispiel; `api.md` verwies auf eine Spec außerhalb des Repos. | `docs/datenformat.md` (aus den Modellen erzeugt, mit Test), Abschnitt „Änderungen einreichen“, neue Beispiele. |
+
+## Nachträge aus dem unabhängigen Review
+
+Das Review des Fix-PRs fand sieben Punkte, alle behoben und mit Test: Daten nach dem Ende eines gzip-Stroms wurden
+nicht begrenzt (jetzt zählen auch die Rohbytes); rohes deflate wurde abgelehnt; das Gesamtlimit für Volltexte war mit
+8 Mio. Zeichen zu knapp (jetzt 20 Mio.); Titel von Inhalten, Abschnitten und Knoten konnten in einigen Prompts noch
+Zeilen vortäuschen; bereits einsortierte Inhalte wurden bei geerbtem `assign_contents: false` als ausgelassen
+gemeldet; die Veröffentlichungssperre fragte das Chart ohne Anmeldung ab und hätte nach einem halben Release jeden
+neuen Lauf blockiert (jetzt wird nur der fehlende Teil veröffentlicht); der Prüf-Job `audit` färbte die CI rot,
+obwohl er nur melden soll.
 
 ## Geprüft, aber nicht geändert
 
