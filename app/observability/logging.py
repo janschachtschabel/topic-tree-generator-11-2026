@@ -1,7 +1,7 @@
 """Logging to stdout: JSON lines for operations, plain text for local development.
 
 Every line carries `service`, `trace_id` and `span_id` so the operations team can follow one request across
-services. `diagnose` is disabled so loguru never renders local variable values (which may hold tokens).
+services; lines of a request that came with the operator's `x-client-trace-id` also carry it as `client_trace_id`. `diagnose` is disabled so loguru never renders local variable values (which may hold tokens).
 """
 
 import json
@@ -59,6 +59,8 @@ def configure_logging(service: str, level: str = "INFO", fmt: str = "json", stre
         record["extra"].setdefault("service", service)
         record["extra"]["trace_id"] = tc.trace_id if tc else None
         record["extra"]["span_id"] = tc.span_id if tc else None
+        if tc and tc.client_trace_id:
+            record["extra"]["client_trace_id"] = tc.client_trace_id
 
     logger.remove()
     logger.configure(patcher=patch)
