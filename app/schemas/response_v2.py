@@ -14,121 +14,147 @@ class _Out(BaseModel):
 
 
 class ContentRef(_Out):
-    id: str
-    node_id: str | None = Field(None, alias="nodeId")
-    confidence: float = Field(1.0, ge=0, le=1)
+    id: str = Field(description="id des Inhalts aus der Anfrage")
+    node_id: str | None = Field(
+        None, alias="nodeId", description="Knoten-ID im Repository, unverändert aus der Anfrage"
+    )
+    confidence: float = Field(
+        1.0, ge=0, le=1, description="Konfidenz der Zuordnung zwischen 0 und 1 (1 bei Übernahme aus folders)"
+    )
 
 
 class Origin(_Out):
-    type: OriginType
-    id: str | None = None
-    section: str | None = None
-    page: int | None = None
-    path: str | None = None
+    type: OriginType = Field(description="Woher der Knoten stammt: topic, document, folder, cluster oder feedback")
+    id: str | None = Field(None, description="id des Eintrags in items, aus dem der Knoten stammt (document)")
+    section: str | None = Field(None, description="Abschnitt im Dokument (document)")
+    page: int | None = Field(None, description="Seite im Dokument, falls Seitenmarken vorhanden sind (document)")
+    path: str | None = Field(None, description="Ordnerpfad (folders)")
 
 
 class NodeOut(_Out):
-    key: str
-    title: str
-    shorttitle: str
-    status: NodeStatus
-    origin: Origin | None = None
-    confidence: float | None = Field(None, ge=0, le=1)
-    properties: Properties = Field(default_factory=Properties)
-    contents: list[ContentRef] = Field(default_factory=list)
-    subcollections: list["NodeOut"] = Field(default_factory=list)
+    key: str = Field(description="Stabiler Schlüssel des Knotens; bleibt über refine-Läufe erhalten")
+    title: str = Field(description="Titel des Knotens")
+    shorttitle: str = Field(description="Kurztitel, höchstens 20 Zeichen")
+    status: NodeStatus = Field(
+        description="Änderungsstand gegenüber current_tree: new, unchanged, changed, moved oder suggested"
+    )
+    origin: Origin | None = Field(None, description="Herkunft des Knotens")
+    confidence: float | None = Field(None, ge=0, le=1, description="Konfidenz, falls der Knoten nur vorgeschlagen ist")
+    properties: Properties = Field(
+        default_factory=Properties,
+        description="edu-sharing-Properties des Knotens, etwa cm:title, cclom:general_description, ccm:taxonid",
+    )
+    contents: list[ContentRef] = Field(default_factory=list, description="Zugeordnete Inhalte")
+    subcollections: list["NodeOut"] = Field(default_factory=list, description="Unterknoten")
 
 
 class Unassigned(_Out):
-    id: str
-    node_id: str | None = Field(None, alias="nodeId")
-    reason: UnassignedReason
+    id: str = Field(description="id des nicht zugeordneten Inhalts")
+    node_id: str | None = Field(
+        None, alias="nodeId", description="Knoten-ID im Repository, unverändert aus der Anfrage"
+    )
+    reason: UnassignedReason = Field(description="Grund: off_topic, low_confidence, no_matching_node oder excluded")
 
 
 class ChangeRecord(_Out):
-    op: ChangeOp
-    key: str | None = None
-    keys: list[str] | None = None
-    parent: str | None = None
-    to: str | None = None
-    title: str | None = None
-    source: ChangeSource = Field(alias="from")
+    op: ChangeOp = Field(description="Art der Änderung")
+    key: str | None = Field(None, description="Schlüssel des betroffenen oder neuen Knotens")
+    keys: list[str] | None = Field(None, description="Schlüssel der zusammengeführten Knoten (merge)")
+    parent: str | None = Field(None, description="Schlüssel des Elternknotens eines neuen Knotens (add)")
+    to: str | None = Field(None, description="Schlüssel des neuen Elternknotens (move)")
+    title: str | None = Field(None, description="Neuer Titel")
+    source: ChangeSource = Field(
+        alias="from", description="Auslöser: feedback_text, feedback_changes oder service (Vorschlag des Dienstes)"
+    )
 
 
 class Question(_Out):
-    text: str
-    key: str | None = None
-    options: list[str] | None = None
+    text: str = Field(description="Rückfrage zu einer unklaren Rückmeldung")
+    key: str | None = Field(None, description="Schlüssel des betroffenen Knotens")
+    options: list[str] | None = Field(None, description="Antwortmöglichkeiten")
 
 
 class ServiceWarning(_Out):
-    code: str
-    message: str
-    key: str | None = None
-    step: str | None = None
+    code: str = Field(description="Fester Code, etwa LLM_DEGRADED, DESCRIBE_FAILED oder SHAPE_SINGLE_CHILD")
+    message: str = Field(description="Erklärung für Menschen")
+    key: str | None = Field(None, description="Schlüssel des betroffenen Knotens")
+    step: str | None = Field(None, description="Verarbeitungsschritt, in dem die Warnung entstand")
 
 
 class StructureInfo(_Out):
-    order: str
-    levels: list[str] = Field(default_factory=list)
-    source: Literal["hint", "detected", "input"]
+    order: str = Field(description="Ordnungsprinzip des Baums")
+    levels: list[str] = Field(default_factory=list, description="Bedeutung der Ebenen, von oben nach unten")
+    source: Literal["hint", "detected", "input"] = Field(
+        description="Herkunft der Ordnung: hint (aus hints.order), detected (erkannt) oder input (aus der Eingabe)"
+    )
 
 
 class ItemCounts(_Out):
-    structure: int = 0
-    content: int = 0
+    structure: int = Field(0, description="Anzahl der Einträge mit Rolle structure")
+    content: int = Field(0, description="Anzahl der Einträge mit Rolle content")
 
 
 class InputCounts(_Out):
-    folders: int = 0
-    items: ItemCounts = Field(default_factory=ItemCounts)
+    folders: int = Field(0, description="Anzahl der übergebenen Ordner")
+    items: ItemCounts = Field(default_factory=ItemCounts, description="Anzahl der Einträge je Rolle")
 
 
 class Usage(_Out):
-    llm_calls: int = 0
-    failed_calls: int = 0
-    prompt_tokens: int = 0
-    cached_tokens: int = 0
-    completion_tokens: int = 0
-    duration_ms: int = 0
+    llm_calls: int = Field(0, description="Anzahl der LLM-Aufrufe")
+    failed_calls: int = Field(0, description="Davon fehlgeschlagen")
+    prompt_tokens: int = Field(0, description="Eingabe-Tokens")
+    cached_tokens: int = Field(0, description="Davon aus dem Prompt-Cache des Anbieters")
+    completion_tokens: int = Field(0, description="Ausgabe-Tokens")
+    duration_ms: int = Field(0, description="Dauer der Verarbeitung in Millisekunden")
 
 
 class Generation(_Out):
-    mode: Mode
-    use_case: UseCase
-    topic: str | None = None
-    frame: Frame
-    shape: Shape
-    hints: Hints
-    options: Options
-    inputs: InputCounts = Field(default_factory=InputCounts)
-    feedback: list[FeedbackEntry] = Field(default_factory=list)
-    structure: StructureInfo | None = None
-    usage: Usage | None = None
-    generator_version: str
-    model: str | None = None
+    mode: Mode = Field(description="Modus dieses Laufs")
+    use_case: UseCase = Field(description="Use Case dieses Laufs")
+    topic: str | None = Field(None, description="Thema dieses Laufs")
+    frame: Frame = Field(description="Wirksamer Rahmen")
+    shape: Shape = Field(description="Wirksame Form")
+    hints: Hints = Field(description="Wirksame Hinweise")
+    options: Options = Field(description="Wirksame Optionen")
+    inputs: InputCounts = Field(default_factory=InputCounts, description="Anzahl der Eingaben")
+    feedback: list[FeedbackEntry] = Field(default_factory=list, description="Alle bisherigen Rückmeldungen")
+    structure: StructureInfo | None = Field(None, description="Erkannte oder vorgegebene Ordnung")
+    usage: Usage | None = Field(None, description="Verbrauch dieses Laufs")
+    generator_version: str = Field(description="Version des Dienstes")
+    model: str | None = Field(None, description="Name der Route bzw. des Modells, die angefragt wurden")
 
 
 class Metadata(_Out):
-    title: str
-    description: str = ""
-    target_audience: str = "Lehrkräfte"
-    created_at: str
-    author: str = "Themenbaum Generator"
-    schema_version: str = "2.0"
-    version: str
-    based_on: str | None = None
-    vocab_labels: dict[str, str] = Field(default_factory=dict)
-    generation: Generation
+    title: str = Field(description="Titel des Baums")
+    description: str = Field("", description="Beschreibung des Baums")
+    target_audience: str = Field("Lehrkräfte", description="Zielgruppe in Worten")
+    created_at: str = Field(description="Zeitpunkt der Erzeugung (ISO 8601)")
+    author: str = Field("Themenbaum Generator", description="Erzeuger")
+    schema_version: str = Field("2.0", description="Version dieses Antwortformats")
+    version: str = Field(description="Version des Baums (v1, v2, …); steigt mit jedem refine")
+    based_on: str | None = Field(None, description="Version, auf der dieser Baum aufbaut")
+    vocab_labels: dict[str, str] = Field(
+        default_factory=dict, description="Deutsche Bezeichnungen der verwendeten Vokabular-URIs"
+    )
+    generation: Generation = Field(
+        description="Wirksame Vorgaben dieses Laufs; für den nächsten refine als current_tree.generation zurückgeben"
+    )
 
 
 class TopicTreeResponseV2(_Out):
-    metadata: Metadata
-    collection: list[NodeOut]
-    unassigned: list[Unassigned] = Field(default_factory=list)
-    changes: list[ChangeRecord] = Field(default_factory=list)
-    questions: list[Question] = Field(default_factory=list)
-    warnings: list[ServiceWarning] = Field(default_factory=list)
+    metadata: Metadata = Field(description="Angaben zum Baum und zum Lauf")
+    collection: list[NodeOut] = Field(description="Der Baum: Hauptthemen mit Unterknoten")
+    unassigned: list[Unassigned] = Field(
+        default_factory=list, description="Inhalte, die keinem Knoten zugeordnet wurden, mit Grund"
+    )
+    changes: list[ChangeRecord] = Field(default_factory=list, description="Angewendete und vorgeschlagene Änderungen")
+    questions: list[Question] = Field(
+        default_factory=list, description="Rückfragen zu unklarer Rückmeldung; der Baum bleibt dafür unverändert"
+    )
+    warnings: list[ServiceWarning] = Field(
+        default_factory=list,
+        description="Was nicht gelungen ist oder auffiel; ein Schritt ohne Ergebnis steht immer hier",
+    )
 
     def dump(self) -> dict[str, Any]:
         return self.model_dump(mode="json", by_alias=True, exclude_none=True)

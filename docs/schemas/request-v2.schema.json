@@ -3,7 +3,8 @@
     "Change": {
       "properties": {
         "op": {
-          "$ref": "#/$defs/ChangeOp"
+          "$ref": "#/$defs/ChangeOp",
+          "description": "Art der Änderung: add, remove, rename, edit, move, merge oder split"
         },
         "key": {
           "anyOf": [
@@ -15,6 +16,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des betroffenen Knotens (remove, rename, edit, move, split)",
           "title": "Key"
         },
         "keys": {
@@ -30,6 +32,7 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel der zusammenzuführenden Knoten, mindestens zwei (merge)",
           "title": "Keys"
         },
         "parent": {
@@ -42,6 +45,7 @@
             }
           ],
           "default": null,
+          "description": "add: Schlüssel oder Titel des Elternknotens; ohne Angabe Hauptebene",
           "title": "Parent"
         },
         "to": {
@@ -54,6 +58,7 @@
             }
           ],
           "default": null,
+          "description": "move: Schlüssel des neuen Elternknotens; ohne Angabe oder null Hauptebene",
           "title": "To"
         },
         "title": {
@@ -68,6 +73,7 @@
             }
           ],
           "default": null,
+          "description": "Neuer Titel (add, rename, merge)",
           "title": "Title"
         },
         "properties": {
@@ -79,7 +85,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Zu setzende Properties (edit)"
         },
         "hint": {
           "anyOf": [
@@ -92,6 +99,7 @@
             }
           ],
           "default": null,
+          "description": "Wie der Knoten aufgeteilt werden soll (split)",
           "title": "Hint"
         }
       },
@@ -118,6 +126,7 @@
       "properties": {
         "min": {
           "default": 3,
+          "description": "Mindestzahl der Unterthemen je Knoten (nie genau eines)",
           "maximum": 20,
           "minimum": 2,
           "title": "Min",
@@ -125,6 +134,7 @@
         },
         "max": {
           "default": 8,
+          "description": "Höchstzahl der Unterthemen je Knoten; begrenzt durch MAX_NODES_PER_LEVEL",
           "maximum": 20,
           "minimum": 2,
           "title": "Max",
@@ -137,6 +147,7 @@
     "ContentRefIn": {
       "properties": {
         "id": {
+          "description": "id des zugeordneten Inhalts",
           "pattern": "^[A-Za-z0-9._:-]{1,100}$",
           "title": "Id",
           "type": "string"
@@ -151,6 +162,7 @@
             }
           ],
           "default": null,
+          "description": "Knoten-ID im Repository, unverändert durchgereicht",
           "title": "Nodeid"
         },
         "confidence": {
@@ -165,6 +177,7 @@
             }
           ],
           "default": null,
+          "description": "Konfidenz der Zuordnung zwischen 0 und 1",
           "title": "Confidence"
         }
       },
@@ -187,6 +200,7 @@
             }
           ],
           "default": null,
+          "description": "metadata.version der früheren Antwort (ohne Angabe: v1)",
           "title": "Version"
         },
         "title": {
@@ -200,6 +214,7 @@
             }
           ],
           "default": null,
+          "description": "metadata.title der früheren Antwort",
           "title": "Title"
         },
         "description": {
@@ -213,9 +228,11 @@
             }
           ],
           "default": null,
+          "description": "metadata.description der früheren Antwort",
           "title": "Description"
         },
         "collection": {
+          "description": "collection der früheren Antwort, gern von Hand bearbeitet",
           "items": {
             "$ref": "#/$defs/TreeNodeIn"
           },
@@ -231,7 +248,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "metadata.generation der früheren Antwort; liefert Vorgaben für alles, was die Anfrage weglässt"
         }
       },
       "required": [
@@ -261,9 +279,11 @@
             }
           ],
           "default": null,
+          "description": "Rückmeldung als Freitext; das Sprachmodell setzt sie in Änderungen um oder stellt Rückfragen",
           "title": "Text"
         },
         "changes": {
+          "description": "Gezielte Änderungen, ohne Sprachmodell angewendet (außer split)",
           "items": {
             "$ref": "#/$defs/Change"
           },
@@ -272,6 +292,7 @@
           "type": "array"
         },
         "locked": {
+          "description": "Schlüssel gesperrter Knoten; sie und ihr Ast bleiben unverändert",
           "items": {
             "type": "string"
           },
@@ -295,6 +316,7 @@
             }
           ],
           "default": null,
+          "description": "Version des Baums, auf die sich die Rückmeldung bezog",
           "title": "Version"
         },
         "text": {
@@ -307,6 +329,7 @@
             }
           ],
           "default": null,
+          "description": "Text der Rückmeldung",
           "title": "Text"
         }
       },
@@ -316,12 +339,14 @@
     "FolderNode": {
       "properties": {
         "title": {
+          "description": "Name des Ordners",
           "maxLength": 200,
           "minLength": 1,
           "title": "Title",
           "type": "string"
         },
         "items": {
+          "description": "ids der Einträge aus items, die in diesem Ordner liegen",
           "items": {
             "pattern": "^[A-Za-z0-9._:-]{1,100}$",
             "type": "string"
@@ -330,6 +355,7 @@
           "type": "array"
         },
         "subcollections": {
+          "description": "Unterordner",
           "items": {
             "$ref": "#/$defs/FolderNode"
           },
@@ -346,6 +372,7 @@
     "Frame": {
       "properties": {
         "discipline_uri": {
+          "description": "Fächer als SkoHub-URIs (Vokabular discipline); prägen Inhalt und Knoten-Metadaten",
           "items": {
             "type": "string"
           },
@@ -354,6 +381,7 @@
           "type": "array"
         },
         "educational_context_uri": {
+          "description": "Bildungsstufen als SkoHub-URIs (educationalContext); bestimmen den Rahmen für die Form",
           "items": {
             "type": "string"
           },
@@ -362,6 +390,7 @@
           "type": "array"
         },
         "intended_end_user_role_uri": {
+          "description": "Zielgruppen als SkoHub-URIs (intendedEndUserRole), etwa Lehrkräfte oder Lernende",
           "items": {
             "type": "string"
           },
@@ -377,7 +406,8 @@
       "properties": {
         "format": {
           "$ref": "#/$defs/FulltextFormat",
-          "default": "markdown"
+          "default": "markdown",
+          "description": "Format von text bzw. des geladenen Verweises"
         },
         "text": {
           "anyOf": [
@@ -390,6 +420,7 @@
             }
           ],
           "default": null,
+          "description": "Volltext direkt in der Anfrage (genau eines von text und ref)",
           "title": "Text"
         },
         "ref": {
@@ -405,6 +436,7 @@
             }
           ],
           "default": null,
+          "description": "HTTPS-Adresse des Volltexts; nur Hosts aus REF_ALLOWED_HOSTS",
           "title": "Ref"
         }
       },
@@ -431,7 +463,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Modus des früheren Laufs"
         },
         "use_case": {
           "anyOf": [
@@ -442,7 +475,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Use Case des früheren Laufs"
         },
         "topic": {
           "anyOf": [
@@ -454,6 +488,7 @@
             }
           ],
           "default": null,
+          "description": "Thema des früheren Laufs",
           "title": "Topic"
         },
         "frame": {
@@ -465,7 +500,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Rahmen des früheren Laufs"
         },
         "shape": {
           "anyOf": [
@@ -476,7 +512,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Form des früheren Laufs"
         },
         "hints": {
           "anyOf": [
@@ -487,7 +524,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Hinweise des früheren Laufs"
         },
         "options": {
           "anyOf": [
@@ -498,7 +536,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Optionen des früheren Laufs (assign_only wird nie geerbt)"
         },
         "structure": {
           "anyOf": [
@@ -511,9 +550,11 @@
             }
           ],
           "default": null,
+          "description": "Erkannte Ordnung des früheren Laufs",
           "title": "Structure"
         },
         "feedback": {
+          "description": "Bisherige Rückmeldungen",
           "items": {
             "$ref": "#/$defs/FeedbackEntry"
           },
@@ -537,9 +578,11 @@
             }
           ],
           "default": null,
+          "description": "Freitext zu Zweck und Kontext des Baums, etwa Zielgruppe oder Einsatz",
           "title": "Context"
         },
         "include": {
+          "description": "Begriffe, die im Baum vorkommen sollen",
           "items": {
             "maxLength": 200,
             "minLength": 1,
@@ -550,6 +593,7 @@
           "type": "array"
         },
         "exclude": {
+          "description": "Begriffe, die nicht vorkommen sollen (Treffer am Wortanfang)",
           "items": {
             "maxLength": 200,
             "minLength": 1,
@@ -570,6 +614,7 @@
             }
           ],
           "default": null,
+          "description": "Gewünschtes Ordnungsprinzip, etwa „chronologisch“ oder „nach Kompetenzen“",
           "title": "Order"
         },
         "description_length": {
@@ -582,6 +627,7 @@
         },
         "language": {
           "default": "de",
+          "description": "Sprache der Titel und Beschreibungen als ISO-639-1-Code",
           "pattern": "^[a-z]{2}$",
           "title": "Language",
           "type": "string"
@@ -593,6 +639,7 @@
     "Item": {
       "properties": {
         "id": {
+          "description": "Eindeutige id des Eintrags in dieser Anfrage; erscheint in contents und unassigned",
           "pattern": "^[A-Za-z0-9._:-]{1,100}$",
           "title": "Id",
           "type": "string"
@@ -608,6 +655,7 @@
             }
           ],
           "default": null,
+          "description": "Knoten-ID im Repository; wird unverändert durchgereicht, der Dienst liest den Knoten nie",
           "title": "Nodeid"
         },
         "use": {
@@ -627,7 +675,8 @@
           "title": "Use"
         },
         "properties": {
-          "$ref": "#/$defs/Properties"
+          "$ref": "#/$defs/Properties",
+          "description": "edu-sharing-Properties wie cm:title oder cclom:general_keyword, Werte als Listen"
         },
         "fulltext": {
           "anyOf": [
@@ -638,7 +687,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Volltext des Eintrags, etwa ein Lehrplan als Markdown"
         },
         "path": {
           "anyOf": [
@@ -651,6 +701,7 @@
             }
           ],
           "default": null,
+          "description": "Ablageort des Eintrags, nur zur Information",
           "title": "Path"
         }
       },
@@ -672,6 +723,7 @@
       "properties": {
         "min": {
           "default": 6,
+          "description": "Mindestzahl der Hauptthemen (Ebene 1)",
           "maximum": 20,
           "minimum": 1,
           "title": "Min",
@@ -679,6 +731,7 @@
         },
         "max": {
           "default": 12,
+          "description": "Höchstzahl der Hauptthemen (Ebene 1); begrenzt durch MAX_NODES_PER_LEVEL",
           "maximum": 20,
           "minimum": 1,
           "title": "Max",
@@ -700,26 +753,31 @@
       "properties": {
         "improve": {
           "default": false,
+          "description": "folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück",
           "title": "Improve",
           "type": "boolean"
         },
         "assign_contents": {
           "default": true,
+          "description": "Inhalte aus items den Knoten zuordnen",
           "title": "Assign Contents",
           "type": "boolean"
         },
         "assign_only": {
           "default": false,
+          "description": "refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf",
           "title": "Assign Only",
           "type": "boolean"
         },
         "multi_assign": {
           "default": true,
+          "description": "Ein Inhalt darf mehreren Knoten zugeordnet werden",
           "title": "Multi Assign",
           "type": "boolean"
         },
         "min_confidence": {
           "default": 0.6,
+          "description": "Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned",
           "maximum": 1,
           "minimum": 0,
           "title": "Min Confidence",
@@ -727,6 +785,7 @@
         },
         "auto_metadata": {
           "default": false,
+          "description": "Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist",
           "title": "Auto Metadata",
           "type": "boolean"
         }
@@ -749,18 +808,22 @@
       "properties": {
         "depth": {
           "default": 3,
+          "description": "Anzahl der Ebenen, höchstens MAX_TREE_DEPTH; ohne shape wählt der Dienst je Zielgruppe",
           "maximum": 4,
           "minimum": 1,
           "title": "Depth",
           "type": "integer"
         },
         "main_topics": {
-          "$ref": "#/$defs/MainRange"
+          "$ref": "#/$defs/MainRange",
+          "description": "Spanne der Hauptthemen; eine einzelne Grenze übernimmt die andere aus dem Empfehlungsrahmen"
         },
         "children": {
-          "$ref": "#/$defs/ChildRange"
+          "$ref": "#/$defs/ChildRange",
+          "description": "Spanne der Unterthemen je Knoten"
         },
         "extra_topics": {
+          "description": "Zusätzliche Hauptthemen: general (Allgemeines) und/oder methodology (Methodik und Didaktik)",
           "items": {
             "$ref": "#/$defs/ExtraTopic"
           },
@@ -785,9 +848,11 @@
             }
           ],
           "default": null,
+          "description": "Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen",
           "title": "Key"
         },
         "title": {
+          "description": "Titel des Knotens",
           "maxLength": 200,
           "minLength": 1,
           "title": "Title",
@@ -804,10 +869,12 @@
             }
           ],
           "default": null,
+          "description": "Kurztitel (höchstens 20 Zeichen in der Antwort)",
           "title": "Shorttitle"
         },
         "properties": {
-          "$ref": "#/$defs/Properties"
+          "$ref": "#/$defs/Properties",
+          "description": "edu-sharing-Properties des Knotens"
         },
         "origin": {
           "anyOf": [
@@ -820,9 +887,11 @@
             }
           ],
           "default": null,
+          "description": "Herkunft des Knotens aus der früheren Antwort",
           "title": "Origin"
         },
         "contents": {
+          "description": "Bereits zugeordnete Inhalte",
           "items": {
             "$ref": "#/$defs/ContentRefIn"
           },
@@ -830,6 +899,7 @@
           "type": "array"
         },
         "subcollections": {
+          "description": "Unterknoten",
           "items": {
             "$ref": "#/$defs/TreeNodeIn"
           },
@@ -856,10 +926,12 @@
   },
   "properties": {
     "mode": {
-      "$ref": "#/$defs/Mode"
+      "$ref": "#/$defs/Mode",
+      "description": "create: neuer Baum; refine: current_tree mit feedback oder neuen items weiterentwickeln"
     },
     "use_case": {
-      "$ref": "#/$defs/UseCase"
+      "$ref": "#/$defs/UseCase",
+      "description": "Quelle der Struktur: topic, document (Gliederung), folders oder contents"
     },
     "topic": {
       "anyOf": [
@@ -873,6 +945,7 @@
         }
       ],
       "default": null,
+      "description": "Thema des Baums; Pflicht bei topic, bei document und contents optional zur Eingrenzung",
       "title": "Topic"
     },
     "folders": {
@@ -888,6 +961,7 @@
         }
       ],
       "default": null,
+      "description": "Bestehende Ordnerstruktur (use_case folders)",
       "title": "Folders"
     },
     "items": {
@@ -903,6 +977,7 @@
         }
       ],
       "default": null,
+      "description": "Materialien und Dokumente, je mit Rolle in use",
       "title": "Items"
     },
     "items_ref": {
@@ -918,6 +993,7 @@
         }
       ],
       "default": null,
+      "description": "HTTPS-Adresse einer JSON-Liste von items; nur von Hosts in REF_ALLOWED_HOSTS",
       "title": "Items Ref"
     },
     "current_tree": {
@@ -929,7 +1005,8 @@
           "type": "null"
         }
       ],
-      "default": null
+      "default": null,
+      "description": "Früheres Ergebnis (mode refine)"
     },
     "feedback": {
       "anyOf": [
@@ -940,19 +1017,24 @@
           "type": "null"
         }
       ],
-      "default": null
+      "default": null,
+      "description": "Rückmeldung zum current_tree (mode refine)"
     },
     "frame": {
-      "$ref": "#/$defs/Frame"
+      "$ref": "#/$defs/Frame",
+      "description": "Fachlicher Rahmen als SkoHub-URIs; übernommen in die Knoten-Metadaten"
     },
     "shape": {
-      "$ref": "#/$defs/Shape"
+      "$ref": "#/$defs/Shape",
+      "description": "Form des Baums: Tiefe und Breite"
     },
     "hints": {
-      "$ref": "#/$defs/Hints"
+      "$ref": "#/$defs/Hints",
+      "description": "Inhaltliche Hinweise"
     },
     "options": {
-      "$ref": "#/$defs/Options"
+      "$ref": "#/$defs/Options",
+      "description": "Schalter für Zuordnung, Verbesserung und Metadaten"
     }
   },
   "required": [

@@ -3,10 +3,31 @@ requirements per use case live in `app/pipeline/input_checks.py`."""
 
 from typing import Annotated, Any, Self
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic import AfterValidator, Field, HttpUrl, model_validator
 
-from app.schemas.common import ChangeOp, ExtraTopic, FulltextFormat, ItemUse, Mode, UseCase
+from app.schemas.common import ChangeOp, FulltextFormat, ItemUse, Mode, UseCase
 from app.schemas.properties import Properties
+from app.schemas.request_parts import ChildRange, Frame, Hints, MainRange, Options, RequestModel, Shape, ShortText
+
+__all__ = [
+    "Change",
+    "ChildRange",
+    "ContentRefIn",
+    "CurrentTree",
+    "Feedback",
+    "FeedbackEntry",
+    "FolderNode",
+    "Frame",
+    "Fulltext",
+    "GenerationIn",
+    "Hints",
+    "Item",
+    "MainRange",
+    "Options",
+    "Shape",
+    "TopicTreeRequestV2",
+    "TreeNodeIn",
+]
 
 
 def _https_only(url: HttpUrl) -> HttpUrl:
@@ -16,74 +37,15 @@ def _https_only(url: HttpUrl) -> HttpUrl:
 
 
 HttpsUrl = Annotated[HttpUrl, AfterValidator(_https_only)]
-ShortText = Annotated[str, Field(min_length=1, max_length=200)]
 ItemId = Annotated[str, Field(pattern=r"^[A-Za-z0-9._:-]{1,100}$")]
 
 
-class _Model(BaseModel):
-    model_config = ConfigDict(extra="ignore", populate_by_name=True)
-
-
-class Frame(_Model):
-    discipline_uri: list[str] = Field(default_factory=list, max_length=20)
-    educational_context_uri: list[str] = Field(default_factory=list, max_length=20)
-    intended_end_user_role_uri: list[str] = Field(default_factory=list, max_length=20)
-
-
-class MainRange(_Model):
-    min: int = Field(6, ge=1, le=20)
-    max: int = Field(12, ge=1, le=20)
-
-    @model_validator(mode="after")
-    def _ordered(self) -> Self:
-        # With one bound sent, the default of the other one yields (e.g. {"max": 4} gives min 4, not an error);
-        # the service later fills it from the recommended or inherited range.
-        # Written to __dict__ so the clamped bound does not count as sent (model_fields_set stays as it was).
-        sent = self.model_fields_set
-        if self.min > self.max and sent == {"max"}:
-            self.__dict__["min"] = self.max
-        elif self.min > self.max and sent == {"min"}:
-            self.__dict__["max"] = self.min
-        if self.min > self.max:
-            raise ValueError("min must not exceed max")
-        return self
-
-
-class ChildRange(MainRange):
-    # A node never gets exactly one child, so the lower bound is 2.
-    min: int = Field(3, ge=2, le=20)
-    max: int = Field(8, ge=2, le=20)
-
-
-class Shape(_Model):
-    depth: int = Field(3, ge=1, le=4)
-    main_topics: MainRange = Field(default_factory=MainRange)
-    children: ChildRange = Field(default_factory=ChildRange)
-    extra_topics: list[ExtraTopic] = Field(default_factory=list)
-
-
-class Hints(_Model):
-    context: str | None = Field(None, max_length=2000)
-    include: list[ShortText] = Field(default_factory=list, max_length=50)
-    exclude: list[ShortText] = Field(default_factory=list, max_length=50)
-    order: str | None = Field(None, max_length=200)
-    description_length: int = Field(60, ge=40, le=200, description="Ziellänge der Beschreibungen in Wörtern")
-    language: str = Field("de", pattern=r"^[a-z]{2}$")
-
-
-class Options(_Model):
-    improve: bool = False
-    assign_contents: bool = True
-    assign_only: bool = False
-    multi_assign: bool = True
-    min_confidence: float = Field(0.6, ge=0, le=1)
-    auto_metadata: bool = False
-
-
-class Fulltext(_Model):
-    format: FulltextFormat = FulltextFormat.markdown
-    text: str | None = Field(None, max_length=2_000_000)
-    ref: HttpsUrl | None = None
+class Fulltext(RequestModel):
+    format: FulltextFormat = Field(FulltextFormat.markdown, description="Format von text bzw. des geladenen Verweises")
+    text: str | None = Field(
+        None, max_length=2_000_000, description="Volltext direkt in der Anfrage (genau eines von text und ref)"
+    )
+    ref: HttpsUrl | None = Field(None, description="HTTPS-Adresse des Volltexts; nur Hosts aus REF_ALLOWED_HOSTS")
 
     @model_validator(mode="after")
     def _one_source(self) -> Self:
@@ -92,70 +54,89 @@ class Fulltext(_Model):
         return self
 
 
-class Item(_Model):
-    id: ItemId
-    node_id: str | None = Field(None, alias="nodeId", max_length=200)
+class Item(RequestModel):
+    id: ItemId = Field(description="Eindeutige id des Eintrags in dieser Anfrage; erscheint in contents und unassigned")
+    node_id: str | None = Field(
+        None,
+        alias="nodeId",
+        max_length=200,
+        description="Knoten-ID im Repository; wird unverändert durchgereicht, der Dienst liest den Knoten nie",
+    )
     use: list[ItemUse] | None = Field(
         None,
         description="Rolle des Eintrags: ['structure'] Gliederung, ['content'] Inhalt, beide, oder [] keines von "
         "beiden (wird angenommen, aber weder für die Struktur genutzt noch einsortiert). Fehlt use, gilt der Standard "
         "des Use Case.",
     )
-    properties: Properties = Field(default_factory=Properties)
-    fulltext: Fulltext | None = None
-    path: str | None = Field(None, max_length=1000)
+    properties: Properties = Field(
+        default_factory=Properties,
+        description="edu-sharing-Properties wie cm:title oder cclom:general_keyword, Werte als Listen",
+    )
+    fulltext: Fulltext | None = Field(None, description="Volltext des Eintrags, etwa ein Lehrplan als Markdown")
+    path: str | None = Field(None, max_length=1000, description="Ablageort des Eintrags, nur zur Information")
 
 
-class FolderNode(_Model):
-    title: ShortText
-    items: list[ItemId] = Field(default_factory=list)
-    subcollections: list["FolderNode"] = Field(default_factory=list)
+class FolderNode(RequestModel):
+    title: ShortText = Field(description="Name des Ordners")
+    items: list[ItemId] = Field(
+        default_factory=list, description="ids der Einträge aus items, die in diesem Ordner liegen"
+    )
+    subcollections: list["FolderNode"] = Field(default_factory=list, description="Unterordner")
 
 
-class ContentRefIn(_Model):
-    id: ItemId
-    node_id: str | None = Field(None, alias="nodeId")
-    confidence: float | None = Field(None, ge=0, le=1)
+class ContentRefIn(RequestModel):
+    id: ItemId = Field(description="id des zugeordneten Inhalts")
+    node_id: str | None = Field(None, alias="nodeId", description="Knoten-ID im Repository, unverändert durchgereicht")
+    confidence: float | None = Field(None, ge=0, le=1, description="Konfidenz der Zuordnung zwischen 0 und 1")
 
 
-class TreeNodeIn(_Model):
+class TreeNodeIn(RequestModel):
     """A node of an earlier answer (v2 or legacy format), possibly edited by hand."""
 
-    key: str | None = Field(None, max_length=200)
-    title: ShortText
-    shorttitle: str | None = Field(None, max_length=200)
-    properties: Properties = Field(default_factory=Properties)
-    origin: dict[str, Any] | None = None
-    contents: list[ContentRefIn] = Field(default_factory=list)
-    subcollections: list["TreeNodeIn"] = Field(default_factory=list)
+    key: str | None = Field(
+        None,
+        max_length=200,
+        description="Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen",
+    )
+    title: ShortText = Field(description="Titel des Knotens")
+    shorttitle: str | None = Field(None, max_length=200, description="Kurztitel (höchstens 20 Zeichen in der Antwort)")
+    properties: Properties = Field(default_factory=Properties, description="edu-sharing-Properties des Knotens")
+    origin: dict[str, Any] | None = Field(None, description="Herkunft des Knotens aus der früheren Antwort")
+    contents: list[ContentRefIn] = Field(default_factory=list, description="Bereits zugeordnete Inhalte")
+    subcollections: list["TreeNodeIn"] = Field(default_factory=list, description="Unterknoten")
 
 
-class FeedbackEntry(_Model):
-    version: str | None = None
-    text: str | None = None
+class FeedbackEntry(RequestModel):
+    version: str | None = Field(None, description="Version des Baums, auf die sich die Rückmeldung bezog")
+    text: str | None = Field(None, description="Text der Rückmeldung")
 
 
-class GenerationIn(_Model):
+class GenerationIn(RequestModel):
     """`metadata.generation` of an earlier answer: defaults for anything the new request leaves out."""
 
-    mode: Mode | None = None
-    use_case: UseCase | None = None
-    topic: str | None = None
-    frame: Frame | None = None
-    shape: Shape | None = None
-    hints: Hints | None = None
-    options: Options | None = None
-    structure: dict[str, Any] | None = None
-    feedback: list[FeedbackEntry] = Field(default_factory=list)
+    mode: Mode | None = Field(None, description="Modus des früheren Laufs")
+    use_case: UseCase | None = Field(None, description="Use Case des früheren Laufs")
+    topic: str | None = Field(None, description="Thema des früheren Laufs")
+    frame: Frame | None = Field(None, description="Rahmen des früheren Laufs")
+    shape: Shape | None = Field(None, description="Form des früheren Laufs")
+    hints: Hints | None = Field(None, description="Hinweise des früheren Laufs")
+    options: Options | None = Field(None, description="Optionen des früheren Laufs (assign_only wird nie geerbt)")
+    structure: dict[str, Any] | None = Field(None, description="Erkannte Ordnung des früheren Laufs")
+    feedback: list[FeedbackEntry] = Field(default_factory=list, description="Bisherige Rückmeldungen")
 
 
-class CurrentTree(_Model):
-    version: str | None = Field(None, max_length=50)
+class CurrentTree(RequestModel):
+    version: str | None = Field(
+        None, max_length=50, description="metadata.version der früheren Antwort (ohne Angabe: v1)"
+    )
     # `metadata.title` / `metadata.description` of the earlier answer; carried over so refine keeps them.
-    title: str | None = Field(None, max_length=2000)
-    description: str | None = Field(None, max_length=8000)
-    collection: list[TreeNodeIn]
-    generation: GenerationIn | None = None
+    title: str | None = Field(None, max_length=2000, description="metadata.title der früheren Antwort")
+    description: str | None = Field(None, max_length=8000, description="metadata.description der früheren Antwort")
+    collection: list[TreeNodeIn] = Field(description="collection der früheren Antwort, gern von Hand bearbeitet")
+    generation: GenerationIn | None = Field(
+        None,
+        description="metadata.generation der früheren Antwort; liefert Vorgaben für alles, was die Anfrage weglässt",
+    )
 
 
 _REQUIRED_BY_OP: dict[ChangeOp, tuple[str, ...]] = {
@@ -169,15 +150,19 @@ _REQUIRED_BY_OP: dict[ChangeOp, tuple[str, ...]] = {
 }
 
 
-class Change(_Model):
-    op: ChangeOp
-    key: str | None = None
-    keys: list[str] | None = None
-    parent: str | None = None
-    to: str | None = None
-    title: ShortText | None = None
-    properties: Properties | None = None
-    hint: str | None = Field(None, max_length=1000)
+class Change(RequestModel):
+    op: ChangeOp = Field(description="Art der Änderung: add, remove, rename, edit, move, merge oder split")
+    key: str | None = Field(None, description="Schlüssel des betroffenen Knotens (remove, rename, edit, move, split)")
+    keys: list[str] | None = Field(
+        None, description="Schlüssel der zusammenzuführenden Knoten, mindestens zwei (merge)"
+    )
+    parent: str | None = Field(None, description="add: Schlüssel oder Titel des Elternknotens; ohne Angabe Hauptebene")
+    to: str | None = Field(
+        None, description="move: Schlüssel des neuen Elternknotens; ohne Angabe oder null Hauptebene"
+    )
+    title: ShortText | None = Field(None, description="Neuer Titel (add, rename, merge)")
+    properties: Properties | None = Field(None, description="Zu setzende Properties (edit)")
+    hint: str | None = Field(None, max_length=1000, description="Wie der Knoten aufgeteilt werden soll (split)")
 
     @model_validator(mode="after")
     def _required_fields(self) -> Self:
@@ -191,25 +176,46 @@ class Change(_Model):
         return self
 
 
-class Feedback(_Model):
-    text: str | None = Field(None, max_length=8000)
-    changes: list[Change] = Field(default_factory=list, max_length=200)
-    locked: list[str] = Field(default_factory=list, max_length=500)
+class Feedback(RequestModel):
+    text: str | None = Field(
+        None,
+        max_length=8000,
+        description="Rückmeldung als Freitext; das Sprachmodell setzt sie in Änderungen um oder stellt Rückfragen",
+    )
+    changes: list[Change] = Field(
+        default_factory=list,
+        max_length=200,
+        description="Gezielte Änderungen, ohne Sprachmodell angewendet (außer split)",
+    )
+    locked: list[str] = Field(
+        default_factory=list,
+        max_length=500,
+        description="Schlüssel gesperrter Knoten; sie und ihr Ast bleiben unverändert",
+    )
 
 
-class TopicTreeRequestV2(_Model):
-    mode: Mode
-    use_case: UseCase
-    topic: str | None = Field(None, min_length=1, max_length=2000)
-    folders: list[FolderNode] | None = None
-    items: list[Item] | None = None
-    items_ref: HttpsUrl | None = None
-    current_tree: CurrentTree | None = None
-    feedback: Feedback | None = None
-    frame: Frame
-    shape: Shape = Field(default_factory=Shape)
-    hints: Hints = Field(default_factory=Hints)
-    options: Options = Field(default_factory=Options)
+class TopicTreeRequestV2(RequestModel):
+    mode: Mode = Field(
+        description="create: neuer Baum; refine: current_tree mit feedback oder neuen items weiterentwickeln"
+    )
+    use_case: UseCase = Field(description="Quelle der Struktur: topic, document (Gliederung), folders oder contents")
+    topic: str | None = Field(
+        None,
+        min_length=1,
+        max_length=2000,
+        description="Thema des Baums; Pflicht bei topic, bei document und contents optional zur Eingrenzung",
+    )
+    folders: list[FolderNode] | None = Field(None, description="Bestehende Ordnerstruktur (use_case folders)")
+    items: list[Item] | None = Field(None, description="Materialien und Dokumente, je mit Rolle in use")
+    items_ref: HttpsUrl | None = Field(
+        None, description="HTTPS-Adresse einer JSON-Liste von items; nur von Hosts in REF_ALLOWED_HOSTS"
+    )
+    current_tree: CurrentTree | None = Field(None, description="Früheres Ergebnis (mode refine)")
+    feedback: Feedback | None = Field(None, description="Rückmeldung zum current_tree (mode refine)")
+    frame: Frame = Field(description="Fachlicher Rahmen als SkoHub-URIs; übernommen in die Knoten-Metadaten")
+    shape: Shape = Field(default_factory=Shape, description="Form des Baums: Tiefe und Breite")
+    hints: Hints = Field(default_factory=Hints, description="Inhaltliche Hinweise")
+    options: Options = Field(default_factory=Options, description="Schalter für Zuordnung, Verbesserung und Metadaten")
 
     def effective_use(self, item: Item) -> set[ItemUse]:
         """Spec: without `use`, contents items are structure and content; everything else is content only.
