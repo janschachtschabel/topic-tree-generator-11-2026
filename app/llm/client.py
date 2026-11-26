@@ -116,9 +116,15 @@ class LLMClient:
                 api_key=self.backend.api_key,
                 base_url=self.backend.base_url,
                 max_retries=self.settings.llm_max_retries,
-                default_headers=outgoing_headers(self.trace or get_trace()),
+                default_headers=self._trace_headers(),
             )
         return self._client
+
+    def _trace_headers(self) -> dict[str, str]:
+        """Trace headers only for our own dependency (the b-api); a provider called directly is a third party."""
+        if self.backend.kind == "openai":
+            return {}
+        return outgoing_headers(self.trace or get_trace())
 
     def _timeout(self, step: str) -> float:
         if self.deadline is None:
