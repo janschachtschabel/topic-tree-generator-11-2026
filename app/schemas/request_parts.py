@@ -135,6 +135,6 @@ class Options(RequestModel):
     auto_metadata: bool = Field(
         False,
         description="Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, "
-        "wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Kostet zusätzliche Aufrufe des "
-        "Sprachmodells.",
+        "wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Nur dann kostet es zusätzliche "
+        "Aufrufe des Sprachmodells.",
     )

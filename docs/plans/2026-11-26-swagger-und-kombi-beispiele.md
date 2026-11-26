@@ -17,7 +17,8 @@ Ziel-Version 2.2.0 (Changelog „Unreleased“).
 - [x] Endpunktbeschreibung: Use Cases mit Pflichtfeldern, Modi (create, refine, assign_only, describe), Rollen
       (`use`, `folders_use`), Kombinationstabelle mit Beispielnamen, wichtigste Optionen mit Standard, Antwort, Fehler.
       App-Beschreibung (Kopf von /docs) mit Kurzüberblick und Verweis auf die Legacy-Endpunkte.
-- [x] Feldbeschreibungen von `Options`, `Item.use`, `Shape`, `Hints` präzisieren (Standard, Wirkung, wann sinnvoll);
+- [x] Feldbeschreibungen von `Options` präzisieren (Standard, Wirkung, wann sinnvoll; `Item.use`, `Shape`, `Hints`
+      waren schon ausreichend und sind über die /docs-Beschreibung erklärt);
       Schemas und `docs/datenformat.md` neu erzeugen.
 - [x] Beispiele: Thema + Inhalte (nur einsortieren), Thema + Inhalte (Anregung + einsortieren), Thema + Lehrplan,
       Thema + Ordner, Dokument + Thema + Inhalte, Inhalte + Lehrplan, Inhalte + Ordner als Hinweis, Ordner verbessern

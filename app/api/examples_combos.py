@@ -6,7 +6,8 @@ from app.api.examples_values import FRAME
 
 _CURRICULUM = (
     "## Themenfeld 1: Licht und Schatten\nLichtquellen, Lichtausbreitung, Schattenbildung.\n"
-    "## Themenfeld 2: Optische Phänomene\nReflexion am Spiegel, Brechung, Linsen und optische Geräte.\n"
+    "## Themenfeld 2: Optische Phänomene\n### Reflexion\nReflexionsgesetz, Spiegelbilder.\n"
+    "### Brechung\nBrechung an Grenzflächen, Regenbogen.\n### Linsen und optische Geräte\nLupe, Brille, Kamera.\n"
     "## Themenfeld 3: Farben\nSpektrum, Farbmischung, Farbensehen."
 )
 
@@ -32,7 +33,7 @@ COMBO_EXAMPLES: dict[str, dict[str, Any]] = {
     "combo_topic_contents": {
         "summary": "Kombination: Thema + Inhalte einsortieren (top-down)",
         "description": 'Der Baum entsteht nur aus `topic`; die Inhalte (`use: ["content"]`, ohne `use` ebenso) werden '
-        "danach mit Konfidenz einsortiert. Fachfremdes („Bruchrechnen“) steht in `unassigned`. Typisch, wenn ein "
+        "danach mit Konfidenz einsortiert. Fachfremdes („Bruchrechnen“) steht in der Regel in `unassigned`. Typisch, wenn ein "
         "Thema vorgegeben ist und vorhandenes Material hinein soll.",
         "value": {"mode": "create", "use_case": "topic", "topic": "Optik", "items": _CONTENTS, "frame": FRAME},
     },
@@ -69,7 +70,8 @@ COMBO_EXAMPLES: dict[str, dict[str, Any]] = {
     "combo_topic_folders": {
         "summary": "Kombination: Thema + Ordnerstruktur + lose Inhalte",
         "description": "Ohne `folders_use` (Standard: Struktur und Inhalt) regt der Ordnerbaum die Gliederung an, und "
-        "der Ordnerpfad jeder Datei hilft beim Einsortieren. Ein `path` an einem losen Eintrag wirkt genauso.",
+        "der Ordnerpfad jeder Datei hilft beim Einsortieren. Ein `path` an einem losen Eintrag hilft ebenso beim "
+        "Einsortieren, prägt aber nicht die Gliederung.",
         "value": {
             "mode": "create",
             "use_case": "topic",
@@ -81,7 +83,8 @@ COMBO_EXAMPLES: dict[str, dict[str, Any]] = {
     },
     "combo_document_topic_contents": {
         "summary": "Kombination: Lehrplan als Gerüst + Thema grenzt ein + Inhalte",
-        "description": "`use_case: document`: Der Lehrplan bildet den Baum, `topic` grenzt auf passende Abschnitte ein, "
+        "description": "`use_case: document`: Der Lehrplan bildet den Baum, `topic` grenzt auf den passenden Abschnitt und seine "
+        "Unterabschnitte ein, "
         'die Inhalte werden den Abschnitten zugeordnet. Mit `use: ["structure", "content"]` würde der Lehrplan '
         "selbst auch einsortiert.",
         "value": {
@@ -95,7 +98,7 @@ COMBO_EXAMPLES: dict[str, dict[str, Any]] = {
     "combo_contents_document": {
         "summary": "Kombination: Inhalte gruppieren + Lehrplan als Orientierung",
         "description": "`use_case: contents`: Die Gruppen entstehen aus den Inhalten (ohne `use` prägen sie die Gruppen "
-        'und werden einsortiert); der Lehrplan-Volltext fließt als Auszug ein. Der Eintrag mit `use: ["content"]` '
+        'und werden einsortiert); der Lehrplan (`use: ["structure"]`) prägt die Gruppen mit, sein Volltext fließt als Auszug ein. Der Eintrag mit `use: ["content"]` '
         "wird nur einsortiert und verzerrt die Gruppen nicht.",
         "value": {
             "mode": "create",
@@ -129,7 +132,7 @@ COMBO_EXAMPLES: dict[str, dict[str, Any]] = {
     "combo_folders_improve_document": {
         "summary": "Kombination: Ordner verbessern mit Lehrplan + lose Dateien",
         "description": "`use_case: folders` mit `options.improve`: Der Lehrplan liefert Maßstäbe für die "
-        "Verbesserungsvorschläge (`changes`), lose Dateien ohne Ordner werden einsortiert.",
+        "Verbesserungen (umgesetzt, in `changes`), lose Dateien ohne Ordner werden einsortiert.",
         "value": {
             "mode": "create",
             "use_case": "folders",
@@ -160,8 +163,9 @@ COMBO_EXAMPLES: dict[str, dict[str, Any]] = {
 REFINE_EXAMPLES: dict[str, dict[str, Any]] = {
     "refine_changes_items": {
         "summary": "Entwurf gezielt ändern und neue Inhalte einsortieren",
-        "description": "`feedback.changes` setzt Änderungen ohne Sprachmodell um (hier `add`, `move`), neue Knoten "
-        "werden beschrieben, und die neuen Inhalte kommen im selben Aufruf in den geänderten Baum.",
+        "description": "`feedback.changes` setzt Änderungen ohne Sprachmodell um: „Strom“ passt nicht unter „Optik“, "
+        "wird in „Elektrizität“ umbenannt (`rename`) und ohne `to` auf die oberste Ebene verschoben (`move`). Geänderte "
+        "Knoten werden neu beschrieben, und der neue Inhalt kommt im selben Aufruf in den geänderten Baum.",
         "value": {
             "mode": "refine",
             "use_case": "topic",
@@ -171,7 +175,12 @@ REFINE_EXAMPLES: dict[str, dict[str, Any]] = {
                     {"key": "k-optik", "title": "Optik", "subcollections": [{"key": "k-strom", "title": "Strom"}]}
                 ],
             },
-            "feedback": {"changes": [{"op": "add", "title": "Elektrizität"}, {"op": "move", "key": "k-strom"}]},
+            "feedback": {
+                "changes": [
+                    {"op": "rename", "key": "k-strom", "title": "Elektrizität"},
+                    {"op": "move", "key": "k-strom"},
+                ]
+            },
             "items": [_item("b1", "Stromkreis mit Batterie und Lampe", ["content"])],
             "frame": FRAME,
         },

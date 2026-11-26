@@ -177,7 +177,7 @@ Werte: `create`, `refine`
 | `assign_only` | ja/nein |  | `False` | Nur mode refine: nur neue Inhalte in den current_tree einsortieren. Struktur, Titel, properties und nodeId jedes Knotens bleiben (auch bei einem Baum aus dem Repository); feedback wird nicht umgesetzt. Gilt nur für diesen Aufruf und wird nicht geerbt. |
 | `multi_assign` | ja/nein |  | `True` | true: Ein Inhalt darf an mehreren passenden Knoten hängen. false: nur am besten passenden Knoten. |
 | `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz (0 bis 1) einer Zuordnung. Darunter kommt der Inhalt mit Grund low_confidence nach unassigned; höher heißt strenger, weniger Zuordnungen. |
-| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Kostet zusätzliche Aufrufe des Sprachmodells. |
+| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Nur dann kostet es zusätzliche Aufrufe des Sprachmodells. |
 
 ### Properties
 
@@ -375,7 +375,7 @@ Werte: `new`, `unchanged`, `changed`, `moved`, `suggested`
 | `assign_only` | ja/nein |  | `False` | Nur mode refine: nur neue Inhalte in den current_tree einsortieren. Struktur, Titel, properties und nodeId jedes Knotens bleiben (auch bei einem Baum aus dem Repository); feedback wird nicht umgesetzt. Gilt nur für diesen Aufruf und wird nicht geerbt. |
 | `multi_assign` | ja/nein |  | `True` | true: Ein Inhalt darf an mehreren passenden Knoten hängen. false: nur am besten passenden Knoten. |
 | `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz (0 bis 1) einer Zuordnung. Darunter kommt der Inhalt mit Grund low_confidence nach unassigned; höher heißt strenger, weniger Zuordnungen. |
-| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Kostet zusätzliche Aufrufe des Sprachmodells. |
+| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Nur dann kostet es zusätzliche Aufrufe des Sprachmodells. |
 
 ### Origin (Antwort)
 

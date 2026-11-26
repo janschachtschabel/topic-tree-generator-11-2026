@@ -54,7 +54,10 @@ Alles, was nicht das Gerüst ist, fließt nach seiner Rolle ein:
   sonst `["content"]`.
 * `folders_use` für die ganze Ordnerstruktur, mit denselben Werten: Standard ist beides (Ordner regen die Gliederung
   an, der Ordnerpfad hilft beim Einsortieren); `["content"]` nur Ablagehinweis; `[]` angenommen, nicht genutzt.
-* `topic` grenzt bei `document`, `contents` und `folders` ein. `path` an einem Eintrag wirkt wie ein Ordnerpfad.
+  Bei `use_case: folders` sind die Ordner das Gerüst: Standard behält die Dateizuordnung der Ordner,
+  `["structure"]` sortiert alle Dateien neu ein, `["content"]` und `[]` ergeben 422.
+* `topic` grenzt bei `document` und `contents` ein; bei `folders` benennt es den Baum und gibt Kontext.
+* `path` an einem Eintrag wirkt wie ein Ordnerpfad: Er hilft beim Einsortieren, prägt aber nicht die Gliederung.
 
 Häufige Kombinationen (Name des Beispiels im Auswahlfeld):
 
@@ -93,10 +96,10 @@ der Dienst aus `current_tree.generation`.
 | `options.assign_contents` | `true` | Inhalte mit Rolle `content` den Knoten zuordnen |
 | `options.multi_assign` | `true` | ein Inhalt darf an mehreren Knoten hängen |
 | `options.min_confidence` | `0.6` | darunter kommt ein Inhalt mit `low_confidence` nach `unassigned` |
-| `options.improve` | `false` | nur `folders`: Verbesserungen als `changes` vorschlagen |
+| `options.improve` | `false` | nur `folders`: Ordner verbessern; jede Umsetzung steht in `changes` (`source: service`) |
 | `options.auto_metadata` | `false` | Fach, Stufe und Zielgruppe je Knoten verengen, wenn `frame` leer oder mehrwertig ist |
 | `options.assign_only` | `false` | nur `refine`: nur einsortieren, Knoten bleiben unverändert |
-| `shape` | nach Zielgruppe | `depth` (1–3), `main_topics` und `children` als Bereich, `extra_topics` (nur `topic`) |
+| `shape` | bei `topic` nach Zielgruppe, sonst nach Eingabe | `depth` (1–3), `main_topics` und `children` als Bereich, `extra_topics` (nur `topic`) |
 | `hints` | – | `context`, `include`, `exclude`, `order`, `description_length` (Wörter), `language` |
 
 ### 5. Antwort
@@ -104,7 +107,7 @@ der Dienst aus `current_tree.generation`.
 * `collection`: der Baum; je Knoten `key` (bleibt über `refine` stabil), `nodeId` (falls gesendet), `title`,
   `shorttitle`, `status`, `origin`, edu-sharing-`properties`, `contents` (`id`, `nodeId`, `confidence`).
 * `unassigned`: nicht einsortierte Inhalte mit Grund (`off_topic`, `low_confidence`, `no_matching_node`, `excluded`).
-* `changes` (umgesetzt oder vorgeschlagen), `questions` (Rückfragen), `warnings` (alles, was nicht gelang oder
+* `changes` (umgesetzt, mit `source`), `questions` (Rückfragen), `warnings` (alles, was nicht gelang oder
   auffiel, mit festem `code`; nie eine stille Lücke).
 * `metadata`: Titel, Beschreibung, `version`, `vocab_labels` und `generation` (alle Vorgaben des Laufs; für den
   nächsten Durchlauf mit `collection` als `current_tree` zurückschicken).

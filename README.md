@@ -17,7 +17,7 @@ request → input & cap checks → resolve refs (allow-listed) → strategy per 
 
 - **`topic`**: Generates the complete title-only skeleton across all requested levels in a single LLM call, eliminates any duplicate titles deterministically, and describes all nodes in parallel balanced batches of up to 10 nodes (each sharing the full tree outline in the prompt-cache prefix for crisp demarcation). Extra Level-1 topics (`extra_topics`: `"general"`, `"methodology"`) count toward the total Level-1 `main_topics` range.
 - **`document`**: Parses Markdown headings and page markers deterministically, maps the outline into a tree with `origin.document` (`section`, `page`), and writes node descriptions from section excerpts (falling back deterministically to the document's headings with an `LLM_DEGRADED` warning if the LLM is unavailable).
-- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`), optionally proposes renames/merges/moves when `options.improve=true`, and degrades gracefully (`LLM_DEGRADED`) if the LLM is unavailable.
+- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`), optionally applies renames/merges/moves when `options.improve=true` (each reported in `changes[]`), and degrades gracefully (`LLM_DEGRADED`) if the LLM is unavailable.
 - **`contents`**: Induces topic groups from a stratified sample of items (`origin.cluster`), eliminates duplicate group titles, and assigns every item with confidence.
 - **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree and every node comes back as sent; the `describe` change rewrites descriptions of chosen nodes with the tree as context.
 - **Prompt caching**: All prompts live in `app/prompts/`; `system.md` is strictly static across every LLM call.
@@ -245,7 +245,7 @@ Every field of request and response, with type, default and meaning, is listed i
 | `metadata` | Title, description, `version`, vocabulary labels and `generation` (all settings of the run; send it back for the next run) |
 | `collection[]` | The tree: per node `key` (stable across runs), `nodeId` (if sent in `current_tree`), `title`, `shorttitle`, `status`, `origin`, edu-sharing `properties`, `contents[]` (`id`, `nodeId`, `confidence`), `subcollections[]` |
 | `unassigned[]` | Items not sorted in, with `reason` (`off_topic`, `low_confidence`, `no_matching_node`, `excluded`) |
-| `changes[]` | Applied (refine) or proposed (`folders` + `improve`) changes |
+| `changes[]` | Applied changes (refine, or `folders` + `improve`, then `source: service`) |
 | `questions[]` | Questions about unclear feedback; the unclear part is not applied |
 | `warnings[]` | Everything that failed or stood out, with a fixed `code` (never a silent gap) |
 
@@ -330,7 +330,7 @@ curl -s http://localhost:8000/v2/topic-tree \
 
 ### 3. `folders` – Keep and optionally improve an uploaded folder hierarchy
 
-Preserves the caller's folder tree (`origin.type="folder"`), writes descriptions/keywords for each folder, and keeps assigned items with confidence `1.0`. Set `"options": {"improve": true}` to let the service rename generic folders (like `Neuer Ordner (2)`) or suggest structural fixes reported in `changes[]`.
+Preserves the caller's folder tree (`origin.type="folder"`), writes descriptions/keywords for each folder, and keeps assigned items with confidence `1.0`. Set `"options": {"improve": true}` to let the service rename generic folders (like `Neuer Ordner (2)`) or fix the structure; every applied change is reported in `changes[]`.
 
 ```shell
 curl -s http://localhost:8000/v2/topic-tree \

@@ -61,7 +61,7 @@ _EXAMPLES = {
     },
     "folders": {
         "summary": "Ordner und Dateien übernehmen und verbessern",
-        "description": "`use_case: folders`: Die Ordner bleiben das Gerüst, die Dateien bleiben in ihren Ordnern (`confidence` 1). Mit `options.improve` schlägt der Dienst Umbenennungen und Umstellungen vor; sie stehen in `changes`.",
+        "description": "`use_case: folders`: Die Ordner bleiben das Gerüst, die Dateien bleiben in ihren Ordnern (`confidence` 1). Mit `options.improve` benennt der Dienst ungünstige Ordner um und stellt um; jede Änderung ist im Baum umgesetzt und steht in `changes` (`source: service`).",
         "value": {
             "mode": "create",
             "use_case": "folders",

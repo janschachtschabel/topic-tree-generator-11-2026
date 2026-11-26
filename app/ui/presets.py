@@ -116,7 +116,7 @@ TOPIC_PRESETS: list[dict[str, Any]] = [
         "combo": True,
         "title": "Kombination: Thema + Materialien nur einsortieren",
         "summary": "Der Baum entsteht nur aus dem Thema; vier Materialien werden danach einsortiert, das fachfremde "
-        "landet in „nicht zugeordnet“.",
+        "landet in der Regel in „nicht zugeordnet“.",
         "payload": {
             "mode": "create",
             "use_case": "topic",

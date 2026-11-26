@@ -694,7 +694,7 @@
         },
         "auto_metadata": {
           "default": false,
-          "description": "Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Kostet zusätzliche Aufrufe des Sprachmodells.",
+          "description": "Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Nur dann kostet es zusätzliche Aufrufe des Sprachmodells.",
           "title": "Auto Metadata",
           "type": "boolean"
         }
