@@ -3,6 +3,14 @@
 ## Unreleased
 
 Changed
+- Combinations without silent gaps (26.11.2026): the new field `folders_use` gives the whole folder structure a role
+  like `use` (default structure + content), so folders combine with `topic`, `document` and `contents`; folder paths
+  and `Item.path` are hints for the assignment; full texts of structure items reach the `contents` grouping;
+  structure items without text reach the `document` outline; `INPUT_IGNORED` for folders or structure documents in
+  `refine`, contents with `assign_contents: false` and `extra_topics` outside `topic`. `contents` dissolves groups
+  with a single subgroup; the extra topics have a defined scope. `docs/api.md` has a decision table for callers
+  such as a chatbot. Test UI: folders in every fitting task, a second document, outline-only materials, seven
+  combination examples, and a test that every example loads into the form unchanged.
 - Leitfaden check (26.11.2026): every log line of a request carries the operator's `x-client-trace-id` as
   `client_trace_id`; an LLM provider called directly (standalone, `OPENAI_API_KEY`) gets no B3 or
   `x-client-trace-id` headers; liveness and readiness probes are configurable in the Helm values (`probes.*`);
