@@ -362,3 +362,21 @@ async def test_an_empty_mapping_with_topic_falls_back_to_the_full_outline() -> N
     result = await build(req([doc()], topic="Licht"), run)
     assert len(result.roots) > 1
     assert "OUTLINE_FALLBACK" in [w.code for w in run.warnings]
+
+
+async def test_a_long_document_without_headings_reports_that_only_an_excerpt_was_read() -> None:
+    from app.pipeline.strategies.document import EXCERPT_CHARS
+
+    mapping = {**MAPPING, "nodes": [{"title": "Licht", "shorttitle": "Licht", "section_ids": [], "children": []}]}
+    llm = FakeLLM({"map_outline": mapping, "describe_nodes": describe})
+    context = rc(llm)
+    long_text = "Licht breitet sich aus. " * (EXCERPT_CHARS // 10)
+    await build(req([doc(text=long_text, fmt="text")]), context)
+    assert "OUTLINE_TRUNCATED" in [w.code for w in context.warnings]
+
+
+async def test_a_short_document_without_headings_gives_no_truncation_warning() -> None:
+    mapping = {**MAPPING, "nodes": [{"title": "Licht", "shorttitle": "Licht", "section_ids": [], "children": []}]}
+    context = rc(FakeLLM({"map_outline": mapping, "describe_nodes": describe}))
+    await build(req([doc(text="Licht breitet sich aus.", fmt="text")]), context)
+    assert "OUTLINE_TRUNCATED" not in [w.code for w in context.warnings]
