@@ -5,6 +5,7 @@ from pathlib import Path
 from app.domain.tree import walk
 from app.pipeline import orchestrator
 from app.pipeline.run_context import RunContext
+from app.pipeline.steps.map_outline import narrowing
 from app.pipeline.strategies.document import build
 from app.schemas.request_v2 import TopicTreeRequestV2
 from app.settings import Settings
@@ -331,4 +332,6 @@ async def test_topic_narrows_the_document_and_a_narrow_mapping_is_kept() -> None
     result = await build(req([doc()], topic="Optik: Licht an Grenzflächen"), run)
     assert [r.title for r in result.roots] == ["Reflexion"]
     assert "OUTLINE_FALLBACK" not in [w.code for w in run.warnings]
-    assert "nur die Abschnitte, die zum Thema gehören" in llm.prompts("map_outline")[0]
+    prompt = llm.prompts("map_outline")[0]
+    assert "Das Thema „Optik: Licht an Grenzflächen“ grenzt das Dokument ein" in prompt
+    assert narrowing(None) == ""

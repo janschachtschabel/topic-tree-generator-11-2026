@@ -126,7 +126,7 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     docs = structure_documents(req)
     sections = [s for doc in docs for s in _sections(doc)]
     try:
-        mapping = await map_outline(_outline_text(sections, docs, rc), rc)
+        mapping = await map_outline(_outline_text(sections, docs, rc), rc, req.topic)
         mapped = _checked_mapping(mapping.nodes, sections, req, rc)
         order, levels, description = mapping.order, mapping.levels, mapping.description
     except LLMStepError as err:

@@ -136,6 +136,10 @@ def _step_payload(step: str, user_prompt: str) -> dict[str, Any]:
         }
     if step == "interpret_feedback":
         return {"changes": [{"op": "add", "parent": None, "title": "Farben"}], "questions": []}
+    if step == "expand_nodes":
+        keys = re.findall(r"^- key: (\S+) \|", user_prompt, flags=re.MULTILINE)
+        child = {"title": "Unterthema", "shorttitle": "Unterthema", "children": []}
+        return {"nodes": [{"key": k, "children": [child, {**child, "title": "Zweites Unterthema"}]} for k in keys]}
     if step == "split_node":
         return {
             "parts": [

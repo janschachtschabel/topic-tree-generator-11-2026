@@ -131,13 +131,13 @@ def _node(title: str, shorttitle: str, children: list[Node], suggested: bool = F
     )
 
 
-def _convert_children(items: list[PlannedChild], levels_left: int, width: int, cut: Cut) -> list[Node]:
+def convert_children(items: list[PlannedChild], levels_left: int, width: int, cut: Cut) -> list[Node]:
     if levels_left <= 0:
         cut.depth = cut.depth or bool(items)
         return []
     cut.width = cut.width or len(items) > width
     return [
-        _node(item.title, item.shorttitle, _convert_children(item.children, levels_left - 1, width, cut))
+        _node(item.title, item.shorttitle, convert_children(item.children, levels_left - 1, width, cut))
         for item in items[:width]
     ]
 
@@ -189,7 +189,7 @@ async def plan_structure(
         _node(
             main.title,
             main.shorttitle,
-            _convert_children(main.children, shape.depth - 1, shape.children.max, cut),
+            convert_children(main.children, shape.depth - 1, shape.children.max, cut),
             main.from_inputs and has_inputs,
         )
         for main in mains

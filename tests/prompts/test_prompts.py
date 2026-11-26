@@ -39,7 +39,7 @@ def test_descriptions_use_one_neutral_voice_without_direct_address() -> None:
     # Live run 2026-11-26: parallel describe batches mixed "du", "Sie", imperatives and "Lehrkräfte können" in one tree.
     text = load("system")
     assert "ohne Anrede" in text
-    assert "„Dieser Bereich …“" in text
+    assert "„Dieser Bereich …“" in text and "erklärt die Sache selbst" in text
 
 
 def test_feedback_adds_new_branches_down_to_the_depth_of_their_neighbours() -> None:
