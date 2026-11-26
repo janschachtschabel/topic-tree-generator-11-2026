@@ -78,8 +78,8 @@
               <button type="button" id="btn-adopt" class="btn-outline" data-i18n="btn.adoptLast" disabled>Letztes Ergebnis übernehmen</button>
             </div>
             <details class="mini-details">
-              <summary><span data-i18n="field.baseJson">Basis als JSON (current_tree)</span></summary>
-              <textarea id="f-current-tree" class="code-area" rows="6" spellcheck="false" placeholder="{&quot;collection&quot;: [...], &quot;generation&quot;: {...}}"></textarea>
+              <summary><span id="lbl-current-tree" data-i18n="field.baseJson">Basis als JSON (current_tree)</span></summary>
+              <textarea id="f-current-tree" aria-labelledby="lbl-current-tree" class="code-area" rows="6" spellcheck="false" placeholder="{&quot;collection&quot;: [...], &quot;generation&quot;: {...}}"></textarea>
             </details>
           </div>
           <div class="field">
@@ -235,9 +235,9 @@
         </details>
 
         <details class="accordion" id="acc-json">
-          <summary><span data-i18n="acc.json">Anfrage als JSON</span></summary>
+          <summary><span id="lbl-json" data-i18n="acc.json">Anfrage als JSON</span></summary>
           <div class="accordion-body">
-            <textarea id="f-json" class="code-area" rows="12" spellcheck="false" readonly></textarea>
+            <textarea id="f-json" aria-labelledby="lbl-json" class="code-area" rows="12" spellcheck="false" readonly></textarea>
             <p id="json-help" class="help-text" data-i18n="help.json">Zeigt die Anfrage aus dem Formular. „Bearbeiten“ sendet stattdessen genau diesen Text.</p>
             <div class="inline-actions">
               <button type="button" id="btn-json-edit" class="btn-outline" data-i18n="btn.jsonEdit">Bearbeiten</button>
