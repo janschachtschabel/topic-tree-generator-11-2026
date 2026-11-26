@@ -27,8 +27,9 @@ def drop_title_heading(sections: list[Section]) -> list[Section]:
 
 
 def _excluded(title: str, exclude: list[str]) -> bool:
+    """A term matches at the start of a word ("Ion" hits "Ionenbindung", not "Funktionen")."""
     low = title.casefold()
-    return any(term.strip() and term.strip().casefold() in low for term in exclude)
+    return any(term.strip() and re.search(rf"(?<!\w){re.escape(term.strip().casefold())}", low) for term in exclude)
 
 
 def outline_mapping(sections: list[tuple[str, Section]], exclude: list[str]) -> list[MappedNode]:

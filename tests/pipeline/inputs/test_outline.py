@@ -68,3 +68,41 @@ def test_outline_mapping_follows_headings_and_skips_excluded_branches() -> None:
     nodes = outline_mapping([(f"d:{s.id}", s) for s in sections], ["wahlpflicht"])
     assert [(n.title, [c.title for c in n.children]) for n in nodes] == [("Licht", ["Quellen"]), ("Farben", [])]
     assert nodes[0].section_ids == ["d:s1"]
+
+
+def test_a_closing_hash_needs_a_space_before_it() -> None:
+    titles = [s.title for s in parse_outline("# C#\n\n## F# und C# ##\n")]
+    assert titles == ["C#", "F# und C#"]
+
+
+def test_inner_underscores_stay_and_emphasis_markers_go() -> None:
+    (section,) = parse_outline("## _Begriff_ snake_case und __fett__\n")
+    assert section.title == "Begriff snake_case und fett"
+
+
+def test_a_fence_closes_only_with_its_own_marker() -> None:
+    text = "# Eins\n```\n~~~\n# kein Titel\n```\n# Zwei\n"
+    assert [s.title for s in parse_outline(text)] == ["Eins", "Zwei"]
+
+
+def test_setext_headings_are_recognised() -> None:
+    text = "Kapitel A\n=========\nText\n\nAbschnitt B\n-----------\nMehr\n\n---\n"
+    sections = parse_outline(text)
+    assert [(s.level, s.title) for s in sections] == [(1, "Kapitel A"), (2, "Abschnitt B")]
+    assert sections[0].text == "Text"
+
+
+def test_text_on_a_line_with_a_page_marker_is_kept() -> None:
+    (section,) = parse_outline("# Eins\nWichtiger Satz <!-- page: 4 -->\nDanach\n")
+    assert "Wichtiger Satz" in section.text
+    assert parse_outline("# Eins\nx <!-- page: 4 -->\n# Zwei\n")[1].page == 4
+
+
+def test_exclude_terms_match_at_word_starts_only() -> None:
+    sections = [
+        ("d:s1", parse_outline("# Funktionen\n")[0]),
+        ("d:s2", parse_outline("# Ionen\n")[0]),
+        ("d:s3", parse_outline("# Ionenbindung\n")[0]),
+    ]
+    titles = [n.title for n in outline_mapping(sections, ["Ion"])]
+    assert titles == ["Funktionen"]

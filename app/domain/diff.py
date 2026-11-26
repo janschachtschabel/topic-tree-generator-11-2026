@@ -11,7 +11,12 @@ def _parent_keys(roots: list[Node]) -> dict[str, str | None]:
 
 
 def _content_changed(new: Node, old: Node) -> bool:
-    return (new.title, new.description, new.keywords) != (old.title, old.description, old.keywords)
+    return (new.title, new.description, new.keywords, new.properties.dump_v2()) != (
+        old.title,
+        old.description,
+        old.keywords,
+        old.properties.dump_v2(),
+    )
 
 
 def mark_status_against_previous(roots: list[Node], previous: list[Node] | None) -> None:
