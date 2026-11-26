@@ -147,7 +147,9 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,
   `FACET_AS_NODE`, `TOPIC_REPEAT`, `CHANGE_REJECTED`, `SPLIT_FAILED`, `EXPAND_FAILED`, `EXPAND_INCOMPLETE`,
-  `FEEDBACK_IGNORED`, `INPUT_IGNORED`, `OUTLINE_TRUNCATED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`).
+  `FEEDBACK_IGNORED`, `INPUT_IGNORED`, `OUTLINE_TRUNCATED`, `ITEM_ALREADY_PLACED`, `ASSIGN_FAILED`, `VOCAB_UNKNOWN`,
+  `SHAPE_DEPTH`, `SHAPE_WIDTH` (Antwort des Sprachmodells zu tief bzw. zu breit, gekürzt), `SECTION_UNKNOWN`,
+  `ITEMS_SAMPLED`, `UNTITLED_NODE`, `DESCRIPTION_MISSING`, `DESCRIPTION_LENGTH`).
   `ASSIGN_FAILED` nennt auch Inhalte, zu denen das Sprachmodell keine Antwort gab; sie stehen in `unassigned`.
   `INPUT_IGNORED` meldet gesendete, aber nicht genutzte Eingaben (z. B. Gliederungsdokumente bei `folders` ohne
   `options.improve`, Ordner mit `folders_use: []`, Inhalte bei `assign_contents: false`). `OUTLINE_TRUNCATED` meldet
@@ -158,8 +160,9 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 ## Fehler
 
 `{"error": {"code", "message", "trace_id", "details"?}}`. 422 ungültige oder unvollständige Anfrage
-(`MISSING_INPUT`, `INVALID_INPUT`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`, `ITEMS_TOO_LARGE`,
-`REF_NOT_ALLOWED`, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
+(`MISSING_INPUT`, `INVALID_INPUT`, `INVALID_OPTION`, `SHAPE_LIMIT_EXCEEDED`, `DUPLICATE_ID`, `ID_CONFLICT`, `UNKNOWN_ITEM`,
+`ITEMS_TOO_LARGE`, `REF_NOT_ALLOWED`, `REF_INVALID`, `REF_TOO_LARGE` – ein Verweis oder alle Volltexte einer Anfrage
+zusammen zu groß –, `REF_FAILED` – auch wenn Verweise nicht innerhalb von `REQUEST_TIMEOUT_SECONDS` geladen sind …),
 404 `NOT_FOUND` und 405 `METHOD_NOT_ALLOWED` für unbekannte Pfade oder Methoden unter `/v2/`,
 413 `REQUEST_TOO_LARGE` (Anfrage größer als `MAX_REQUEST_BYTES`, Standard 32 MiB),
-401/403 Anmeldung bzw. fehlende b-api-Berechtigung, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.
+401 `UNAUTHORIZED` / 403 `FORBIDDEN` Anmeldung bzw. fehlende b-api-Berechtigung, 501 `NOT_IMPLEMENTED`, 502/503 `LLM_UNAVAILABLE` (503 mit `Retry-After` bei vorübergehenden Fehlern), 503 `LLM_NOT_CONFIGURED`.

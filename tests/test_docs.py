@@ -66,3 +66,18 @@ def test_steckbrief_short_description_equals_openapi_description() -> None:
     steckbrief = (ROOT / "docs" / "steckbrief.md").read_text(encoding="utf-8")
     row = next(line for line in steckbrief.splitlines() if line.startswith("| **Funktionalität / Kurzbeschreibung**"))
     assert row.split("|")[2].strip() == DESCRIPTION
+
+
+def test_api_doc_lists_every_warning_and_error_code_the_code_emits() -> None:
+    # Regression: seven warning codes and six error codes were missing from docs/api.md.
+    import re
+
+    doc = (ROOT / "docs" / "api.md").read_text(encoding="utf-8")
+    codes: set[str] = set()
+    for path in (ROOT / "app").rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        codes |= set(re.findall(r'warn\(\s*"([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'_warning\(\s*"([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'code="([A-Z][A-Z_]+)"', text))
+        codes |= set(re.findall(r'ApiError\(\s*(?:\d+|status\.\w+),\s*"([A-Z][A-Z_]+)"', text))
+    assert sorted(c for c in codes if f"`{c}`" not in doc) == []
