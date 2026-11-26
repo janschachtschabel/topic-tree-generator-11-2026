@@ -185,7 +185,7 @@ class Feedback(RequestModel):
     changes: list[Change] = Field(
         default_factory=list,
         max_length=200,
-        description="Gezielte Änderungen, ohne Sprachmodell angewendet (außer split)",
+        description="Gezielte Änderungen; Struktur ohne Sprachmodell (außer split), neue Knoten danach beschrieben",
     )
     locked: list[str] = Field(
         default_factory=list,

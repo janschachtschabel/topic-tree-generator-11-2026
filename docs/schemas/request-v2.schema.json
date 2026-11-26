@@ -283,7 +283,7 @@
           "title": "Text"
         },
         "changes": {
-          "description": "Gezielte Änderungen, ohne Sprachmodell angewendet (außer split)",
+          "description": "Gezielte Änderungen; Struktur ohne Sprachmodell (außer split), neue Knoten danach beschrieben",
           "items": {
             "$ref": "#/$defs/Change"
           },
@@ -593,7 +593,7 @@
           "type": "array"
         },
         "exclude": {
-          "description": "Begriffe, die nicht vorkommen sollen (Treffer am Wortanfang)",
+          "description": "Begriffe, die nicht vorkommen sollen",
           "items": {
             "maxLength": 200,
             "minLength": 1,
@@ -808,7 +808,7 @@
       "properties": {
         "depth": {
           "default": 3,
-          "description": "Anzahl der Ebenen, höchstens MAX_TREE_DEPTH; ohne shape wählt der Dienst je Zielgruppe",
+          "description": "Anzahl der Ebenen, höchstens MAX_TREE_DEPTH; ohne shape nach Bildungsstufe und Eingabe",
           "maximum": 4,
           "minimum": 1,
           "title": "Depth",

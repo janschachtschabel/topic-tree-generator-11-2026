@@ -1,7 +1,8 @@
 """Logging to stdout: JSON lines for operations, plain text for local development.
 
 Every line carries `service`, `trace_id` and `span_id` so the operations team can follow one request across
-services; lines of a request that came with the operator's `x-client-trace-id` also carry it as `client_trace_id`. `diagnose` is disabled so loguru never renders local variable values (which may hold tokens).
+services; lines of a request that came with the operator's `x-client-trace-id` also carry it as
+`client_trace_id`. `diagnose` is disabled so loguru never renders local variable values (which may hold tokens).
 """
 
 import json

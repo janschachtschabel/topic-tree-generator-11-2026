@@ -65,7 +65,7 @@ class Shape(RequestModel):
         3,
         ge=1,
         le=4,
-        description="Anzahl der Ebenen, höchstens MAX_TREE_DEPTH; ohne shape wählt der Dienst je Zielgruppe",
+        description="Anzahl der Ebenen, höchstens MAX_TREE_DEPTH; ohne shape nach Bildungsstufe und Eingabe",
     )
     main_topics: MainRange = Field(
         default_factory=MainRange,
@@ -86,7 +86,7 @@ class Hints(RequestModel):
         default_factory=list, max_length=50, description="Begriffe, die im Baum vorkommen sollen"
     )
     exclude: list[ShortText] = Field(
-        default_factory=list, max_length=50, description="Begriffe, die nicht vorkommen sollen (Treffer am Wortanfang)"
+        default_factory=list, max_length=50, description="Begriffe, die nicht vorkommen sollen"
     )
     order: str | None = Field(
         None, max_length=200, description="Gewünschtes Ordnungsprinzip, etwa „chronologisch“ oder „nach Kompetenzen“"
