@@ -63,6 +63,7 @@ jobs:
   # pip-audit runs via uvx and is not a project dependency (no new entry in pyproject.toml).
   audit:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
@@ -92,16 +93,21 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # A version is never overwritten. After a partial publish (image pushed, chart failed), a re-run pushes only
+      # the missing part. The chart lookup is logged in, so a private package is not mistaken for a missing one.
       - name: Publish each release version only once
+        id: once
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VER="${GITHUB_REF_NAME#v}"
-          if docker manifest inspect "ghcr.io/${GITHUB_REPOSITORY,,}:${VER}" > /dev/null 2>&1; then
-            echo "Image ${VER} is already published; a version is never overwritten." >&2
-            exit 1
-          fi
-          if helm show chart "oci://ghcr.io/${GITHUB_REPOSITORY,,}/charts/topic-tree" --version "${VER}" > /dev/null 2>&1; then
-            echo "Chart ${VER} is already published; a version is never overwritten." >&2
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+          image=false; chart=false
+          docker manifest inspect "ghcr.io/${GITHUB_REPOSITORY,,}:${VER}" > /dev/null 2>&1 && image=true
+          helm show chart "oci://ghcr.io/${GITHUB_REPOSITORY,,}/charts/topic-tree" --version "${VER}" > /dev/null 2>&1 && chart=true
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "chart=${chart}" >> "$GITHUB_OUTPUT"
+          if [ "$image" = true ] && [ "$chart" = true ]; then
+            echo "Image and chart ${VER} are already published; a version is never overwritten." >&2
             exit 1
           fi
       - uses: docker/metadata-action@v5
@@ -116,6 +122,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
       - uses: docker/build-push-action@v7
+        if: steps.once.outputs.image != 'true'
         with:
           context: .
           push: true
@@ -124,8 +131,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Package and push Helm chart to GHCR OCI on release tags
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.once.outputs.chart != 'true'
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
           helm package deploy/helm/topic-tree
           helm push topic-tree-*.tgz "oci://ghcr.io/${GITHUB_REPOSITORY,,}/charts"

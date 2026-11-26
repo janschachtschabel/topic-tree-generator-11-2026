@@ -33,3 +33,14 @@ def test_release_tags_never_move_latest_and_never_overwrite_a_version() -> None:
 def test_the_lock_file_is_checked_against_pyproject() -> None:
     runs = [s.get("run", "") for s in _workflow()["jobs"]["test"]["steps"]]
     assert "uv lock --check" in runs
+
+
+def test_a_partial_publish_can_be_completed_and_the_audit_only_reports() -> None:
+    # Review: the image check stopped every re-run after a failed chart push; the chart check ran logged out.
+    data = _workflow()
+    steps = {s.get("name") or s.get("uses"): s for s in data["jobs"]["publish"]["steps"]}
+    once = steps["Publish each release version only once"]
+    assert "helm registry login" in once["run"].split("helm show chart")[0]
+    assert "steps.once.outputs.image" in steps["docker/build-push-action@v7"]["if"]
+    assert "steps.once.outputs.chart" in steps["Package and push Helm chart to GHCR OCI on release tags"]["if"]
+    assert data["jobs"]["audit"]["continue-on-error"] is True
