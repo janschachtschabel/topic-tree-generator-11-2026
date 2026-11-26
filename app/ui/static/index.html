@@ -52,13 +52,22 @@
           <p id="topic-help" class="help-text"></p>
         </div>
 
-        <section id="sec-folders" class="task-section" data-tasks="folders">
+        <section id="sec-folders" class="task-section">
           <div class="field">
             <label for="f-folder-outline" data-i18n="field.folders">Ordner und Dateien</label>
             <textarea id="f-folder-outline" class="code-area" rows="7" spellcheck="false" placeholder="Optik&#10;  - Licht und Schatten&#10;  Linsen&#10;    - Sammellinse"></textarea>
             <p class="help-text" data-i18n="help.folders">Eine Zeile je Ordner, zwei Leerzeichen je Ebene. „- Titel“ ist eine Datei im Ordner darüber.</p>
           </div>
-          <label class="check"><input id="f-opt-improve" type="checkbox"> <span data-i18n="opt.improve">Ordnerstruktur verbessern</span></label>
+          <div class="field">
+            <label for="f-folders-use" data-i18n="field.foldersUse">Rolle der Ordnerstruktur</label>
+            <select id="f-folders-use">
+              <option value="structure+content" data-i18n="foldersUse.both">Gliederung und Ablage (Standard)</option>
+              <option value="structure" data-i18n="foldersUse.structure">Nur Gliederung (Dateien neu einsortieren)</option>
+              <option value="content" data-tasks="topic document contents" data-i18n="foldersUse.content">Nur Ablage (prägt die Struktur nicht)</option>
+              <option value="none" data-tasks="topic document contents" data-i18n="foldersUse.none">Keins (angenommen, nicht genutzt)</option>
+            </select>
+          </div>
+          <label class="check" data-tasks="folders"><input id="f-opt-improve" type="checkbox"> <span data-i18n="opt.improve">Ordnerstruktur verbessern</span></label>
         </section>
 
         <section id="sec-refine" class="task-section" data-tasks="refine">
@@ -111,7 +120,8 @@
 
         <fieldset class="group">
           <legend class="group-label" data-i18n="sec.extras">Zusätzlich einbeziehen</legend>
-          <label class="check" data-tasks="topic"><input id="x-structure-materials" type="checkbox"> <span data-i18n="x.structureMaterials">Materialien als Anregung für die Struktur</span></label>
+          <label class="check" data-tasks="topic document folders"><input id="x-structure-materials" type="checkbox"> <span data-i18n="x.structureMaterials">Materialien als Anregung für die Struktur</span></label>
+          <label class="check" data-tasks="topic document contents"><input id="x-folders" type="checkbox"> <span data-i18n="x.folders">Ordnerstruktur</span></label>
           <label class="check" data-tasks="topic folders"><input id="x-document" type="checkbox"> <span id="x-document-label" data-i18n="x.document">Strukturdokument als Anregung</span></label>
           <label class="check"><input id="x-content-materials" type="checkbox"> <span id="x-content-label" data-i18n="x.contentMaterials">Materialien einsortieren</span></label>
           <label class="check" data-tasks="topic"><input id="f-extra-general" type="checkbox"> <span data-i18n="extra.general">Zusatzthema „Allgemeines“ vorn</span></label>
@@ -133,6 +143,20 @@
             <label for="f-doc-title" data-i18n="field.docTitle">Titel des Dokuments (optional)</label>
             <input id="f-doc-title" type="text" maxlength="200">
           </div>
+          <details class="accordion" id="acc-doc2">
+            <summary><span data-i18n="acc.doc2">Weiteres Dokument (optional)</span></summary>
+            <div class="accordion-body">
+              <div class="field">
+                <label for="f-doc2-markdown" data-i18n="field.doc2Md">Zweites Dokument (Markdown)</label>
+                <textarea id="f-doc2-markdown" class="code-area" rows="5" spellcheck="false"></textarea>
+                <p class="help-text" data-i18n="help.doc2">Beide Dokumente werden zu einer Gliederung zusammengeführt.</p>
+              </div>
+              <div class="field">
+                <label for="f-doc2-title" data-i18n="field.doc2Title">Titel des zweiten Dokuments (optional)</label>
+                <input id="f-doc2-title" type="text" maxlength="200">
+              </div>
+            </div>
+          </details>
           <label class="check"><input id="x-doc-content" type="checkbox"> <span data-i18n="x.docContent">Dokument auch als Inhalt einsortieren</span></label>
         </section>
 
@@ -142,6 +166,7 @@
             <textarea id="f-materials-a" class="code-area" rows="6" spellcheck="false" placeholder="Lochkamera bauen | Licht, Experiment | Kurzbeschreibung"></textarea>
             <p class="help-text" data-i18n="help.materials">Eine Zeile je Material: Titel | Schlagworte (Komma) | Kurzbeschreibung. Nur der Titel ist Pflicht.</p>
           </div>
+          <label class="check"><input id="x-a-structure-only" type="checkbox"> <span data-i18n="x.aStructureOnly">Nur für die Struktur nutzen, nicht einsortieren</span></label>
         </section>
 
         <section id="sec-materials-b" class="task-section">
