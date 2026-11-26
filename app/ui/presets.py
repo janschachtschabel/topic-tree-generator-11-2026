@@ -111,9 +111,31 @@ TOPIC_PRESETS: list[dict[str, Any]] = [
         },
     },
     {
+        "id": "topic_assign_contents",
+        "task": "topic",
+        "combo": True,
+        "title": "Kombination: Thema + Materialien nur einsortieren",
+        "summary": "Der Baum entsteht nur aus dem Thema; vier Materialien werden danach einsortiert, das fachfremde "
+        "landet in „nicht zugeordnet“.",
+        "payload": {
+            "mode": "create",
+            "use_case": "topic",
+            "topic": "Optik in der Sekundarstufe I",
+            "frame": FRAME_PHYS_SEK1,
+            "items": [
+                material("b1", "Arbeitsblatt Reflexionsgesetz am ebenen Spiegel", ["Reflexion", "Spiegel"]),
+                material("b2", "Video: Wie entsteht ein Regenbogen?", ["Regenbogen", "Farben"]),
+                material("b3", "Lupe selbst bauen", ["Linse", "Experiment"]),
+                material("b4", "Bruchrechnen üben", ["Mathematik"]),
+            ],
+            "shape": {"depth": 2},
+        },
+    },
+    {
         "id": "topic_with_contents",
         "task": "topic",
-        "title": "Thema + Materialien (Anregung und Einsortieren)",
+        "combo": True,
+        "title": "Kombination: Thema + Materialien (Anregung und Einsortieren)",
         "summary": "Zwei Materialien regen Themen an und werden einsortiert; zwei weitere werden nur einsortiert.",
         "payload": {
             "mode": "create",
@@ -132,7 +154,8 @@ TOPIC_PRESETS: list[dict[str, Any]] = [
     {
         "id": "topic_with_document",
         "task": "topic",
-        "title": "Thema + Lehrplanauszug als Anregung",
+        "combo": True,
+        "title": "Kombination: Thema + Lehrplanauszug als Anregung",
         "summary": "Der Baum folgt dem Thema; der Lehrplan liefert nur Anregungen (zusätzliche Themen als „suggested“).",
         "payload": {
             "mode": "create",

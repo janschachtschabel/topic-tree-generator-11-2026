@@ -69,7 +69,8 @@ DOCUMENT_PRESETS: list[dict[str, Any]] = [
     {
         "id": "document_with_topic",
         "task": "document",
-        "title": "Lehrplan + Thema als Rahmen + mehrere Materialien",
+        "combo": True,
+        "title": "Kombination: Lehrplan + Thema als Rahmen + mehrere Materialien",
         "summary": "Thema grenzt den Lehrplan ein; vier Materialien, eins davon fachfremd (landet in „nicht zugeordnet“).",
         "payload": {
             "mode": "create",

@@ -13,6 +13,15 @@ New
   with the whole tree as context. It is the v2 successor of `/generate-collection-description`, which stays frozen.
   Test UI: row editor op "Neu beschreiben" and an example.
 
+- `/docs` (Swagger): the endpoint description explains backbones, roles (`use`, `folders_use`), common combinations,
+  `refine` with `assign_only` and `describe`, the main options with defaults and the answer; the drop-down has an
+  example with its own explanation for each combination (topic + contents both ways, topic + curriculum, topic +
+  folders, document + topic + contents, contents + curriculum, contents + folders as hint, folders improved by a
+  curriculum, folders as outline only) and for refine with new items. Option field texts name default, effect and
+  cost; tag texts lead from the legacy endpoints to v2.
+- Test UI: the example picker separates basic examples from combinations, task cards count the combinations, and
+  the topic task has "Thema + Materialien nur einsortieren".
+
 Fixed
 - Test UI: the base summary counted only nodes with a key (a repository tree showed "0 Knoten").
 

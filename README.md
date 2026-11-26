@@ -2,7 +2,7 @@
 
 FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores. An existing tree, also one taken from the repository, can be filled with contents only (structure, properties and `nodeId` stay as they are), and single nodes can get a fresh description with the whole tree as context.
 
-- **`POST /v2/topic-tree`** – current v2 API ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
+- **`POST /v2/topic-tree`** – current v2 API; `/docs` explains use cases, combinations and options and offers an example for each in the "Examples" drop-down ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
 - **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2); new callers describe collections with the `describe` change of v2 (see use case 7)
 - **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
 - **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [v1 vs. v2 comparison](docs/measurements/2026-11-25-v1-vs-v2-comparison.md) · [v2 load & token benchmark](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
@@ -208,8 +208,8 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 - **Capabilities**:
   - Left navigation by task (Thema, Dokument, Ordner, Inhalte gruppieren, Inhalte einsortieren, Baum ändern); each task
     shows only its fields plus an "also include" group for combinations (materials that shape the structure, materials
-    that are only sorted in, a structure document as inspiration or guide). 27 examples, filtered per task, fill the
-    form without starting.
+    that are only sorted in, a structure document as inspiration or guide). 28 examples, filtered per task and split
+    into basic examples and combinations (e.g. topic + materials only sorted in), fill the form without starting.
   - "Inhalte einsortieren": a base tree (example, last result or pasted JSON, also a repository tree with `nodeId` and
     without keys) plus materials; the tree is shown read-only and sent as `refine` + `assign_only`.
   - Line editors instead of JSON: materials as `Titel | Schlagworte | Beschreibung`, folders as an indented outline.

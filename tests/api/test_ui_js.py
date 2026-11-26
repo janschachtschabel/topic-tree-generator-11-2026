@@ -16,3 +16,12 @@ def test_ui_js_unit_tests() -> None:
     cmd = ["node", "--test", *tests]
     proc = subprocess.run(cmd, check=False, cwd=_ROOT, capture_output=True, text=True, timeout=120)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
+@pytest.mark.parametrize("script", sorted(p.name for p in (_ROOT / "app" / "ui" / "static").glob("*.js")))
+def test_ui_script_parses(script: str) -> None:
+    # Regression: an unescaped quote in i18n.js broke the whole page while every unit test stayed green.
+    path = _ROOT / "app" / "ui" / "static" / script
+    proc = subprocess.run(["node", "--check", str(path)], check=False, capture_output=True, text=True, timeout=30)
+    assert proc.returncode == 0, proc.stderr

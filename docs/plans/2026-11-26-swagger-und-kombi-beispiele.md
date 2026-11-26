@@ -14,17 +14,17 @@ Ziel-Version 2.2.0 (Changelog „Unreleased“).
 
 ## Aufgaben
 
-- [ ] Endpunktbeschreibung: Use Cases mit Pflichtfeldern, Modi (create, refine, assign_only, describe), Rollen
+- [x] Endpunktbeschreibung: Use Cases mit Pflichtfeldern, Modi (create, refine, assign_only, describe), Rollen
       (`use`, `folders_use`), Kombinationstabelle mit Beispielnamen, wichtigste Optionen mit Standard, Antwort, Fehler.
       App-Beschreibung (Kopf von /docs) mit Kurzüberblick und Verweis auf die Legacy-Endpunkte.
-- [ ] Feldbeschreibungen von `Options`, `Item.use`, `Shape`, `Hints` präzisieren (Standard, Wirkung, wann sinnvoll);
+- [x] Feldbeschreibungen von `Options`, `Item.use`, `Shape`, `Hints` präzisieren (Standard, Wirkung, wann sinnvoll);
       Schemas und `docs/datenformat.md` neu erzeugen.
-- [ ] Beispiele: Thema + Inhalte (nur einsortieren), Thema + Inhalte (Anregung + einsortieren), Thema + Lehrplan,
+- [x] Beispiele: Thema + Inhalte (nur einsortieren), Thema + Inhalte (Anregung + einsortieren), Thema + Lehrplan,
       Thema + Ordner, Dokument + Thema + Inhalte, Inhalte + Lehrplan, Inhalte + Ordner als Hinweis, Ordner verbessern
       + Lehrplan + lose Dateien, Ordner nur als Gliederung, refine mit Änderungen + Inhalten, Einsortieren, describe.
       Test: jedes Beispiel ist gültig; zusammen decken sie jeden use_case, jede Rolle, jeden folders_use-Wert,
       assign_only und describe ab; jedes Beispiel hat `description`.
-- [ ] Test-UI: Presets mit `combo: true`, Dropdown mit Gruppen „Grundbeispiele“/„Kombinationen“, Aufgabenkarten
+- [x] Test-UI: Presets mit `combo: true`, Dropdown mit Gruppen „Grundbeispiele“/„Kombinationen“, Aufgabenkarten
       zeigen die Zahl der Kombinationen; neues Preset „Thema + Materialien nur einsortieren“. Test: jede Aufgabe außer
       assign/refine hat mindestens eine Kombination.
 - [ ] Tests, Lint, Review, PR, CI, mergen.

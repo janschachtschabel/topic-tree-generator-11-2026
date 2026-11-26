@@ -91,7 +91,15 @@
   function fillPresetSelect() {
     const select = $("f-preset");
     select.replaceChildren(new Option(t("preset.placeholder"), ""));
-    for (const p of state.presets.filter((x) => x.task === state.task)) select.appendChild(new Option(p.title, p.id));
+    const presets = state.presets.filter((x) => x.task === state.task);
+    const groups = [["preset.group.basic", presets.filter((p) => !p.combo)], ["preset.group.combo", presets.filter((p) => p.combo)]];
+    for (const [label, list] of groups) {
+      if (!list.length) continue;
+      // Only split when both kinds exist; a task with one kind keeps a flat list.
+      const parent = groups.every(([, l]) => l.length) ? document.createElement("optgroup") : select;
+      if (parent !== select) { parent.label = t(label); select.appendChild(parent); }
+      for (const p of list) parent.appendChild(new Option(p.title, p.id));
+    }
   }
 
   function selectTask(task, { keepJson = false } = {}) {
