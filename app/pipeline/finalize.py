@@ -130,6 +130,14 @@ def _collect_vocab_uris(frame: Frame, nodes: list[NodeOut]) -> list[str]:
     return uris
 
 
+def _recorded_frame(req: TopicTreeRequestV2) -> Frame:
+    """assign_only leaves the nodes as they were, so the tree keeps the frame it was made with."""
+    generation = req.current_tree.generation if req.current_tree else None
+    if req.options.assign_only and generation is not None and generation.frame is not None:
+        return generation.frame
+    return req.frame
+
+
 def finalize(
     req: TopicTreeRequestV2, data: FinalizeInput, *, model: str | None, usage: dict[str, Any], duration_ms: int
 ) -> TopicTreeResponseV2:
@@ -142,7 +150,7 @@ def finalize(
         mode=req.mode,
         use_case=req.use_case,
         topic=req.topic,
-        frame=req.frame,
+        frame=_recorded_frame(req),
         shape=req.shape,
         hints=req.hints,
         options=req.options,

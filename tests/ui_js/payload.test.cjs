@@ -251,7 +251,7 @@ test("assign task: refine with assign_only, no feedback, no shape, materials req
     extras: { contentMaterials: true },
     materialsB: "Lupe bauen",
     shape: { depth: 2 },
-    options: { assignContents: false, assignOnly: false, multiAssign: true, minConfidence: 0.6 },
+    options: { autoMetadata: true, assignContents: false, assignOnly: false, multiAssign: true, minConfidence: 0.6 },
     feedback: { text: "nicht senden", rows: [] },
   }));
   assert.equal(p.mode, "refine");
@@ -259,6 +259,7 @@ test("assign task: refine with assign_only, no feedback, no shape, materials req
   assert.equal(p.current_tree, base);
   assert.equal(p.options.assign_only, true);
   assert.equal(p.options.assign_contents, true);
+  assert.equal(p.options.auto_metadata, false);
   assert.equal(p.feedback, undefined);
   assert.equal(p.shape, undefined);
   assert.equal(p.topic, undefined);

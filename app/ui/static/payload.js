@@ -73,7 +73,7 @@
     const o = options || {};
     const inheritedImprove = Boolean(generation && generation.options && generation.options.improve);
     return {
-      auto_metadata: Boolean(o.autoMetadata),
+      auto_metadata: task !== "assign" && Boolean(o.autoMetadata), // hidden there: sorting in never narrows nodes
       improve: task === "refine" ? inheritedImprove : task === "folders" && Boolean(o.improve),
       assign_contents: task === "assign" || o.assignContents !== false,
       assign_only: task === "assign" || (task === "refine" && Boolean(o.assignOnly)),

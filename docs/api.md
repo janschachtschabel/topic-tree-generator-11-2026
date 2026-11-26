@@ -196,10 +196,13 @@ Für einen Baum, der schon existiert (z. B. Sammlungen aus edu-sharing), und neu
 - `mode: refine`, den Baum als `current_tree.collection`, die Inhalte als `items` (Rolle `["content"]`),
   `options.assign_only: true`. `use_case` spielt keine Rolle (`topic` genügt), `generation` und `version` sind optional.
 - Je Knoten reichen `title` und `subcollections`; fehlende `key` vergibt der Dienst. Eine `nodeId` am Knoten kommt
-  unverändert zurück, so lässt sich jede Zuordnung der Sammlung zuordnen.
+  unverändert zurück, so lässt sich jede Zuordnung der Sammlung zuordnen. (Bei späteren Strukturänderungen gilt: `merge`
+behält die `nodeId` des ersten Knotens, Teile aus `split` und neue Knoten haben keine; welche Sammlungen wegfallen,
+zeigen die Schlüssel in `changes`.)
 - Unverändert bleiben Struktur, Titel und `properties` jedes Knotens (auch bei geändertem `frame`; der Rahmen hilft
   nur bei der Zuordnung). Es entstehen keine Beschreibungen und keine Formprüfungen. Nur `shorttitle` folgt der
   Antwortregel (höchstens 20 Zeichen, unter Geschwistern eindeutig); `properties` behalten den gesendeten Kurztitel.
+- `metadata.generation.frame` behält den Rahmen, mit dem der Baum entstand (er wurde ja nicht übernommen).
 - `feedback` wird nicht umgesetzt (`FEEDBACK_IGNORED`), ein gesendetes `options.auto_metadata` nicht ausgeführt
   (`INPUT_IGNORED`). Nicht passende Inhalte stehen in `unassigned`.
 
@@ -210,8 +213,11 @@ In der Test-UI ist das die Aufgabe „Inhalte einsortieren“.
 `{"op": "describe", "key": "k-linsen", "hint": "Für Klasse 8, mit Alltagsbeispielen"}` in `feedback.changes`
 schreibt Beschreibung und Schlagworte des Knotens neu. Anders als der alte Endpunkt kennt das Sprachmodell Pfad,
 Geschwister und den ganzen Baum und grenzt den Text davon ab; die Länge folgt `hints.description_length` (Wörter).
-`hint` nimmt den Freitext auf, den der alte Endpunkt als `text_context` bekam. Gesperrte Knoten werden abgelehnt
-(`CHANGE_REJECTED`); Knoten ganz ohne Beschreibung werden im selben Lauf mitbeschrieben. Der alte Endpunkt bleibt für
+`hint` nimmt den Freitext auf, den der alte Endpunkt als `text_context` bekam (einzeilig, bis 1.000 Zeichen).
+Gesperrte Knoten und Knoten, die eine spätere Änderung derselben Anfrage entfernt, einschmilzt oder aufteilt, werden
+abgelehnt (`CHANGE_REJECTED`); lässt das Sprachmodell den Knoten aus, kommt `DESCRIBE_FAILED`. Wie bei jedem `refine`
+mit Rückmeldung werden Knoten ganz ohne Beschreibung im selben Lauf mitbeschrieben (bei einem großen Baum ohne Texte
+ein Aufruf je 10 Knoten), der `frame` an Knoten ohne eigene Werte gesetzt und Schlagworte bereinigt. Der alte Endpunkt bleibt für
 bestehende Aufrufer unverändert.
 
 ## Seitenmarken im Markdown (use_case document)

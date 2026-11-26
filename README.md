@@ -426,7 +426,7 @@ Fills a tree that already exists, for example a collection tree from edu-sharing
 else: no restructuring, no new descriptions, no shape checks, and every node's `properties` come back exactly as sent
 (the `frame` only helps the assignment). Nodes need only a `title`; missing `key`s are assigned, a `nodeId` per node is
 passed through, so each assignment maps back to its collection. `use_case` does not matter here (`topic` is fine), a
-`generation` is optional. Off-topic or unmatched items land in `unassigned`; `options.auto_metadata` and `feedback`
+`generation` is optional; `metadata.generation.frame` keeps the frame the tree was made with. Off-topic or unmatched items land in `unassigned`; `options.auto_metadata` and `feedback`
 are ignored with a warning. In the test UI this is the task "Inhalte einsortieren".
 
 ```shell
@@ -457,8 +457,11 @@ Answer (shortened): the node `Linsen` keeps `"nodeId": "n-linsen"` and gains
 `{"op": "describe", "key": …, "hint": …}` in `feedback.changes` writes a fresh description and keywords for the node,
 knowing its path, siblings and the whole tree, so the text sets the node apart from its neighbours. The optional
 `hint` (up to 1,000 characters) is the basis or wish for the text, e.g. the free text the legacy endpoint took.
-Nothing else changes; locked nodes are rejected with `CHANGE_REJECTED`. For a single collection send a tree with one
-node. Nodes without any description are described in the same run as in every `refine` with feedback.
+The structure stays; locked nodes are rejected with `CHANGE_REJECTED`, a node that a later change in the same request
+removes, merges away or splits with `CHANGE_REJECTED` too, and a node the model left out with `DESCRIBE_FAILED`. As in
+every `refine` with feedback, nodes without any description are described in the same run (on a large tree from the
+repository without descriptions that means one call per 10 nodes), the `frame` is set on nodes that lack it, and
+keywords are tidied. For a single collection send a tree with one node.
 Example: [`docs/examples/describe.json`](docs/examples/describe.json).
 
 ### 8. Combining Use Cases (e.g. Topic + Items)

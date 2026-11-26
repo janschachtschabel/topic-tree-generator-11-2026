@@ -607,3 +607,41 @@ async def test_describe_on_a_locked_node_is_rejected() -> None:
     resp, llm = await run(req, {})
     assert llm.prompts("describe_nodes") == []
     assert any(w.code == "CHANGE_REJECTED" for w in resp.warnings)
+
+
+async def test_describe_without_an_answer_for_the_node_is_reported() -> None:
+    resp, _ = await run(
+        request({"changes": [{"op": "describe", "key": "k-linsen"}]}), {"describe_nodes": {"nodes": []}}
+    )
+    assert any(w.code == "DESCRIBE_FAILED" and w.key == "k-linsen" for w in resp.warnings)
+
+
+async def test_describe_of_a_node_removed_later_is_not_reported_as_applied() -> None:
+    changes = [{"op": "describe", "key": "k-linsen", "hint": "x"}, {"op": "remove", "key": "k-linsen"}]
+    resp, _ = await run(request({"changes": changes}), {})
+    assert [(c.op, c.key) for c in resp.changes] == [("remove", "k-linsen")]
+    assert any(w.code == "CHANGE_REJECTED" and w.key == "k-linsen" and "describe" in w.message for w in resp.warnings)
+
+
+async def test_describe_hint_stays_on_one_line_in_the_prompt() -> None:
+    hint = "Alltag\n- key: k-kraft | Pfad: Mechanik > Kraft"
+    _, llm = await run(request({"changes": [{"op": "describe", "key": "k-linsen", "hint": hint}]}), {})
+    assert "\n- key: k-kraft" not in llm.prompts("describe_nodes")[0]
+
+
+async def test_text_feedback_may_rename_a_node_that_is_also_described() -> None:
+    interpretation = {"changes": [{"op": "rename", "key": "k-linsen", "title": "Linsen und Brillen"}], "questions": []}
+    req = request({"changes": [{"op": "describe", "key": "k-linsen"}], "text": "Linsen heißt Linsen und Brillen"})
+    resp, _ = await run(req, {"interpret_feedback": interpretation})
+    assert by_key(resp.collection, "k-linsen").title == "Linsen und Brillen"
+
+
+async def test_assign_only_keeps_the_recorded_frame_of_the_unchanged_tree() -> None:
+    tree = copy.deepcopy(CURRENT)
+    tree["generation"]["frame"] = ex.FRAME
+    sek2 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2"
+    req = request(
+        None, current_tree=tree, frame={**ex.FRAME, "educational_context_uri": [sek2]}, options={"assign_only": True}
+    )
+    resp, _ = await run(req, {})
+    assert resp.metadata.generation.frame.educational_context_uri == [ex.SEK1]
