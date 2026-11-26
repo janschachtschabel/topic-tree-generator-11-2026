@@ -155,12 +155,17 @@ _REQUIRED_BY_OP: dict[ChangeOp, tuple[str, ...]] = {
     ChangeOp.move: ("key",),  # `to` omitted or null: move to the top level
     ChangeOp.merge: ("keys", "title"),
     ChangeOp.split: ("key", "hint"),
+    ChangeOp.describe: ("key",),
 }
 
 
 class Change(RequestModel):
-    op: ChangeOp = Field(description="Art der Änderung: add, remove, rename, edit, move, merge oder split")
-    key: str | None = Field(None, description="Schlüssel des betroffenen Knotens (remove, rename, edit, move, split)")
+    op: ChangeOp = Field(
+        description="Art der Änderung: add, remove, rename, edit, move, merge, split oder describe (neu beschreiben)"
+    )
+    key: str | None = Field(
+        None, description="Schlüssel des betroffenen Knotens (remove, rename, edit, move, split, describe)"
+    )
     keys: list[str] | None = Field(
         None, description="Schlüssel der zusammenzuführenden Knoten, mindestens zwei (merge)"
     )
@@ -170,7 +175,11 @@ class Change(RequestModel):
     )
     title: ShortText | None = Field(None, description="Neuer Titel (add, rename, merge)")
     properties: Properties | None = Field(None, description="Zu setzende Properties (edit)")
-    hint: str | None = Field(None, max_length=1000, description="Wie der Knoten aufgeteilt werden soll (split)")
+    hint: str | None = Field(
+        None,
+        max_length=1000,
+        description="split: wie der Knoten aufgeteilt werden soll; describe: Grundlage oder Wunsch für die Beschreibung",
+    )
 
     @model_validator(mode="after")
     def _required_fields(self) -> Self:

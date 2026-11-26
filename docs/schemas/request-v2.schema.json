@@ -4,7 +4,7 @@
       "properties": {
         "op": {
           "$ref": "#/$defs/ChangeOp",
-          "description": "Art der Änderung: add, remove, rename, edit, move, merge oder split"
+          "description": "Art der Änderung: add, remove, rename, edit, move, merge, split oder describe (neu beschreiben)"
         },
         "key": {
           "anyOf": [
@@ -16,7 +16,7 @@
             }
           ],
           "default": null,
-          "description": "Schlüssel des betroffenen Knotens (remove, rename, edit, move, split)",
+          "description": "Schlüssel des betroffenen Knotens (remove, rename, edit, move, split, describe)",
           "title": "Key"
         },
         "keys": {
@@ -99,7 +99,7 @@
             }
           ],
           "default": null,
-          "description": "Wie der Knoten aufgeteilt werden soll (split)",
+          "description": "split: wie der Knoten aufgeteilt werden soll; describe: Grundlage oder Wunsch für die Beschreibung",
           "title": "Hint"
         }
       },
@@ -117,7 +117,8 @@
         "edit",
         "move",
         "merge",
-        "split"
+        "split",
+        "describe"
       ],
       "title": "ChangeOp",
       "type": "string"

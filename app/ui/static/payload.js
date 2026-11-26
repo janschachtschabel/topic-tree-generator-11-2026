@@ -20,6 +20,7 @@
     move: ["key"],
     merge: ["keys", "title"],
     split: ["key", "hint"],
+    describe: ["key"],
   };
 
   function fail(key, vars = {}) {
@@ -223,6 +224,7 @@
       if (row.op === "edit") out.properties = { ...(row.otherProps || {}), "cm:description": [text(row.description)] };
       if (row.op === "move") out.to = text(row.to) || null;
       if (row.op === "split") out.hint = text(row.hint);
+      if (row.op === "describe" && text(row.basis)) out.hint = text(row.basis);
     }
     return out;
   }

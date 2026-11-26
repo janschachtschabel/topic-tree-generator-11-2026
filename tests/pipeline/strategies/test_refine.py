@@ -587,3 +587,23 @@ async def test_assign_only_skips_auto_metadata_with_warning() -> None:
     )
     assert llm.prompts("infer_metadata") == []
     assert any(w.code == "INPUT_IGNORED" and "auto_metadata" in w.message for w in resp.warnings)
+
+
+async def test_describe_rewrites_the_description_with_the_hint() -> None:
+    hint = "Schwerpunkt Brennweite und Alltagsbeispiele wie Brillen"
+    resp, llm = await run(request({"changes": [{"op": "describe", "key": "k-linsen", "hint": hint}]}), {})
+    prompts = llm.prompts("describe_nodes")
+    assert len(prompts) == 1 and hint in prompts[0]
+    assert "- key: k-linsen" in prompts[0] and "- key: k-spiegel" not in prompts[0]
+    assert [(c.op, c.key) for c in resp.changes] == [("describe", "k-linsen")]
+    linsen = by_key(resp.collection, "k-linsen")
+    assert linsen.properties.values("cclom:general_keyword") == ["neu"]
+    assert linsen.status == "changed"
+    assert by_key(resp.collection, "k-spiegel").status == "unchanged"
+
+
+async def test_describe_on_a_locked_node_is_rejected() -> None:
+    req = request({"changes": [{"op": "describe", "key": "k-linsen"}], "locked": ["k-optik"]})
+    resp, llm = await run(req, {})
+    assert llm.prompts("describe_nodes") == []
+    assert any(w.code == "CHANGE_REJECTED" for w in resp.warnings)

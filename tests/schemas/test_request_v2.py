@@ -156,6 +156,7 @@ def test_feedback_changes_from_the_spec_validate() -> None:
         {"op": "split", "key": "k"},
         {"op": "edit", "key": "k"},
         {"op": "add"},
+        {"op": "describe"},
     ],
 )
 def test_change_ops_require_their_fields(change: dict) -> None:

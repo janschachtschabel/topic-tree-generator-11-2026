@@ -30,18 +30,18 @@ Spalten: **Pflicht** = muss gesendet werden; **Standard** = Wert, wenn das Feld 
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
-| `op` | [`ChangeOp`](#changeop) | ja |  | Art der Änderung: add, remove, rename, edit, move, merge oder split |
-| `key` | Text oder null |  | – | Schlüssel des betroffenen Knotens (remove, rename, edit, move, split) |
+| `op` | [`ChangeOp`](#changeop) | ja |  | Art der Änderung: add, remove, rename, edit, move, merge, split oder describe (neu beschreiben) |
+| `key` | Text oder null |  | – | Schlüssel des betroffenen Knotens (remove, rename, edit, move, split, describe) |
 | `keys` | Liste von Text oder null |  | – | Schlüssel der zusammenzuführenden Knoten, mindestens zwei (merge) |
 | `parent` | Text oder null |  | – | add: Schlüssel oder Titel des Elternknotens; ohne Angabe Hauptebene |
 | `to` | Text oder null |  | – | move: Schlüssel des neuen Elternknotens; ohne Angabe oder null Hauptebene |
 | `title` | Text oder null (min. Länge 1, max. Länge 200) |  | – | Neuer Titel (add, rename, merge) |
 | `properties` | [`Properties`](#properties) oder null |  | – | Zu setzende Properties (edit) |
-| `hint` | Text oder null (max. Länge 1000) |  | – | Wie der Knoten aufgeteilt werden soll (split) |
+| `hint` | Text oder null (max. Länge 1000) |  | – | split: wie der Knoten aufgeteilt werden soll; describe: Grundlage oder Wunsch für die Beschreibung |
 
 ### ChangeOp
 
-Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`
+Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`, `describe`
 
 ### ChildRange
 
@@ -226,7 +226,7 @@ Werte: `topic`, `document`, `folders`, `contents`
 
 ### ChangeOp (Antwort)
 
-Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`
+Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`, `describe`
 
 ### ChangeRecord (Antwort)
 

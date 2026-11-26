@@ -139,6 +139,8 @@ test("change rows: each op with its required fields", () => {
     { op: "move", key: "a", to: "p" },
     { op: "merge", keys: ["a", "b"], title: "AB" },
     { op: "split", key: "a", hint: "nach Epochen" },
+    { op: "describe", key: "a", basis: " Mehr Alltagsbezug " },
+    { op: "describe", key: "b", basis: "", hint: "stale split hint" },
   ]);
   assert.deepEqual(errors, []);
   assert.deepEqual(changes, [
@@ -150,6 +152,8 @@ test("change rows: each op with its required fields", () => {
     { op: "move", key: "a", to: "p" },
     { op: "merge", keys: ["a", "b"], title: "AB" },
     { op: "split", key: "a", hint: "nach Epochen" },
+    { op: "describe", key: "a", hint: "Mehr Alltagsbezug" },
+    { op: "describe", key: "b" },
   ]);
 });
 

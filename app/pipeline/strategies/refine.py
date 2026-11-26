@@ -17,7 +17,7 @@ from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
 from app.schemas.request_v2 import Change, Frame, TopicTreeRequestV2
 from app.schemas.response_v2 import ChangeRecord, Question, StructureInfo, Unassigned
 
-_REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge}
+_REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge, ChangeOp.describe}
 
 
 def _structure(req: TopicTreeRequestV2) -> StructureInfo | None:
@@ -32,6 +32,16 @@ def _structure(req: TopicTreeRequestV2) -> StructureInfo | None:
 
 def _keys_of(item: Change | ChangeRecord) -> set[str]:
     return {k for k in (item.key, item.to, item.parent, *(item.keys or [])) if k}
+
+
+def _describe_hints(changes: list[Change], applied: list[ChangeRecord]) -> dict[str, str]:
+    """Hints of applied `describe` changes, per key, as extra prompt text for describe_nodes."""
+    done = {r.key for r in applied if r.op == ChangeOp.describe}
+    return {
+        c.key: f"Vorgabe für die Beschreibung: {c.hint.strip()}"
+        for c in changes
+        if c.op == ChangeOp.describe and c.key in done and c.hint and c.hint.strip()
+    }
 
 
 class _Refiner:
@@ -204,5 +214,12 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         for node, _, _ in walk(roots)
         if node.key not in protected and (node.key in refiner.refresh or not node.description)
     ]
-    await describe_nodes(targets, roots, rc, context=rc.context, description_length=req.hints.description_length)
+    await describe_nodes(
+        targets,
+        roots,
+        rc,
+        context=rc.context,
+        description_length=req.hints.description_length,
+        extra=_describe_hints(feedback.changes, result.changes),
+    )
     return result

@@ -82,6 +82,29 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         },
     },
     {
+        "id": "refine_describe",
+        "task": "refine",
+        "title": "Beschreibungen neu schreiben",
+        "summary": "„describe“ schreibt Beschreibungen mit Baum-Kontext neu, wahlweise nach einer Vorgabe; "
+        "die Struktur bleibt.",
+        "payload": {
+            "mode": "refine",
+            "use_case": "topic",
+            "current_tree": _current("v1"),
+            "feedback": {
+                "changes": [
+                    {
+                        "op": "describe",
+                        "key": "k-linsen",
+                        "hint": "Für Klasse 8: Brennweite bestimmen, Lupe, Brille und Fotoapparat als Alltagsbeispiele.",
+                    },
+                    {"op": "describe", "key": "k-akustik"},
+                ],
+            },
+            "frame": FRAME_PHYS_SEK1,
+        },
+    },
+    {
         "id": "refine_feedback",
         "task": "refine",
         "title": "Freitext-Rückmeldung + gesperrter Ast",
