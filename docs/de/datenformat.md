@@ -1,8 +1,10 @@
 # Datenformat von POST /v2/topic-tree
 
+> 🇬🇧 English version: [`../en/data-format.md`](../en/data-format.md)
+
 Automatisch erzeugt aus den Pydantic-Modellen (`uv run python -m scripts.export_schemas`); nicht von Hand ändern.
 Muster für einzelne und kombinierte Use Cases und für Änderungen an Bäumen: [`api.md`](api.md) und
-[`examples/`](examples/). Maschinenlesbar: [`schemas/`](schemas/).
+[`examples/`](../examples/). Maschinenlesbar: [`schemas/`](../schemas/).
 
 Spalten: **Pflicht** = muss gesendet werden; **Standard** = Wert, wenn das Feld fehlt.
 
