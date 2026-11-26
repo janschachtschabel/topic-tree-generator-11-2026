@@ -53,11 +53,13 @@ def edited_texts(changes: list[Change], applied: list[ChangeRecord]) -> dict[str
     return edited
 
 
-def reject_describes_of_edited(edited: dict[str, set[str]], result: StrategyResult, rc: RunContext) -> None:
+def reject_describes_of_edited(edited: dict[str, set[str]], result: StrategyResult, rc: RunContext) -> set[str]:
     """`describe` and an `edit` of the description on one node contradict each other; the explicit text wins."""
     kept: list[ChangeRecord] = []
+    rejected: set[str] = set()
     for record in result.changes:
         if record.op == ChangeOp.describe and record.key in edited:
+            rejected.add(record.key)
             rc.warn(
                 "CHANGE_REJECTED",
                 f"Änderung describe nicht umgesetzt: Beschreibung oder Schlagworte von {record.key} wurden im selben "
@@ -68,6 +70,7 @@ def reject_describes_of_edited(edited: dict[str, set[str]], result: StrategyResu
         else:
             kept.append(record)
     result.changes[:] = kept
+    return rejected
 
 
 def keep_edited_texts(roots: list[Node], edited: dict[str, set[str]]) -> dict[str, dict[str, object]]:

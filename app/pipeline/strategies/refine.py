@@ -212,7 +212,10 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         await refiner.apply_text(feedback.text)
     drop_vanished_describes(roots, result, rc)
     edited = edited_texts(feedback.changes, result.changes)
-    reject_describes_of_edited(edited, result, rc)
+    rejected = reject_describes_of_edited(edited, result, rc)
+    # A rejected describe must not rewrite anything else either, unless another change refreshes the node.
+    refreshed_otherwise = {r.key for r in result.changes if r.op in _REFRESH_OPS and r.op != ChangeOp.describe}
+    refiner.refresh -= rejected - refreshed_otherwise
     protected = protected_keys(roots, set(feedback.locked))
     targets = [
         node
