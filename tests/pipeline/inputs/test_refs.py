@@ -286,3 +286,27 @@ async def test_small_compressed_bodies_are_decoded(serve) -> None:
         lambda r: httpx.Response(200, content=gzip.compress("# Läuft".encode()), headers={"Content-Encoding": "gzip"})
     )
     assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Läuft"
+
+
+async def test_data_after_the_end_of_a_gzip_stream_is_bounded(serve) -> None:
+    # Review: zlib keeps bytes after the gzip end in unused_data, so only the raw size can bound them.
+    import gzip
+
+    async def body():  # streamed without Content-Length, so only the read loop can stop it
+        yield gzip.compress(b"hi")
+        for _ in range(5):
+            yield b"\0" * 1000
+
+    serve(lambda r: httpx.Response(200, content=body(), headers={"Content-Encoding": "gzip"}))
+    with pytest.raises(ApiError) as err:
+        await fetch_text("https://files.example.org/a.md", ALLOWED)
+    assert err.value.code == "REF_TOO_LARGE"
+
+
+async def test_raw_deflate_bodies_are_decoded(serve) -> None:
+    import zlib
+
+    packer = zlib.compressobj(wbits=-15)
+    raw = packer.compress(b"# Roh") + packer.flush()
+    serve(lambda r: httpx.Response(200, content=raw, headers={"Content-Encoding": "deflate"}))
+    assert await fetch_text("https://files.example.org/a.md", ALLOWED) == "# Roh"

@@ -5,6 +5,7 @@ import asyncio
 import json
 import time
 import zlib
+from typing import Any
 from urllib.parse import urlsplit
 
 import httpx
@@ -17,7 +18,7 @@ from app.settings import Settings
 
 MAX_REF_ITEMS = 5000
 MAX_FULLTEXT_CHARS = 2_000_000
-MAX_TOTAL_FULLTEXT_CHARS = 8_000_000  # all full texts of one request together (memory per worker)
+MAX_TOTAL_FULLTEXT_CHARS = 20_000_000  # all full texts of one request together (memory per worker)
 MAX_CONCURRENT_REFS = 8
 _ITEMS = TypeAdapter(list[Item])
 
@@ -65,15 +66,36 @@ async def _read_body(response: httpx.Response, host: str, limit: int) -> bytearr
     if encoding not in {"identity", "", *_WBITS}:
         raise ApiError(422, "REF_FAILED", "Verweis konnte nicht geladen werden.", details={"host": host})
     decoder = zlib.decompressobj(_WBITS[encoding]) if encoding in _WBITS else None
-    body = bytearray()
+    body, raw = bytearray(), 0
     async for chunk in response.aiter_raw():
-        try:
-            body.extend(decoder.decompress(chunk, limit + 1 - len(body)) if decoder else chunk)
-        except zlib.error as exc:
-            raise ApiError(422, "REF_FAILED", "Verweis konnte nicht geladen werden.", details={"host": host}) from exc
+        # Raw bytes count too: zlib keeps data after the end of a stream in `unused_data`, unbounded.
+        raw += len(chunk)
+        if raw > limit:
+            raise _too_large(host)
+        if decoder is None:
+            body.extend(chunk)
+        else:
+            decoder = _decode(decoder, chunk, body, limit, first=raw == len(chunk), host=host)
         if len(body) > limit or (decoder is not None and decoder.unconsumed_tail):
             raise _too_large(host)
     return body
+
+
+def _decode(decoder: Any, chunk: bytes, body: bytearray, limit: int, *, first: bool, host: str) -> Any:
+    """Decode one chunk into `body` (at most up to the limit). A `deflate` body may also come without the zlib
+    wrapper (raw deflate); that is detected on the first chunk."""
+    try:
+        body.extend(decoder.decompress(chunk, limit + 1 - len(body)))
+        return decoder
+    except zlib.error as exc:
+        if first:
+            try:
+                raw_decoder = zlib.decompressobj(-15)
+                body.extend(raw_decoder.decompress(chunk, limit + 1 - len(body)))
+                return raw_decoder
+            except zlib.error:
+                pass
+        raise ApiError(422, "REF_FAILED", "Verweis konnte nicht geladen werden.", details={"host": host}) from exc
 
 
 async def _read_response(client: httpx.AsyncClient, url: str, host: str, settings: Settings) -> str:
