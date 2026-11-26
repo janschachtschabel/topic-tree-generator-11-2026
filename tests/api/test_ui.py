@@ -347,6 +347,8 @@ def test_preset_picker_groups_basic_examples_and_combinations() -> None:
 
     js = (Path("app/ui/static") / "app.js").read_text(encoding="utf-8")
     assert "optgroup" in js and "preset.group.combo" in js
+    # The "Kombinationen" group already says what the options are; their labels drop the "Kombination:" prefix.
+    assert "presetOptionLabel(" in js
 
 
 def test_base_texts_are_rendered_from_state_not_static_i18n() -> None:
@@ -372,6 +374,9 @@ def test_assign_flow_says_inhalte_consistently() -> None:
     i18n = (Path("app/ui/static") / "i18n.js").read_text(encoding="utf-8")
     assert "Nur Materialien einsortieren" not in i18n
     assert '"opt.assignOnly": "Nur Inhalte einsortieren, Struktur nicht ändern"' in i18n
+    assert '"field.materialsB.assign": "Inhalte zum Einsortieren"' in i18n
+    form = (Path("app/ui/static") / "form.js").read_text(encoding="utf-8")
+    assert '"field.materialsB.assign"' in form
 
 
 def test_answer_headings_can_take_focus_after_a_request() -> None:

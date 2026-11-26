@@ -98,7 +98,8 @@
       // Only split when both kinds exist; a task with one kind keeps a flat list.
       const parent = groups.every(([, l]) => l.length) ? document.createElement("optgroup") : select;
       if (parent !== select) { parent.label = t(label); select.appendChild(parent); }
-      for (const p of list) parent.appendChild(new Option(p.title, p.id));
+      const grouped = parent !== select && label === "preset.group.combo";
+      for (const p of list) parent.appendChild(new Option(window.TopicTreeParsers.presetOptionLabel(p.title, grouped), p.id));
     }
   }
 

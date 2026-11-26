@@ -38,6 +38,7 @@
     $("x-content-label").textContent = t(`x.contentMaterials.${task}`);
     $("x-document-label").textContent = t(task === "folders" ? "x.document.folders" : "x.document");
     $("materials-a-label").textContent = t(task === "contents" ? "field.materialsA.contents" : "field.materialsA");
+    $("materials-b-label").textContent = t(task === "assign" ? "field.materialsB.assign" : "field.materialsB");
     $("topic-req").textContent = t(task === "topic" ? "topic.req.required" : "topic.req.optional");
     $("topic-help").textContent = t(`help.topic.${task}`);
     $("task-intro").textContent = t(`intro.${task}`);
