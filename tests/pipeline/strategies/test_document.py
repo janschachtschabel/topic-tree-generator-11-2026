@@ -310,3 +310,25 @@ async def test_document_falls_back_to_deterministic_outline_when_llm_unavailable
     assert [n.title for n in resp.collection] == ["Themenfeld 1: Licht", "Themenfeld 2: Grenzflächen"]
     codes = [w.code for w in resp.warnings]
     assert "LLM_DEGRADED" in codes and "DESCRIBE_FAILED" in codes
+
+
+async def test_topic_narrows_the_document_and_a_narrow_mapping_is_kept() -> None:
+    narrow = {
+        "order": "Themenfelder",
+        "levels": ["Themenfeld", "Fachbegriff"],
+        "description": "Licht an Grenzflächen",
+        "nodes": [
+            {
+                "title": "Reflexion",
+                "shorttitle": "Reflexion",
+                "section_ids": ["d1:s5"],
+                "children": [],
+            }
+        ],
+    }
+    llm = FakeLLM({"map_outline": narrow, "describe_nodes": describe})
+    run = rc(llm)
+    result = await build(req([doc()], topic="Optik: Licht an Grenzflächen"), run)
+    assert [r.title for r in result.roots] == ["Reflexion"]
+    assert "OUTLINE_FALLBACK" not in [w.code for w in run.warnings]
+    assert "nur die Abschnitte, die zum Thema gehören" in llm.prompts("map_outline")[0]

@@ -105,8 +105,12 @@ class _Converter:
 def _checked_mapping(
     nodes: list[MappedNode], sections: list[DocSection], req: TopicTreeRequestV2, rc: RunContext
 ) -> list[MappedNode]:
-    """The LLM mapping, or the document's own headings when the mapping collapsed the outline."""
+    """The LLM mapping, or the document's own headings when the mapping collapsed the outline.
+
+    With a topic the mapping may keep only the matching sections, so only an empty mapping counts as collapsed."""
     outline = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
+    if nodes and req.topic:
+        return nodes
     if len(nodes) >= min(req.shape.main_topics.min, len(outline)):
         return nodes
     rc.warn(
