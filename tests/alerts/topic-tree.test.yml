@@ -45,6 +45,10 @@ tests:
         alertname: TopicTreeLLMErrors
         exp_alerts:
           - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "Themenbaum-Dienst: viele fehlgeschlagene LLM-Aufrufe"
+              description: "Mehr als 0.2 der LLM-Aufrufe schlugen in 10 Minuten fehl (Zeitüberschreitung, Verbindung, 429 oder 5xx der b-api)."
+              runbook_url: "https://github.com/janschachtschabel/topic-tree-generator-11-2026/blob/main/docs/de/betrieb.md#topictreellmerrors"
 
   - name: callers without LLM rights (401/403) do not fire TopicTreeLLMErrors
     interval: 1m
@@ -82,6 +86,10 @@ tests:
         alertname: TopicTreeServerErrors
         exp_alerts:
           - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "Themenbaum-Dienst: viele Antworten mit 5xx"
+              description: "Mehr als 0.05 der Anfragen endeten in 10 Minuten mit einem Serverfehler."
+              runbook_url: "https://github.com/janschachtschabel/topic-tree-generator-11-2026/blob/main/docs/de/betrieb.md#topictreeservererrors"
 
   - name: slow p90 fires TopicTreeSlowRequests
     interval: 1m
@@ -97,6 +105,10 @@ tests:
         alertname: TopicTreeSlowRequests
         exp_alerts:
           - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "Themenbaum-Dienst: P90 der Antwortzeit nahe der Frist"
+              description: "Das 90. Perzentil der Antwortzeit von /v2/topic-tree liegt seit 15 Minuten über 240 s."
+              runbook_url: "https://github.com/janschachtschabel/topic-tree-generator-11-2026/blob/main/docs/de/betrieb.md#topictreeslowrequests"
 
   - name: many failed description batches fire TopicTreeDescribeFailures
     interval: 1m
@@ -108,3 +120,7 @@ tests:
         alertname: TopicTreeDescribeFailures
         exp_alerts:
           - exp_labels: { severity: info }
+            exp_annotations:
+              summary: "Themenbaum-Dienst: viele Beschreibungs-Batches sind fehlgeschlagen"
+              description: "Mehr als 20 Warnungen DESCRIBE_FAILED in einer Stunde."
+              runbook_url: "https://github.com/janschachtschabel/topic-tree-generator-11-2026/blob/main/docs/de/betrieb.md#topictreedescribefailures"
