@@ -207,3 +207,11 @@ def test_canonical_compose_publishes_one_configurable_host_port(
     assert result.returncode == 0, result.stderr
     ports = json.loads(result.stdout)["services"]["topic-tree"]["ports"]
     assert [(p.get("host_ip"), p["published"], p["target"]) for p in ports] == [expected]
+
+
+@pytest.mark.parametrize("filename", ["docker-compose.yml", "docker-compose.build.yml"])
+def test_compose_waits_for_running_requests_before_killing_the_container(filename: str) -> None:
+    # Audit 2026-11-26: 90 s cut requests that may run up to REQUEST_TIMEOUT_SECONDS plus gunicorn's grace.
+    service = yaml.safe_load((ROOT / filename).read_text(encoding="utf-8"))["services"]["topic-tree"]
+    grace = int(re.fullmatch(r"(\d+)s", service["stop_grace_period"]).group(1))
+    assert grace >= Settings(_env_file=None).request_timeout_seconds + 20
