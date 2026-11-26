@@ -46,3 +46,13 @@ def test_refine_does_not_report_default_roles_of_a_contents_tree() -> None:
     item = {"id": "n1", "properties": {"cm:title": ["Neu"]}}
     data = {"mode": "refine", "use_case": "contents", "current_tree": tree, "items": [item], "frame": ex.FRAME}
     assert messages(data) == []
+
+
+def test_folders_use_without_folders_is_reported() -> None:
+    found = messages({**ex.TOPIC, "folders_use": ["structure"]})
+    assert len(found) == 1 and "folders_use" in found[0]
+
+
+def test_refine_warning_says_folder_paths_still_help_the_assignment() -> None:
+    found = messages({**ex.ASSIGN_ONLY, "options": {}, "folders": ex.FOLDERS_TREE, "items": ex.FOLDER_ITEMS})
+    assert len(found) == 1 and "Zuordnungshinweis" in found[0]

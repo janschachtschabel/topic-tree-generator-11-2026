@@ -49,10 +49,12 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     assign_missing_keys(roots)
     titles = item_titles(req.items or [])
     changes = []
-    if not req.options.improve and any(ItemUse.structure in req.effective_use(i) for i in req.items or []):
+    shaping = [i.id for i in req.items or [] if ItemUse.structure in req.effective_use(i)]
+    if not req.options.improve and shaping:
         rc.warn(
             "INPUT_IGNORED",
-            "Gliederungsdokumente fließen bei use_case 'folders' nur mit options.improve ein und wurden ignoriert.",
+            "Einträge mit Rolle Gliederung prägen bei use_case 'folders' die Struktur nur mit options.improve; "
+            f"ihre Gliederungsrolle wurde ignoriert, Inhalte darunter werden trotzdem einsortiert ({', '.join(shaping[:20])}).",
             step="folders",
         )
     if req.options.improve:

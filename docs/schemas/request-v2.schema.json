@@ -701,7 +701,7 @@
             }
           ],
           "default": null,
-          "description": "Ablageort des Eintrags, nur zur Information",
+          "description": "Ablageort des Eintrags (z. B. Optik/Linsen); Hinweis bei der Zuordnung",
           "title": "Path"
         }
       },

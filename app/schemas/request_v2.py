@@ -73,7 +73,9 @@ class Item(RequestModel):
         description="edu-sharing-Properties wie cm:title oder cclom:general_keyword, Werte als Listen",
     )
     fulltext: Fulltext | None = Field(None, description="Volltext des Eintrags, etwa ein Lehrplan als Markdown")
-    path: str | None = Field(None, max_length=1000, description="Ablageort des Eintrags, nur zur Information")
+    path: str | None = Field(
+        None, max_length=1000, description="Ablageort des Eintrags (z. B. Optik/Linsen); Hinweis bei der Zuordnung"
+    )
 
 
 class FolderNode(RequestModel):

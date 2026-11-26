@@ -135,7 +135,8 @@
     const useDocument = task === "document" || (extras.document && (task === "topic" || task === "folders"));
     const doc = useDocument ? documentItem(form, task === "document") : null;
     if (doc) items.push(doc);
-    const doc2 = doc && !doc.fulltext.ref ? secondDocument(form) : null;
+    const doc2 = useDocument ? secondDocument(form) : null;
+    if (doc2 && !doc) throw fail("err.doc2WithoutDoc");
     if (doc2) items.push(doc2);
     const withA = ["topic", "document", "folders"].includes(task) && extras.structureMaterials;
     if (task === "contents" || withA) {

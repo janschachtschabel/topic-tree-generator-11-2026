@@ -32,6 +32,8 @@ def warn_unused_inputs(req: TopicTreeRequestV2, rc: RunContext) -> None:
             "Zuordnung genutzt.",
             step="input",
         )
+    if req.folders_use is not None and not req.folders:
+        rc.warn("INPUT_IGNORED", "folders_use wurde ohne folders gesendet und ignoriert.", step="input")
     if req.mode == Mode.create and req.use_case != UseCase.topic and req.shape.extra_topics:
         rc.warn(
             "INPUT_IGNORED",
@@ -54,7 +56,8 @@ def _refine(req: TopicTreeRequestV2, rc: RunContext) -> None:
     if req.folders:
         rc.warn(
             "INPUT_IGNORED",
-            f"Beim Weiterentwickeln gilt der bestehende Baum (current_tree); folders wurde nicht neu eingelesen. {hint}",
+            "Beim Weiterentwickeln gilt der bestehende Baum (current_tree); folders prägt die Struktur nicht, "
+            f"Ordnerpfade dienen nur als Zuordnungshinweis. {hint}",
             step="input",
         )
     # Only an explicit structure role counts: default roles (e.g. materials of a contents tree) are content here.

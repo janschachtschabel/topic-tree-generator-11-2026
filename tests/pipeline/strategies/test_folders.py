@@ -169,3 +169,11 @@ async def test_folders_without_structure_documents_give_no_input_warning() -> No
 async def test_without_the_content_role_folder_files_are_sorted_in_anew() -> None:
     result = await build(req(folders_use=["structure"]), rc(FakeLLM({"describe_nodes": describe})))
     assert all(not node.contents for node, _, _ in walk(result.roots))
+
+
+async def test_without_improve_the_warning_names_only_the_structure_role_of_dual_items() -> None:
+    dual = {"id": "m1", "use": ["structure", "content"], "properties": {"cm:title": ["Lupe"]}}
+    context = rc(FakeLLM({"describe_nodes": describe}))
+    await build(req(items=[*ex.FOLDER_ITEMS, dual]), context)
+    message = next(w.message for w in context.warnings if w.code == "INPUT_IGNORED")
+    assert "m1" in message and "einsortiert" in message
