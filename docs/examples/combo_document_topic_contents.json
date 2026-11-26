@@ -1,0 +1,66 @@
+{
+  "mode": "create",
+  "use_case": "document",
+  "topic": "Optik",
+  "items": [
+    {
+      "id": "d1",
+      "use": [
+        "structure"
+      ],
+      "properties": {
+        "cm:title": [
+          "Lehrplan Physik 7-10"
+        ]
+      },
+      "fulltext": {
+        "format": "markdown",
+        "text": "## Optik\n### Lichtausbreitung\nSchatten, Lochkamera.\n### Reflexion\nSpiegel.\n## Mechanik\n### Kräfte\nKraftmesser."
+      }
+    },
+    {
+      "id": "t1",
+      "use": [
+        "structure"
+      ],
+      "properties": {
+        "cm:title": [
+          "Themenliste der Fachschaft"
+        ],
+        "cm:description": [
+          "Zusätzlich: Farben und Spektrum"
+        ]
+      }
+    },
+    {
+      "id": "c1",
+      "use": [
+        "content"
+      ],
+      "properties": {
+        "cm:title": [
+          "Arbeitsblatt Schattenwurf"
+        ]
+      }
+    },
+    {
+      "id": "c2",
+      "use": [
+        "content"
+      ],
+      "properties": {
+        "cm:title": [
+          "Prisma und Regenbogen"
+        ]
+      }
+    }
+  ],
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ]
+  }
+}

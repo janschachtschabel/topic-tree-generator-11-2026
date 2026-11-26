@@ -1,0 +1,294 @@
+{
+  "metadata": {
+    "title": "Optik",
+    "description": "Themenbaum zur Optik für die Sekundarstufe I: Ausbreitung des Lichts, Schatten, Spiegel und Linsen.",
+    "target_audience": "Lehrkräfte",
+    "created_at": "2026-11-26T09:00:00Z",
+    "author": "Themenbaum Generator",
+    "schema_version": "2.0",
+    "version": "v1",
+    "vocab_labels": {
+      "http://w3id.org/openeduhub/vocabs/discipline/460": "Physik",
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1": "Sekundarstufe I"
+    },
+    "generation": {
+      "mode": "create",
+      "use_case": "topic",
+      "topic": "Optik",
+      "frame": {
+        "discipline_uri": [
+          "http://w3id.org/openeduhub/vocabs/discipline/460"
+        ],
+        "educational_context_uri": [
+          "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+        ],
+        "intended_end_user_role_uri": []
+      },
+      "shape": {
+        "depth": 2,
+        "main_topics": {
+          "min": 2,
+          "max": 2
+        },
+        "children": {
+          "min": 2,
+          "max": 2
+        },
+        "extra_topics": []
+      },
+      "hints": {
+        "include": [],
+        "exclude": [],
+        "description_length": 60,
+        "language": "de"
+      },
+      "options": {
+        "improve": false,
+        "assign_contents": true,
+        "assign_only": false,
+        "multi_assign": true,
+        "min_confidence": 0.6,
+        "auto_metadata": false
+      },
+      "inputs": {
+        "folders": 0,
+        "items": {
+          "structure": 0,
+          "content": 2
+        }
+      },
+      "feedback": [],
+      "structure": {
+        "order": "Themenfelder",
+        "levels": [
+          "Themenfeld",
+          "Thema"
+        ],
+        "source": "detected"
+      },
+      "usage": {
+        "llm_calls": 3,
+        "failed_calls": 0,
+        "prompt_tokens": 9800,
+        "cached_tokens": 6400,
+        "completion_tokens": 2100,
+        "duration_ms": 14200
+      },
+      "generator_version": "2.1.0",
+      "model": "gpt-6-luna"
+    }
+  },
+  "collection": [
+    {
+      "key": "k-lichtausbreitung",
+      "title": "Lichtausbreitung",
+      "shorttitle": "Licht",
+      "status": "new",
+      "origin": {
+        "type": "topic"
+      },
+      "properties": {
+        "cm:title": [
+          "Lichtausbreitung"
+        ],
+        "ccm:collectionshorttitle": [
+          "Licht"
+        ],
+        "cm:description": [
+          "Wie sich Licht geradlinig ausbreitet, warum Schatten entstehen und wie eine Lochkamera ein Bild erzeugt."
+        ],
+        "cclom:general_keyword": [
+          "Licht",
+          "Schatten",
+          "Lochkamera"
+        ],
+        "ccm:taxonid": [
+          "http://w3id.org/openeduhub/vocabs/discipline/460"
+        ],
+        "ccm:educationalcontext": [
+          "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+        ]
+      },
+      "contents": [],
+      "subcollections": [
+        {
+          "key": "k-schatten",
+          "title": "Schatten",
+          "shorttitle": "Schatten",
+          "status": "new",
+          "origin": {
+            "type": "topic"
+          },
+          "properties": {
+            "cm:title": [
+              "Schatten"
+            ],
+            "ccm:collectionshorttitle": [
+              "Schatten"
+            ],
+            "cm:description": [
+              "Kern- und Halbschatten, Schattenlänge und Finsternisse als Folge der geradlinigen Lichtausbreitung."
+            ],
+            "cclom:general_keyword": [
+              "Kernschatten",
+              "Halbschatten"
+            ],
+            "ccm:taxonid": [
+              "http://w3id.org/openeduhub/vocabs/discipline/460"
+            ],
+            "ccm:educationalcontext": [
+              "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+            ]
+          },
+          "contents": [
+            {
+              "id": "c1",
+              "nodeId": "5c0e1f2a-1111-4000-8000-000000000001",
+              "confidence": 0.92
+            }
+          ],
+          "subcollections": []
+        },
+        {
+          "key": "k-lochkamera",
+          "title": "Lochkamera",
+          "shorttitle": "Lochkamera",
+          "status": "new",
+          "origin": {
+            "type": "topic"
+          },
+          "properties": {
+            "cm:title": [
+              "Lochkamera"
+            ],
+            "ccm:collectionshorttitle": [
+              "Lochkamera"
+            ],
+            "cm:description": [
+              "Bildentstehung durch eine kleine Öffnung, Bildgröße und Bildschärfe im Experiment."
+            ],
+            "cclom:general_keyword": [
+              "Lochkamera",
+              "Bildentstehung"
+            ],
+            "ccm:taxonid": [
+              "http://w3id.org/openeduhub/vocabs/discipline/460"
+            ],
+            "ccm:educationalcontext": [
+              "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+            ]
+          },
+          "contents": [],
+          "subcollections": []
+        }
+      ]
+    },
+    {
+      "key": "k-reflexion-und-brechung",
+      "title": "Reflexion und Brechung",
+      "shorttitle": "Reflexion",
+      "status": "new",
+      "origin": {
+        "type": "topic"
+      },
+      "properties": {
+        "cm:title": [
+          "Reflexion und Brechung"
+        ],
+        "ccm:collectionshorttitle": [
+          "Reflexion"
+        ],
+        "cm:description": [
+          "Wie Licht an Spiegeln zurückgeworfen und an Grenzflächen gebrochen wird, mit Spiegeln und Linsen im Alltag."
+        ],
+        "cclom:general_keyword": [
+          "Reflexion",
+          "Brechung"
+        ],
+        "ccm:taxonid": [
+          "http://w3id.org/openeduhub/vocabs/discipline/460"
+        ],
+        "ccm:educationalcontext": [
+          "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+        ]
+      },
+      "contents": [],
+      "subcollections": [
+        {
+          "key": "k-spiegel",
+          "title": "Spiegel",
+          "shorttitle": "Spiegel",
+          "status": "new",
+          "origin": {
+            "type": "topic"
+          },
+          "properties": {
+            "cm:title": [
+              "Spiegel"
+            ],
+            "ccm:collectionshorttitle": [
+              "Spiegel"
+            ],
+            "cm:description": [
+              "Reflexionsgesetz, ebene und gewölbte Spiegel, Spiegelbilder."
+            ],
+            "cclom:general_keyword": [
+              "Reflexionsgesetz",
+              "Hohlspiegel"
+            ],
+            "ccm:taxonid": [
+              "http://w3id.org/openeduhub/vocabs/discipline/460"
+            ],
+            "ccm:educationalcontext": [
+              "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+            ]
+          },
+          "contents": [],
+          "subcollections": []
+        },
+        {
+          "key": "k-linsen",
+          "title": "Linsen",
+          "shorttitle": "Linsen",
+          "status": "new",
+          "origin": {
+            "type": "topic"
+          },
+          "properties": {
+            "cm:title": [
+              "Linsen"
+            ],
+            "ccm:collectionshorttitle": [
+              "Linsen"
+            ],
+            "cm:description": [
+              "Sammel- und Zerstreuungslinsen, Brennpunkt und Bildentstehung, Lupe und Brille."
+            ],
+            "cclom:general_keyword": [
+              "Sammellinse",
+              "Brennpunkt"
+            ],
+            "ccm:taxonid": [
+              "http://w3id.org/openeduhub/vocabs/discipline/460"
+            ],
+            "ccm:educationalcontext": [
+              "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+            ]
+          },
+          "contents": [],
+          "subcollections": []
+        }
+      ]
+    }
+  ],
+  "unassigned": [
+    {
+      "id": "c2",
+      "nodeId": "71bd09e4-2222-4000-8000-000000000002",
+      "reason": "off_topic"
+    }
+  ],
+  "changes": [],
+  "questions": [],
+  "warnings": []
+}

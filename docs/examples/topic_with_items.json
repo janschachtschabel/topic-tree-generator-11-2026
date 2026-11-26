@@ -1,0 +1,44 @@
+{
+  "mode": "create",
+  "use_case": "topic",
+  "topic": "Optik",
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ]
+  },
+  "shape": {
+    "depth": 2,
+    "main_topics": {
+      "min": 2,
+      "max": 2
+    },
+    "children": {
+      "min": 2,
+      "max": 2
+    }
+  },
+  "items": [
+    {
+      "id": "c1",
+      "nodeId": "5c0e1f2a-1111-4000-8000-000000000001",
+      "properties": {
+        "cm:title": [
+          "Arbeitsblatt Schattenwurf"
+        ]
+      }
+    },
+    {
+      "id": "c2",
+      "nodeId": "71bd09e4-2222-4000-8000-000000000002",
+      "properties": {
+        "cm:title": [
+          "Rezept Apfelkuchen"
+        ]
+      }
+    }
+  ]
+}

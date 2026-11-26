@@ -218,6 +218,38 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
     viewer with duplicate highlighting, copy/save JSON.
 ---
 
+## Request and response structure (`POST /v2/topic-tree`)
+
+Every field of request and response, with type, default and meaning, is listed in
+[`docs/datenformat.md`](docs/datenformat.md) (generated from the models, German). Machine-readable:
+[`docs/schemas/`](docs/schemas/); call patterns, roles and the decision table for callers: [`docs/api.md`](docs/api.md).
+
+| Request field | Required | Purpose |
+|---|---|---|
+| `mode` | yes | `create` (new tree) or `refine` (change `current_tree`) |
+| `use_case` | yes | Backbone of the tree: `topic`, `document`, `folders` or `contents` |
+| `frame` | yes | Subject, educational context and target group as SkoHub URIs (may be empty lists) |
+| `topic` | for `topic` | Topic text; elsewhere it narrows the scope and names the tree |
+| `items` / `items_ref` | depends | Materials and documents; each with a role in `use` (`structure`, `content`, both, none), optional `fulltext` (text or `ref`) and `path` |
+| `folders`, `folders_use` | for `folders` | Existing folder tree (`title`, `items`, `subcollections`); `folders_use` is its role elsewhere |
+| `shape` | no | `depth`, `main_topics`/`children` ranges, `extra_topics` |
+| `hints` | no | `context`, `include`, `exclude`, `order`, `description_length`, `language` |
+| `options` | no | `assign_contents`, `multi_assign`, `min_confidence`, `improve`, `assign_only`, `auto_metadata` |
+| `current_tree`, `feedback` | for `refine` | The previous result and the change request (`text`, `changes`, `locked`) |
+
+| Response field | Content |
+|---|---|
+| `metadata` | Title, description, `version`, vocabulary labels and `generation` (all settings of the run; send it back for the next run) |
+| `collection[]` | The tree: per node `key` (stable across runs), `title`, `shorttitle`, `status`, `origin`, edu-sharing `properties`, `contents[]` (`id`, `nodeId`, `confidence`), `subcollections[]` |
+| `unassigned[]` | Items not sorted in, with `reason` (`off_topic`, `low_confidence`, `no_matching_node`, `excluded`) |
+| `changes[]` | Applied (refine) or proposed (`folders` + `improve`) changes |
+| `questions[]` | Questions about unclear feedback (the tree stays unchanged) |
+| `warnings[]` | Everything that failed or stood out, with a fixed `code` (never a silent gap) |
+
+A full request/response pair: [`docs/examples/topic_with_items.json`](docs/examples/topic_with_items.json) →
+[`docs/examples/responses/topic_with_items.json`](docs/examples/responses/topic_with_items.json). Errors are
+`{"error": {"code", "message", "trace_id"}}`; all codes are listed in `docs/api.md`.
+
 ## Use Cases & Examples (`POST /v2/topic-tree`)
 
 All examples below work directly against `http://localhost:8000/v2/topic-tree` (also saved under [`docs/examples/`](docs/examples/)). If `SERVICE_API_KEYS` is configured in standalone mode, add `-H "Authorization: Bearer <key>"`.
@@ -365,6 +397,24 @@ curl -s http://localhost:8000/v2/topic-tree \
   }'
 ```
 
+**Targeted changes (`feedback.changes`)** are applied without the LLM (except `split`), together with or instead of `feedback.text`:
+
+| `op` | Required fields | Effect |
+|---|---|---|
+| `add` | `title` (+ optional `parent`, key or title) | New node; without `parent` on the main level |
+| `remove` | `key` | Removes the branch; its items move to `unassigned` |
+| `rename` | `key`, `title` | New title; short title and description are rewritten |
+| `edit` | `key`, `properties` | Sets properties such as `cclom:general_keyword` |
+| `move` | `key` (+ `to`) | Moves under `to`; without `to` (or `null`) to the main level |
+| `merge` | `keys` (≥ 2), `title` | Merges nodes into the first key |
+| `split` | `key`, `hint` | Splits a node as described (LLM) |
+
+All seven in one request: `curl -s http://localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @docs/examples/refine_changes.json`.
+Locked keys (`feedback.locked`) and their branches never change; a change that would touch them is rejected with
+`CHANGE_REJECTED`. The response marks each node's `status` (`new`, `changed`, `moved`, `unchanged`), lists the
+applied `changes` and counts the version up (`v1` → `v2`). For the next run send back `collection`,
+`metadata.version` and `metadata.generation` as `current_tree` (see `docs/api.md`, "Änderungen an einem Baum einreichen").
+
 ### 6. `refine` + `assign_only` – Sort new items into a fixed tree
 
 Leaves the entire tree structure untouched and runs only content assignment for newly added items.
@@ -402,6 +452,10 @@ curl -s http://localhost:8000/v2/topic-tree \
 | **Folders + topic + loose items + curriculum** | `use_case: "folders"` + `folders` + `items` (folder items + loose `"content"` items + optional `"structure"` doc) + `options.improve: true` | Keeps folder assignments (`confidence: 1.0`), improves folder structure using `topic` and supplementary docs, and sorts remaining loose items into matching folders. |
 | **Topic, curriculum or items + folders** | `use_case: "topic"`, `"document"` or `"contents"` + `folders` + optional `folders_use` | The folder structure as a whole gets a role like `use` (default `["structure", "content"]`): its tree inspires the plan, and each file's folder path is a hint for the assignment. `[]` accepts it unused (`INPUT_IGNORED`). See `docs/api.md` for the caller decision table. |
 | **Refine + feedback + new items** | `mode: "refine"` + `current_tree` + `feedback` + new `items` | Applies structural changes (honoring `locked`), describes new/renamed nodes, and assigns the new `items` into the updated tree in the same call. |
+
+More combination requests in [`docs/examples/`](docs/examples/): `combo_topic_folders.json` (topic + folder structure
+with `folders_use` + an item with `path`), `combo_document_topic_contents.json` (curriculum + topic + topic list +
+contents) and `contents_with_curriculum.json` (contents clustered with a curriculum full text).
 
 Hybrid `topic` + `items` example:
 

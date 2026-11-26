@@ -1,7 +1,8 @@
 # Aufrufe von POST /v2/topic-tree
 
-Vollständige Beispiele liegen unter `docs/examples/`, das Format unter `docs/schemas/`, die Feldbedeutungen in der
-Spec „Themenbaum-Dienst: Use Cases und Datenformat“. Zum interaktiven Ausprobieren im Browser steht optional die
+Vollständige Beispiele liegen unter `docs/examples/` (Anfragen) und `docs/examples/responses/` (Antwort), jedes Feld
+von Anfrage und Antwort mit Typ, Standard und Bedeutung in [`datenformat.md`](datenformat.md), maschinenlesbar unter
+`docs/schemas/`. Zum interaktiven Ausprobieren im Browser steht optional die
 eingebaute Test-Oberfläche unter `/ui/` bereit (steuerbar über `UI_ENABLED=true|false`). Laufzeit synchron, typisch
 5 bis 45 Sekunden (große 3-Ebenen-Bäume ~25–45 s).
 
@@ -33,6 +34,11 @@ Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`) können per 
 | `contents.json` | contents | Gruppen aus den Inhalten (inkl. Duplikatbereinigung), Zuordnung mit Konfidenz |
 | `refine_feedback.json` | refine | Rückmeldung als Text; `locked` schützt Äste |
 | `assign_only.json` | refine | Nur neue Inhalte einsortieren, Struktur bleibt |
+| `refine_changes.json` | refine | Alle sieben gezielten Änderungen, dazu Freitext, gesperrter Ast und ein neuer Inhalt |
+| `topic_with_items.json` | topic | Thema und zwei Inhalte; die Antwort dazu: `responses/topic_with_items.json` |
+| `combo_topic_folders.json` | topic + Ordner | Ordnerstruktur regt an (`folders_use`), Ordnerpfade und `path` helfen beim Einsortieren |
+| `combo_document_topic_contents.json` | document + Thema + Inhalte | Lehrplan als Gerüst, `topic` grenzt ein, Themenliste ohne Text ergänzt, Inhalte werden einsortiert |
+| `contents_with_curriculum.json` | contents + Lehrplan | Gruppen aus Inhalten, der Lehrplan-Volltext fließt ein, ein Inhalt wird nur einsortiert |
 
 ## Use Cases kombinieren (z. B. Themenvorgabe + Inhalte)
 
@@ -136,6 +142,49 @@ Operationen (`add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`) als Ze
 gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema + Materialien) laufen dort über
 „Zusätzlich einbeziehen“.
 
+## Änderungen an einem Baum einreichen (`mode: refine`)
+
+1. Das letzte Ergebnis zurückgeben: `collection` → `current_tree.collection`, `metadata.version` →
+   `current_tree.version`, `metadata.generation` → `current_tree.generation` (siehe „Nächster Durchlauf“).
+2. Den Wunsch in `feedback` beschreiben, frei oder gezielt (beides geht in einer Anfrage):
+   - `feedback.text`: Freitext, z. B. „Farben als eigenes Hauptthema“. Das Sprachmodell setzt ihn in Änderungen um;
+     ist er unklar, kommen `questions` zurück und der Baum bleibt unverändert.
+   - `feedback.changes`: gezielte Änderungen, ohne Sprachmodell umgesetzt (außer `split`).
+   - `feedback.locked`: Schlüssel von Knoten, die mit ihrem Ast unverändert bleiben.
+3. Neue Inhalte zum Einsortieren als `items` mitschicken (eigene ids).
+
+| `op` | Pflichtfelder | Wirkung |
+|---|---|---|
+| `add` | `title` | Neuer Knoten unter `parent` (Schlüssel oder Titel); ohne `parent` auf der Hauptebene |
+| `remove` | `key` | Knoten samt Ast entfernen; seine Inhalte stehen danach in `unassigned` (`no_matching_node`), sofern sie nicht noch an einem anderen Knoten hängen |
+| `rename` | `key`, `title` | Titel ändern; Kurztitel und Beschreibung werden neu geschrieben |
+| `edit` | `key`, `properties` | Properties setzen, z. B. `cclom:general_keyword` oder `ccm:taxonid` |
+| `move` | `key` | Unter `to` verschieben; ohne `to` oder mit `null` auf die Hauptebene |
+| `merge` | `keys` (mind. 2), `title` | Knoten zusammenführen; der erste Schlüssel bleibt |
+| `split` | `key`, `hint` | Knoten nach dem Hinweis in mehrere aufteilen (Sprachmodell) |
+
+```json
+{
+  "mode": "refine",
+  "use_case": "topic",
+  "current_tree": {"version": "v1", "collection": [{"key": "k-optik", "title": "Optik", "subcollections": []}]},
+  "feedback": {
+    "changes": [
+      {"op": "add", "title": "Farben"},
+      {"op": "rename", "key": "k-optik", "title": "Geometrische Optik"}
+    ],
+    "text": "Beschreibungen alltagsnäher formulieren",
+    "locked": []
+  },
+  "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]}
+}
+```
+
+Alle sieben Operationen zusammen: `docs/examples/refine_changes.json`. In der Antwort steht jede umgesetzte Änderung
+in `changes` (mit `from`: `feedback_changes`, `feedback_text` oder `service`), jeder Knoten trägt `status` (`new`,
+`changed`, `moved`, `unchanged`, `suggested`), die Version zählt hoch (`v1` → `v2`, `generation.based_on`).
+Abgelehnte Änderungen melden `CHANGE_REJECTED`.
+
 ## Seitenmarken im Markdown (use_case document)
 
 Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) sowie `<!-- page_break -->`,
@@ -143,6 +192,17 @@ Erkannt werden `<!-- page: N -->`, `<!-- PageNumber="N" -->` (setzen die Seite) 
 
 ## Antwort lesen
 
+Beispiel: `docs/examples/responses/topic_with_items.json`; alle Felder: [`datenformat.md`](datenformat.md#antwort).
+
+- `metadata`: Titel, Beschreibung, Version (`v1`, `v2`, …), Bezeichnungen der Vokabular-URIs und `generation`
+  (alle Einstellungen des Laufs, für den nächsten Durchlauf zurückgeben).
+- `collection[]`: der Baum. Je Knoten `key` (stabil über refine-Läufe), `title`, `shorttitle`, `status`, `origin`
+  (Herkunft: `topic`, `document` mit Abschnitt und Seite, `folder`, `cluster`, `feedback`), `properties` (edu-sharing:
+  `cm:title`, `cm:description`, `cclom:general_keyword`, `ccm:taxonid`, …), `contents[]` (`id`, `nodeId`,
+  `confidence`) und `subcollections[]`.
+- `unassigned[]`: nicht einsortierte Inhalte mit Grund (`off_topic`, `low_confidence`, `no_matching_node`,
+  `excluded`).
+- `changes[]`: umgesetzte (refine) oder vorgeschlagene (`folders` mit `improve`) Änderungen.
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,

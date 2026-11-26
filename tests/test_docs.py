@@ -81,3 +81,20 @@ def test_api_doc_lists_every_warning_and_error_code_the_code_emits() -> None:
         codes |= set(re.findall(r'code="([A-Z][A-Z_]+)"', text))
         codes |= set(re.findall(r'ApiError\(\s*(?:\d+|status\.\w+),\s*"([A-Z][A-Z_]+)"', text))
     assert sorted(c for c in codes if f"`{c}`" not in doc) == []
+
+
+def test_response_examples_validate_against_the_v2_response_model() -> None:
+    from app.schemas.response_v2 import TopicTreeResponseV2
+
+    files = sorted((ROOT / "docs" / "examples" / "responses").glob("*.json"))
+    assert files
+    for path in files:
+        TopicTreeResponseV2.model_validate(json.loads(path.read_text(encoding="utf-8")))
+
+
+def test_examples_cover_combinations_and_every_change_op() -> None:
+    examples = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "docs" / "examples").glob("*.json")}
+    ops = {c["op"] for c in examples["refine_changes"]["feedback"]["changes"]}
+    assert ops == {"add", "remove", "rename", "edit", "move", "merge", "split"}
+    assert "folders_use" in examples["combo_topic_folders"]
+    assert (ROOT / "docs" / "datenformat.md").exists()
