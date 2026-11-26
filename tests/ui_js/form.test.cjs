@@ -63,3 +63,34 @@ test("a base without generation clears hidden extra-topic boxes left from an ear
   const payload = W.TopicTreePayload.build(W.TopicTreeForm.readForm(state));
   assert.ok(!payload.shape?.extra_topics?.length);
 });
+
+test("a refine keeps every educational context and role of the base frame", () => {
+  // Regression: the single selects kept only the first value; the service then wrote that onto every node.
+  const frame = { discipline_uri: ["d"], educational_context_uri: ["sek1", "sek2"], intended_end_user_role_uri: ["teacher", "learner"] };
+  const { W, state } = load();
+  W.TopicTreeForm.setBase(state, { version: "v2", collection: [], generation: { use_case: "topic", frame } }, (s, v) => { s.value = v; });
+  const read = W.TopicTreeForm.readForm(state).frame;
+  assert.deepEqual([...read.educational_context_uri], ["sek1", "sek2"]);
+  assert.deepEqual([...read.intended_end_user_role_uri], ["teacher", "learner"]);
+});
+
+test("an include term with a comma survives loading and reading", () => {
+  const { W, state } = load();
+  const generation = { use_case: "topic", frame: {}, hints: { include: ["Licht, Farbe", "Auge"], exclude: ["A"] } };
+  W.TopicTreeForm.setBase(state, { version: "v2", collection: [], generation }, (s, v) => { s.value = v; });
+  const hints = W.TopicTreeForm.readForm(state).hints;
+  assert.deepEqual([...hints.include], ["Licht, Farbe", "Auge"]);
+  assert.deepEqual([...hints.exclude], ["A"]);
+});
+
+test("a preset whose folder files carry more than a title needs the JSON view", () => {
+  // Regression: keywords, descriptions and roles of folder files were dropped when loading into the form.
+  const { W, state } = load();
+  state.task = "folders";
+  const payload = {
+    mode: "create", use_case: "folders", frame: {},
+    folders: [{ title: "Optik", items: ["f1"], subcollections: [] }],
+    items: [{ id: "f1", properties: { "cm:title": ["Spiegel"], "cclom:general_keyword": ["Reflexion"] } }],
+  };
+  assert.equal(W.TopicTreeForm.applyPreset(state, { task: "folders", payload }, (s, v) => { s.value = v; }), false);
+});

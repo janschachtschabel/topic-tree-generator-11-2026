@@ -6,6 +6,9 @@
   const t = (key, vars) => (window.TopicTreeI18n ? window.TopicTreeI18n.t(key, vars) : key);
   const P = () => window.TopicTreeParsers;
   const csv = (text) => String(text || "").split(",").map((s) => s.trim()).filter(Boolean);
+  // Terms are split at ";" when there is one (so a term may hold a comma), else at ",".
+  const terms = (text) => String(text || "").split(String(text || "").includes(";") ? ";" : ",").map((s) => s.trim()).filter(Boolean);
+  const joinTerms = (list) => list.join(list.some((x) => x.includes(",")) ? "; " : ", ");
   const intOrNull = (id) => {
     const raw = ($(id).value || "").trim();
     if (!raw) return null;
@@ -44,11 +47,19 @@
 
   const FOLDER_EXTRA_TASKS = ["topic", "document", "contents"];
 
+  /** A single select keeps the further values of a loaded frame as long as it still shows the first one. */
+  function selected(id, loaded) {
+    const value = $(id).value;
+    if (!value) return [];
+    return loaded && loaded[0] === value ? [...loaded] : [value];
+  }
+
   function readFrame(state) {
+    const loaded = state.loadedFrame || {};
     return {
       discipline_uri: [...state.disciplineUris],
-      educational_context_uri: $("f-context").value ? [$("f-context").value] : [],
-      intended_end_user_role_uri: $("f-role").value ? [$("f-role").value] : [],
+      educational_context_uri: selected("f-context", loaded.educational_context_uri),
+      intended_end_user_role_uri: selected("f-role", loaded.intended_end_user_role_uri),
     };
   }
 
@@ -72,8 +83,8 @@
         context: $("f-hint-context").value,
         order: $("f-hint-order").value,
         language: $("f-hint-lang").value,
-        include: csv($("f-hint-include").value),
-        exclude: csv($("f-hint-exclude").value),
+        include: terms($("f-hint-include").value),
+        exclude: terms($("f-hint-exclude").value),
         descriptionLength: $("f-desc-len").value,
       },
       options: {
@@ -128,6 +139,7 @@
     for (const [id, value] of Object.entries(VALUES)) $(id).value = value;
     for (const [id, value] of Object.entries(CHECKS)) $(id).checked = value;
     state.disciplineUris = [];
+    state.loadedFrame = {};
     state.lockedKeys = new Set();
     state.changes.setChanges([]);
     setBase(state, null);
@@ -175,7 +187,12 @@
     const slots = { docs: [], a: [], b: [], folderItems: [], aUse: null };
     for (const item of items) {
       const use = sameUse(item, task);
-      if (folderIds.has(item.id)) slots.folderItems.push(item);
+      if (folderIds.has(item.id)) {
+        // The outline holds only titles and the default role: anything more needs the JSON view.
+        const extra = Object.keys(item.properties || {}).some((k) => k !== "cm:title");
+        if (extra || item.fulltext || item.path || (item.use !== undefined && use !== "content")) return null;
+        slots.folderItems.push(item);
+      }
       else if (item.fulltext && (use === "structure" || use === "content+structure")) slots.docs.push(item);
       else if (use === "structure" || use === "content+structure") {
         if (slots.aUse && slots.aUse !== use) return null;
@@ -235,6 +252,10 @@
   function applySettings(state, payload, setSelectValue) {
     const frame = payload.frame || {};
     state.disciplineUris = [...(frame.discipline_uri || [])];
+    state.loadedFrame = {
+      educational_context_uri: [...(frame.educational_context_uri || [])],
+      intended_end_user_role_uri: [...(frame.intended_end_user_role_uri || [])],
+    };
     setSelectValue($("f-context"), (frame.educational_context_uri || [])[0] || "");
     setSelectValue($("f-role"), (frame.intended_end_user_role_uri || [])[0] || "");
     $("f-topic").value = payload.topic || "";
@@ -250,8 +271,8 @@
     $("f-hint-context").value = hints.context || "";
     $("f-hint-order").value = hints.order || "";
     $("f-hint-lang").value = hints.language || "de";
-    $("f-hint-include").value = (hints.include || []).join(", ");
-    $("f-hint-exclude").value = (hints.exclude || []).join(", ");
+    $("f-hint-include").value = joinTerms(hints.include || []);
+    $("f-hint-exclude").value = joinTerms(hints.exclude || []);
     $("f-desc-len").value = hints.description_length ?? 60;
     const o = payload.options || {};
     $("f-opt-auto-meta").checked = Boolean(o.auto_metadata);
