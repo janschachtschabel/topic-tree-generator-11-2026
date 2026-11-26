@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (planned 2.2.0)
+## 2.2.0 (2026-11-26)
 
 New
 - Sorting into an existing tree is its own use case: `refine` + `options.assign_only` now returns every node exactly as
@@ -24,6 +24,23 @@ New
 
 Fixed
 - Test UI: the base summary counted only nodes with a key (a repository tree showed "0 Knoten").
+
+Final audit 26.11.2026 (`docs/audits/2026-11-26-abschlussaudit.md`)
+- `describe` and refresh: a description or keywords set with `edit` win (a `describe` of the same node is rejected
+  with `CHANGE_REJECTED`); a renamed, merged or split node whose description is not rewritten is reported
+  (`DESCRIBE_FAILED`), a failed batch only once; two `describe` of one node keep both hints.
+- `assign_only`: a changed `frame` is reported (`INPUT_IGNORED`); labels and audience follow the tree's own frame.
+- A refine without structural change and without a sent `shape` gives no `SHAPE_*` warnings (describing a single
+  collection warned about the width of the main level).
+- Every LLM call has its own B3 span id; `fulltext.ref`/`items_ref` only on port 443; the internal port answers
+  other methods with JSON 405; document excerpts and node descriptions stay on one line in all prompts.
+- Helm: PodDisruptionBudget (on by default), `serviceMonitor.labels`/`prometheusRule.labels`, alerts
+  `TopicTreeDown` and `TopicTreeServerErrors`, LLM error alert ignores callers' 401/403 and needs a minimum of
+  calls, every alert has a description and runbook link, `promtool test rules` in CI, no service account token in
+  the pod, probe timeouts.
+- Docs in German and English: `README.md`/`README.de.md`, `docs/de/` and `docs/en/` (API guide, data format,
+  operations and handover guide with runbook, service profile, changes since 0.4); tests keep the pairs in sync and
+  every relative link resolvable.
 
 ## 2.1.0 (2026-11-26)
 
