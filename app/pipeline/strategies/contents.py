@@ -6,6 +6,7 @@ from app.domain.keys import assign_missing_keys
 from app.domain.quality import PLATFORM_STOPWORDS
 from app.domain.shape_rules import eliminate_generated_duplicates
 from app.domain.text import truncate_sentences
+from app.domain.tree import collapse_single_children
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.group_contents import group_contents
@@ -124,6 +125,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     if cut.width:
         rc.warn("SHAPE_WIDTH", "Die Gruppenbildung hatte zu viele Gruppen; gekürzt.", step="group_contents")
     eliminate_generated_duplicates(roots)
+    # Invented groups never keep a lone subgroup (system prompt rule); dissolving it is safe before assignment.
+    collapse_single_children(roots)
     assign_missing_keys(roots)
     return StrategyResult(
         roots=roots,

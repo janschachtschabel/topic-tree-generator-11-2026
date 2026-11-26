@@ -92,3 +92,29 @@ def test_nested_untitled_nodes_are_removed_too() -> None:
     roots = [Node(key="k-a", title="A", children=[Node(key="k-x", title=""), Node(key="k-y", title="Y")])]
     assert [n.key for n in drop_untitled(roots)] == ["k-x"]
     assert [c.key for c in roots[0].children] == ["k-y"]
+
+
+def test_collapse_single_children_lifts_the_only_child_into_its_parent() -> None:
+    from app.domain.tree import collapse_single_children
+    from app.schemas.response_v2 import ContentRef
+
+    grandchildren = [Node(key="g1", title="G1"), Node(key="g2", title="G2")]
+    only = Node(key="c", title="C", contents=[ContentRef(id="x", confidence=0.8)], children=grandchildren)
+    lone = Node(key="l", title="L", children=[Node(key="l1", title="L1")])
+    pair = Node(key="p", title="P", children=[Node(key="p1", title="P1"), Node(key="p2", title="P2")])
+    roots = [Node(key="a", title="A", children=[only]), lone, pair]
+
+    assert collapse_single_children(roots) == 2
+    assert [n.key for n in roots[0].children] == ["g1", "g2"]
+    assert [c.id for c in roots[0].contents] == ["x"]
+    assert roots[1].children == []
+    assert [n.key for n in roots[2].children] == ["p1", "p2"]
+
+
+def test_collapse_single_children_repeats_down_a_chain() -> None:
+    from app.domain.tree import collapse_single_children
+
+    chain = Node(key="a", title="A", children=[Node(key="b", title="B", children=[Node(key="c", title="C")])])
+    roots = [chain]
+    assert collapse_single_children(roots) == 2
+    assert roots[0].children == []

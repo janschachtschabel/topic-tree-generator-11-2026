@@ -236,3 +236,12 @@ def test_output_budget_covers_every_level_of_a_three_level_shape() -> None:
     request = req(items(3), shape=shape)
     groups = 6 + 6 * 4 + 6 * 4 * 4
     assert _max_tokens(request) == min(32000, 1000 + groups * (request.hints.description_length * 2 + 60))
+
+
+async def test_a_group_with_a_single_subgroup_loses_the_subdivision() -> None:
+    answer = grouping(2)
+    answer["groups"][0]["children"] = answer["groups"][0]["children"][:1]
+    result = await build(req(items(10)), rc(FakeLLM({"group_contents": answer})))
+    assert [n.title for n in result.roots] == ["Gruppe 0", "Gruppe 1"]
+    assert result.roots[0].children == []
+    assert len(result.roots[1].children) == 3
