@@ -4,6 +4,9 @@ name: ci
 on:
   push:
   pull_request:
+  # Re-run on a release tag by hand (Actions > ci > Run workflow > pick the tag), e.g. when a tag made with an
+  # integration token did not trigger a push run.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,6 +24,7 @@ jobs:
       - uses: azure/setup-helm@v5
         with:
           version: v3.16.3
+      - run: uv lock --check
       - run: uv sync --frozen
       - run: uv run ruff check
       - run: uv run ruff format --check
@@ -55,9 +59,23 @@ jobs:
             > /tmp/alerts.yaml
           docker run --rm --entrypoint promtool -v /tmp/alerts.yaml:/alerts.yaml:ro prom/prometheus:v2.55.1 check rules /alerts.yaml
 
+  # Known vulnerabilities in the locked runtime dependencies. Reports only: it does not block publishing.
+  # pip-audit runs via uvx and is not a project dependency (no new entry in pyproject.toml).
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv export --frozen --no-dev --no-hashes --no-emit-project > requirements.txt
+      - run: uvx pip-audit -r requirements.txt --no-deps --disable-pip --progress-spinner off
+
   publish:
     needs: test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -74,10 +92,25 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish each release version only once
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          if docker manifest inspect "ghcr.io/${GITHUB_REPOSITORY,,}:${VER}" > /dev/null 2>&1; then
+            echo "Image ${VER} is already published; a version is never overwritten." >&2
+            exit 1
+          fi
+          if helm show chart "oci://ghcr.io/${GITHUB_REPOSITORY,,}/charts/topic-tree" --version "${VER}" > /dev/null 2>&1; then
+            echo "Chart ${VER} is already published; a version is never overwritten." >&2
+            exit 1
+          fi
       - uses: docker/metadata-action@v5
         id: meta
         with:
           images: ghcr.io/${{ github.repository }}
+          # `latest` only from main: a release tag must not move it (default flavor would).
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
