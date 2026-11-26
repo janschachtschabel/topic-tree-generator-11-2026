@@ -139,6 +139,8 @@ test("change rows: each op with its required fields", () => {
     { op: "move", key: "a", to: "p" },
     { op: "merge", keys: ["a", "b"], title: "AB" },
     { op: "split", key: "a", hint: "nach Epochen" },
+    { op: "describe", key: "a", basis: " Mehr Alltagsbezug " },
+    { op: "describe", key: "b", basis: "", hint: "stale split hint" },
   ]);
   assert.deepEqual(errors, []);
   assert.deepEqual(changes, [
@@ -150,6 +152,8 @@ test("change rows: each op with its required fields", () => {
     { op: "move", key: "a", to: "p" },
     { op: "merge", keys: ["a", "b"], title: "AB" },
     { op: "split", key: "a", hint: "nach Epochen" },
+    { op: "describe", key: "a", hint: "Mehr Alltagsbezug" },
+    { op: "describe", key: "b" },
   ]);
 });
 
@@ -237,4 +241,29 @@ test("contents with only a folder structure asks for structure materials before 
   // Regression: the service answered 422 MISSING_INPUT; the form gave no hint beforehand.
   const outline = "Optik\n  - Spiegel\n  - Linse";
   throwsKey(() => B.build(form({ task: "contents", extras: { folders: true }, folderOutline: outline })), "err.materialsRequired");
+});
+
+test("assign task: refine with assign_only, no feedback, no shape, materials required", () => {
+  const base = { collection: [{ nodeId: "es-1", title: "Optik", subcollections: [] }] };
+  const p = B.build(form({
+    task: "assign",
+    currentTree: base,
+    extras: { contentMaterials: true },
+    materialsB: "Lupe bauen",
+    shape: { depth: 2 },
+    options: { autoMetadata: true, assignContents: false, assignOnly: false, multiAssign: true, minConfidence: 0.6 },
+    feedback: { text: "nicht senden", rows: [] },
+  }));
+  assert.equal(p.mode, "refine");
+  assert.equal(p.use_case, "topic");
+  assert.equal(p.current_tree, base);
+  assert.equal(p.options.assign_only, true);
+  assert.equal(p.options.assign_contents, true);
+  assert.equal(p.options.auto_metadata, false);
+  assert.equal(p.feedback, undefined);
+  assert.equal(p.shape, undefined);
+  assert.equal(p.topic, undefined);
+  assert.deepEqual(p.items.map((i) => [i.properties["cm:title"][0], i.use]), [["Lupe bauen", ["content"]]]);
+  throwsKey(() => B.build(form({ task: "assign", currentTree: base, extras: { contentMaterials: true } })), "err.assignItemsRequired");
+  throwsKey(() => B.build(form({ task: "assign", extras: { contentMaterials: true }, materialsB: "X" })), "err.currentTreeRequired");
 });

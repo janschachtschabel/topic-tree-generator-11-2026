@@ -54,6 +54,7 @@ class ChangeOp(StrEnum):
     move = "move"
     merge = "merge"
     split = "split"
+    describe = "describe"
 
 
 class ChangeSource(StrEnum):

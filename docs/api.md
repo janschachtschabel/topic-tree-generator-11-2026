@@ -33,8 +33,9 @@ Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`) können per 
 | `folders.json` | folders | Ordner bleiben; mit `options.improve` Vorschläge, die als `changes` zurückkommen |
 | `contents.json` | contents | Gruppen aus den Inhalten (inkl. Duplikatbereinigung), Zuordnung mit Konfidenz |
 | `refine_feedback.json` | refine | Rückmeldung als Text; `locked` schützt Äste |
-| `assign_only.json` | refine | Nur neue Inhalte einsortieren, Struktur bleibt |
-| `refine_changes.json` | refine | Alle sieben gezielten Änderungen, dazu Freitext, gesperrter Ast und ein neuer Inhalt |
+| `assign_only.json` | refine + `assign_only` | Inhalte in einen bestehenden Baum aus dem Repository einsortieren (`nodeId`, ohne Schlüssel); Knoten bleiben unverändert |
+| `describe.json` | refine + `describe` | Beschreibung eines Knotens mit Baum-Kontext und Vorgabe neu schreiben |
+| `refine_changes.json` | refine | Sieben gezielte Änderungen (alle außer `describe`), dazu Freitext, gesperrter Ast und ein neuer Inhalt |
 | `topic_with_items.json` | topic | Thema und zwei Inhalte; die Antwort dazu: `responses/topic_with_items.json` |
 | `combo_topic_folders.json` | topic + Ordner | Ordnerstruktur regt an (`folders_use`), Ordnerpfade und `path` helfen beim Einsortieren |
 | `combo_document_topic_contents.json` | document + Thema + Inhalte | Lehrplan als Gerüst, `topic` grenzt ein, Themenliste ohne Text ergänzt, Inhalte werden einsortiert |
@@ -57,7 +58,9 @@ an. Den `use_case` wählt der Aufrufer in dieser Reihenfolge; die erste passende
 | 2 | Gliederungsdokument mit Text (z. B. Lehrplan) | `document` | `topic` grenzt auf einen Ausschnitt ein; Ordner und Dokumente ohne Text fließen ergänzend ein |
 | 3 | Nur Inhalte (ohne Thema als Gerüst) | `contents` | `topic` grenzt ein, fachfremde Inhalte kommen nach `unassigned` |
 | 4 | Thema | `topic` | Gliederungsdokumente und Ordner regen nur an (bis 50 Einträge, 5 Volltext-Auszüge à 1.500 Zeichen) |
+| – | Ein bestehender Baum soll nur befüllt werden (Struktur bleibt) | `mode: refine` + `current_tree` | `options.assign_only: true`, Inhalte in `items`; `use_case: topic` genügt |
 | – | Ein bestehender Baum soll geändert werden | `mode: refine` + `current_tree` | Änderungswunsch als `feedback`; neue Inhalte in `items` |
+| – | Eine Sammlung soll (neu) beschrieben werden | `mode: refine` + `current_tree` | `feedback.changes: [{"op": "describe", "key": …, "hint": …}]`; eine einzelne Sammlung als Baum mit einem Knoten |
 
 Rollen übertragen: Gliederungsdokument → `"use": ["structure"]`, Inhalt → `["content"]`, beides →
 `["structure", "content"]`, keins → `[]`. Für die Ordnerstruktur dasselbe in `folders_use` (Standard: beides).
@@ -137,8 +140,8 @@ frühere Änderung derselben Anfrage schon entfernt oder aufgeteilt hat. Scheite
 `SPLIT_FAILED` und der Rest der Rückmeldung wird trotzdem umgesetzt. Schlüssel entfernter Knoten werden in derselben
 Anfrage nicht neu vergeben.
 
-In der Test-UI (`/ui/`) heißt das „Baum ändern“: Basis aus einem Beispiel, dem letzten Ergebnis oder JSON, alle sieben
-Operationen (`add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`) als Zeilen mit Knotenauswahl, dazu Freitext,
+In der Test-UI (`/ui/`) heißt das „Baum ändern“: Basis aus einem Beispiel, dem letzten Ergebnis oder JSON, alle acht
+Operationen (`add`, `remove`, `rename`, `edit`, `describe`, `move`, `merge`, `split`) als Zeilen mit Knotenauswahl, dazu Freitext,
 gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema + Materialien) laufen dort über
 „Zusätzlich einbeziehen“.
 
@@ -162,6 +165,7 @@ gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema +
 | `move` | `key` | Unter `to` verschieben; ohne `to` oder mit `null` auf die Hauptebene |
 | `merge` | `keys` (mind. 2), `title` | Knoten zusammenführen; der erste Schlüssel bleibt |
 | `split` | `key`, `hint` | Knoten nach dem Hinweis in mehrere aufteilen (Sprachmodell) |
+| `describe` | `key` | Beschreibung und Schlagworte mit Baum-Kontext neu schreiben; `hint` (optional, bis 1.000 Zeichen) ist Grundlage oder Wunsch (Sprachmodell) |
 
 ```json
 {
@@ -180,10 +184,41 @@ gesperrte Äste und neue Materialien. Kombinationen der Use Cases (z. B. Thema +
 }
 ```
 
-Alle sieben Operationen zusammen: `docs/examples/refine_changes.json`. In der Antwort steht jede umgesetzte Änderung
+Sieben Operationen zusammen: `docs/examples/refine_changes.json`; `describe` allein: `docs/examples/describe.json`. In der Antwort steht jede umgesetzte Änderung
 in `changes` (mit `from`: `feedback_changes`, `feedback_text` oder `service`), jeder Knoten trägt `status` (`new`,
 `changed`, `moved`, `unchanged`, `suggested`), die Version zählt hoch (`v1` → `v2`, `metadata.based_on` nennt die Vorversion).
 Abgelehnte Änderungen melden `CHANGE_REJECTED`.
+
+## Inhalte in einen bestehenden Baum einsortieren (`options.assign_only`)
+
+Für einen Baum, der schon existiert (z. B. Sammlungen aus edu-sharing), und neue Inhalte, die nur hineinsollen:
+
+- `mode: refine`, den Baum als `current_tree.collection`, die Inhalte als `items` (Rolle `["content"]`),
+  `options.assign_only: true`. `use_case` spielt keine Rolle (`topic` genügt), `generation` und `version` sind optional.
+- Je Knoten reichen `title` und `subcollections`; fehlende `key` vergibt der Dienst. Eine `nodeId` am Knoten kommt
+  unverändert zurück, so lässt sich jede Zuordnung der Sammlung zuordnen. (Bei späteren Strukturänderungen gilt: `merge`
+behält die `nodeId` des ersten Knotens, Teile aus `split` und neue Knoten haben keine; welche Sammlungen wegfallen,
+zeigen die Schlüssel in `changes`.)
+- Unverändert bleiben Struktur, Titel und `properties` jedes Knotens (auch bei geändertem `frame`; der Rahmen hilft
+  nur bei der Zuordnung). Es entstehen keine Beschreibungen und keine Formprüfungen. Nur `shorttitle` folgt der
+  Antwortregel (höchstens 20 Zeichen, unter Geschwistern eindeutig); `properties` behalten den gesendeten Kurztitel.
+- `metadata.generation.frame` behält den Rahmen, mit dem der Baum entstand (er wurde ja nicht übernommen).
+- `feedback` wird nicht umgesetzt (`FEEDBACK_IGNORED`), ein gesendetes `options.auto_metadata` nicht ausgeführt
+  (`INPUT_IGNORED`). Nicht passende Inhalte stehen in `unassigned`.
+
+In der Test-UI ist das die Aufgabe „Inhalte einsortieren“.
+
+## Knoten beschreiben (`describe`, Nachfolger von `/generate-collection-description`)
+
+`{"op": "describe", "key": "k-linsen", "hint": "Für Klasse 8, mit Alltagsbeispielen"}` in `feedback.changes`
+schreibt Beschreibung und Schlagworte des Knotens neu. Anders als der alte Endpunkt kennt das Sprachmodell Pfad,
+Geschwister und den ganzen Baum und grenzt den Text davon ab; die Länge folgt `hints.description_length` (Wörter).
+`hint` nimmt den Freitext auf, den der alte Endpunkt als `text_context` bekam (einzeilig, bis 1.000 Zeichen).
+Gesperrte Knoten und Knoten, die eine spätere Änderung derselben Anfrage entfernt, einschmilzt oder aufteilt, werden
+abgelehnt (`CHANGE_REJECTED`); lässt das Sprachmodell den Knoten aus, kommt `DESCRIBE_FAILED`. Wie bei jedem `refine`
+mit Rückmeldung werden Knoten ganz ohne Beschreibung im selben Lauf mitbeschrieben (bei einem großen Baum ohne Texte
+ein Aufruf je 10 Knoten), der `frame` an Knoten ohne eigene Werte gesetzt und Schlagworte bereinigt. Der alte Endpunkt bleibt für
+bestehende Aufrufer unverändert.
 
 ## Seitenmarken im Markdown (use_case document)
 

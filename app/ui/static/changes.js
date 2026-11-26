@@ -3,7 +3,7 @@
   "use strict";
 
   const t = (key, vars) => (window.TopicTreeI18n ? window.TopicTreeI18n.t(key, vars) : key);
-  const OPS = ["rename", "move", "add", "edit", "merge", "split", "remove"];
+  const OPS = ["rename", "move", "add", "edit", "describe", "merge", "split", "remove"];
   // Fields shown per op, in order. "key2" is the second node of a merge.
   const FIELDS = {
     add: ["parent", "title"],
@@ -13,7 +13,9 @@
     move: ["key", "to"],
     merge: ["key", "key2", "title"],
     split: ["key", "hint"],
+    describe: ["key", "basis"],
   };
+  const LONG_TEXT = new Set(["description", "basis"]);
   const TOP_LEVEL = new Set(["parent", "to"]);
 
   function el(tag, className, text) {
@@ -30,6 +32,9 @@
     row.to = change.to || "";
     const { "cm:description": description = [""], ...otherProps } = change.properties || {};
     row.description = description[0] || "";
+    // describe keeps its optional hint apart from a split hint, so switching the op does not carry it over.
+    row.basis = change.op === "describe" ? change.hint || "" : "";
+    if (change.op === "describe") row.hint = "";
     row.otherProps = otherProps;
     if (change.op === "merge") [row.key = "", row.key2 = "", ...row.moreKeys] = change.keys || [];
     return row;
@@ -58,8 +63,8 @@
   }
 
   function textInput(row, field) {
-    const input = el(field === "description" ? "textarea" : "input", "change-text");
-    if (field !== "description") input.type = "text";
+    const input = el(LONG_TEXT.has(field) ? "textarea" : "input", "change-text");
+    if (!LONG_TEXT.has(field)) input.type = "text";
     else input.rows = 2;
     input.value = row[field] || "";
     input.placeholder = t(`change.ph.${field}`);

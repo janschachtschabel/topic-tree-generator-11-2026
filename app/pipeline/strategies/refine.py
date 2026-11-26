@@ -13,11 +13,17 @@ from app.pipeline.steps.describe_nodes import describe_nodes
 from app.pipeline.steps.expand_nodes import expand_nodes, shallow_leaves
 from app.pipeline.steps.interpret_feedback import interpret_feedback
 from app.pipeline.steps.split_node import split_node
+from app.pipeline.strategies.refine_describe import (
+    describe_hints,
+    described_before,
+    drop_vanished_describes,
+    warn_not_described,
+)
 from app.schemas.common import ChangeOp, ChangeSource, UnassignedReason, UseCase
 from app.schemas.request_v2 import Change, Frame, TopicTreeRequestV2
 from app.schemas.response_v2 import ChangeRecord, Question, StructureInfo, Unassigned
 
-_REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge}
+_REFRESH_OPS = {ChangeOp.add, ChangeOp.rename, ChangeOp.merge, ChangeOp.describe}
 
 
 def _structure(req: TopicTreeRequestV2) -> StructureInfo | None:
@@ -89,7 +95,8 @@ class _Refiner:
         protected = protected_keys(self.roots, self.locked)
         changes, questions = await interpret_feedback(self.roots, text, protected, self.rc, self.result.changes)
         self.result.questions.extend(Question(text=q) for q in questions)
-        touched = {k for record in self.result.changes for k in _keys_of(record)}
+        # A describe only rewrites text, so free-text changes to the same node do not contradict it.
+        touched = {k for r in self.result.changes if r.op != ChangeOp.describe for k in _keys_of(r)}
         allowed = []
         for change in changes:
             if _keys_of(change) & touched:
@@ -172,7 +179,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     roots = from_tree_in(current.collection)
     assign_missing_keys(roots)
     locked = set(req.feedback.locked) if req.feedback else set()
-    apply_changed_frame(roots, current.generation.frame if current.generation else None, req.frame, locked)
+    if not req.options.assign_only:  # only sorting in: the caller's node properties stay as they are
+        apply_changed_frame(roots, current.generation.frame if current.generation else None, req.frame, locked)
     result = StrategyResult(
         roots=roots,
         title=current.title or req.topic or (roots[0].title if len(roots) == 1 else "Themenbaum"),
@@ -197,11 +205,21 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
         await refiner.apply(feedback.changes, ChangeSource.feedback_changes)
     if feedback.text:
         await refiner.apply_text(feedback.text)
+    drop_vanished_describes(roots, result, rc)
     protected = protected_keys(roots, set(feedback.locked))
     targets = [
         node
         for node, _, _ in walk(roots)
         if node.key not in protected and (node.key in refiner.refresh or not node.description)
     ]
-    await describe_nodes(targets, roots, rc, context=rc.context, description_length=req.hints.description_length)
+    before = described_before(roots, result)
+    await describe_nodes(
+        targets,
+        roots,
+        rc,
+        context=rc.context,
+        description_length=req.hints.description_length,
+        extra=describe_hints(feedback.changes, result.changes),
+    )
+    warn_not_described(roots, before, rc)
     return result

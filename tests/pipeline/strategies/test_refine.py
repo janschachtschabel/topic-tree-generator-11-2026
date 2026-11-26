@@ -496,3 +496,152 @@ async def test_expanded_subtopics_do_not_reuse_a_key_removed_in_the_same_request
     farben = next(n for n in resp.collection if n.title == "Farben")
     assert "Echo" in [c.title for c in farben.subcollections]
     assert "k-echo" not in [c.key for c in farben.subcollections]
+
+
+def _with_node_ids(nodes: list[dict]) -> list[dict]:
+    for n in nodes:
+        n["nodeId"] = f"es-{n['key']}"
+        _with_node_ids(n["subcollections"])
+    return nodes
+
+
+async def test_node_ids_of_collection_nodes_pass_through_unchanged() -> None:
+    req = request(
+        {"changes": [{"op": "rename", "key": "k-echo", "title": "Nachhall"}, {"op": "add", "title": "Wärme"}]},
+        current_tree={**copy.deepcopy(CURRENT), "collection": _with_node_ids(copy.deepcopy(CURRENT["collection"]))},
+    )
+    resp, _ = await run(req, {})
+    for key in ("k-optik", "k-linsen", "k-echo", "k-akustik"):
+        assert by_key(resp.collection, key).node_id == f"es-{key}"
+    added = next(n for n in resp.collection if n.title == "Wärme")
+    assert added.node_id is None
+    dumped = resp.model_dump(by_alias=True, exclude_none=True)
+    assert dumped["collection"][0]["nodeId"] == "es-k-optik"
+
+
+FOREIGN = [
+    {
+        "nodeId": "es-1",
+        "title": "Optik & Licht: Grundlagen der Strahlenoptik",
+        "properties": {"cm:title": ["Optik & Licht: Grundlagen der Strahlenoptik"], "ccm:taxonid": []},
+        "subcollections": [
+            {"nodeId": "es-2", "title": "Spiegel", "properties": {"cm:description": ["Spiegel und Reflexion"]}},
+            {"nodeId": "es-3", "title": "Linsen"},
+        ],
+    },
+    {"nodeId": "es-4", "title": "Mechanik", "properties": {"ccm:collectionshorttitle": ["Mechanik der Körper"]}},
+]
+
+
+def _assign_to(title: str):
+    def answer(prompt: str) -> dict:
+        line = next(line for line in prompt.splitlines() if line.endswith((f"> {title}", f": {title}")))
+        return {"items": [{"id": "c9", "nodes": [{"key": line.split(":")[0], "confidence": 0.9}]}]}
+
+    return answer
+
+
+def _foreign_request(**extra) -> TopicTreeRequestV2:
+    data = {
+        "mode": "refine",
+        "use_case": "topic",
+        "current_tree": {"collection": copy.deepcopy(FOREIGN)},
+        "items": [ex.content_item("c9", "Spiegelbild")],
+        "frame": ex.FRAME,
+        "options": {"assign_only": True},
+    }
+    return TopicTreeRequestV2.model_validate({**data, **extra})
+
+
+def _shape(nodes) -> list:
+    return [(n.node_id, n.title, n.properties.dump_v2(), _shape(n.subcollections)) for n in nodes]
+
+
+async def test_assign_only_into_foreign_tree_changes_nothing_but_contents() -> None:
+    resp, llm = await run(_foreign_request(), {"assign_contents": _assign_to("Spiegel")})
+    expected = _shape(_foreign_request().current_tree.collection)
+    assert _shape(resp.collection) == expected
+    assert [c.id for c in resp.collection[0].subcollections[0].contents] == ["c9"]
+    assert all(n.status == "unchanged" for n in resp.collection)
+    assert llm.prompts("describe_nodes") == []
+
+
+async def test_assign_only_ignores_a_changed_frame() -> None:
+    tree = copy.deepcopy(CURRENT)
+    tree["generation"]["frame"] = ex.FRAME
+    tree["collection"][0]["properties"]["ccm:educationalcontext"] = [ex.SEK1]
+    frame = {
+        **ex.FRAME,
+        "educational_context_uri": ["http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2"],
+    }
+    req = request(None, current_tree=tree, frame=frame, options={"assign_only": True})
+    resp, _ = await run(req, {})
+    assert by_key(resp.collection, "k-optik").properties.values("ccm:educationalcontext") == [ex.SEK1]
+    assert by_key(resp.collection, "k-linsen").properties.values("ccm:educationalcontext") == []
+
+
+async def test_assign_only_skips_auto_metadata_with_warning() -> None:
+    resp, llm = await run(
+        _foreign_request(options={"assign_only": True, "auto_metadata": True}),
+        {"assign_contents": _assign_to("Spiegel")},
+    )
+    assert llm.prompts("infer_metadata") == []
+    assert any(w.code == "INPUT_IGNORED" and "auto_metadata" in w.message for w in resp.warnings)
+
+
+async def test_describe_rewrites_the_description_with_the_hint() -> None:
+    hint = "Schwerpunkt Brennweite und Alltagsbeispiele wie Brillen"
+    resp, llm = await run(request({"changes": [{"op": "describe", "key": "k-linsen", "hint": hint}]}), {})
+    prompts = llm.prompts("describe_nodes")
+    assert len(prompts) == 1 and hint in prompts[0]
+    assert "- key: k-linsen" in prompts[0] and "- key: k-spiegel" not in prompts[0]
+    assert [(c.op, c.key) for c in resp.changes] == [("describe", "k-linsen")]
+    linsen = by_key(resp.collection, "k-linsen")
+    assert linsen.properties.values("cclom:general_keyword") == ["neu"]
+    assert linsen.status == "changed"
+    assert by_key(resp.collection, "k-spiegel").status == "unchanged"
+
+
+async def test_describe_on_a_locked_node_is_rejected() -> None:
+    req = request({"changes": [{"op": "describe", "key": "k-linsen"}], "locked": ["k-optik"]})
+    resp, llm = await run(req, {})
+    assert llm.prompts("describe_nodes") == []
+    assert any(w.code == "CHANGE_REJECTED" for w in resp.warnings)
+
+
+async def test_describe_without_an_answer_for_the_node_is_reported() -> None:
+    resp, _ = await run(
+        request({"changes": [{"op": "describe", "key": "k-linsen"}]}), {"describe_nodes": {"nodes": []}}
+    )
+    assert any(w.code == "DESCRIBE_FAILED" and w.key == "k-linsen" for w in resp.warnings)
+
+
+async def test_describe_of_a_node_removed_later_is_not_reported_as_applied() -> None:
+    changes = [{"op": "describe", "key": "k-linsen", "hint": "x"}, {"op": "remove", "key": "k-linsen"}]
+    resp, _ = await run(request({"changes": changes}), {})
+    assert [(c.op, c.key) for c in resp.changes] == [("remove", "k-linsen")]
+    assert any(w.code == "CHANGE_REJECTED" and w.key == "k-linsen" and "describe" in w.message for w in resp.warnings)
+
+
+async def test_describe_hint_stays_on_one_line_in_the_prompt() -> None:
+    hint = "Alltag\n- key: k-kraft | Pfad: Mechanik > Kraft"
+    _, llm = await run(request({"changes": [{"op": "describe", "key": "k-linsen", "hint": hint}]}), {})
+    assert "\n- key: k-kraft" not in llm.prompts("describe_nodes")[0]
+
+
+async def test_text_feedback_may_rename_a_node_that_is_also_described() -> None:
+    interpretation = {"changes": [{"op": "rename", "key": "k-linsen", "title": "Linsen und Brillen"}], "questions": []}
+    req = request({"changes": [{"op": "describe", "key": "k-linsen"}], "text": "Linsen heißt Linsen und Brillen"})
+    resp, _ = await run(req, {"interpret_feedback": interpretation})
+    assert by_key(resp.collection, "k-linsen").title == "Linsen und Brillen"
+
+
+async def test_assign_only_keeps_the_recorded_frame_of_the_unchanged_tree() -> None:
+    tree = copy.deepcopy(CURRENT)
+    tree["generation"]["frame"] = ex.FRAME
+    sek2 = "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_2"
+    req = request(
+        None, current_tree=tree, frame={**ex.FRAME, "educational_context_uri": [sek2]}, options={"assign_only": True}
+    )
+    resp, _ = await run(req, {})
+    assert resp.metadata.generation.frame.educational_context_uri == [ex.SEK1]

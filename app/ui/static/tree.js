@@ -83,6 +83,7 @@
 
   function nodeActions(node, ctx) {
     const actions = [];
+    if (!ctx.onToggleLock) return actions; // read-only view (e.g. the base of "Inhalte einsortieren")
     const isLocked = ctx.lockedSet.has(node.key);
     const lockBtn = el("button", "lock-btn", isLocked ? t("tree.locked") : t("tree.lock"));
     lockBtn.type = "button";

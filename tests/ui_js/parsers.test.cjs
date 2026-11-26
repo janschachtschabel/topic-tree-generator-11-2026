@@ -94,3 +94,8 @@ test("tree node options in pre-order with depth", () => {
     { key: "b", title: "B", depth: 1 },
   ]);
 });
+
+test("countNodes counts nodes without service keys too", () => {
+  assert.equal(P.countNodes([{ title: "A", subcollections: [{ title: "B" }, { key: "k", title: "C" }] }, { title: "D" }]), 4);
+  assert.equal(P.countNodes(undefined), 0);
+});

@@ -192,3 +192,16 @@ def test_a_key_removed_in_the_same_batch_is_not_given_to_a_new_node() -> None:
     new_key = result.applied[1].key
     assert new_key != "k-akustik"
     assert find(roots, new_key).title == "Akustik"
+
+
+def test_describe_is_recorded_and_changes_no_structure() -> None:
+    roots, result = run([ch(op="describe", key="k-linsen", hint="Sammellinsen im Alltag")])
+    assert [(r.op, r.key) for r in result.applied] == [("describe", "k-linsen")]
+    assert [n.key for n in roots] == ["k-optik", "k-mechanik", "k-akustik"]
+    assert not result.rejected
+
+
+def test_describe_on_locked_or_unknown_node_is_rejected() -> None:
+    _, result = run([ch(op="describe", key="k-linsen"), ch(op="describe", key="k-nix")], locked={"k-optik"})
+    assert result.applied == []
+    assert [w.code for w in result.rejected] == ["CHANGE_REJECTED", "CHANGE_REJECTED"]

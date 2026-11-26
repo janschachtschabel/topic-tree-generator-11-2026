@@ -4,7 +4,7 @@
       "properties": {
         "op": {
           "$ref": "#/$defs/ChangeOp",
-          "description": "Art der Änderung: add, remove, rename, edit, move, merge oder split"
+          "description": "Art der Änderung: add, remove, rename, edit, move, merge, split oder describe (neu beschreiben)"
         },
         "key": {
           "anyOf": [
@@ -16,7 +16,7 @@
             }
           ],
           "default": null,
-          "description": "Schlüssel des betroffenen Knotens (remove, rename, edit, move, split)",
+          "description": "Schlüssel des betroffenen Knotens (remove, rename, edit, move, split, describe)",
           "title": "Key"
         },
         "keys": {
@@ -99,7 +99,7 @@
             }
           ],
           "default": null,
-          "description": "Wie der Knoten aufgeteilt werden soll (split)",
+          "description": "split: wie der Knoten aufgeteilt werden soll; describe: Grundlage oder Wunsch für die Beschreibung",
           "title": "Hint"
         }
       },
@@ -117,7 +117,8 @@
         "edit",
         "move",
         "merge",
-        "split"
+        "split",
+        "describe"
       ],
       "title": "ChangeOp",
       "type": "string"
@@ -765,7 +766,7 @@
         },
         "assign_only": {
           "default": false,
-          "description": "refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf",
+          "description": "refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf",
           "title": "Assign Only",
           "type": "boolean"
         },
@@ -850,6 +851,20 @@
           "default": null,
           "description": "Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen",
           "title": "Key"
+        },
+        "nodeId": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Knoten-ID der Sammlung im Repository, unverändert durchgereicht",
+          "title": "Nodeid"
         },
         "title": {
           "description": "Titel des Knotens",

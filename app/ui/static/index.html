@@ -29,6 +29,7 @@
           <button type="button" class="task-btn" data-task="document" aria-pressed="false" data-i18n="task.document">Dokument</button>
           <button type="button" class="task-btn" data-task="folders" aria-pressed="false" data-i18n="task.folders">Ordner</button>
           <button type="button" class="task-btn" data-task="contents" aria-pressed="false" data-i18n="task.contents">Inhalte gruppieren</button>
+          <button type="button" class="task-btn" data-task="assign" aria-pressed="false" data-i18n="task.assign">Inhalte einsortieren</button>
           <button type="button" class="task-btn" data-task="refine" aria-pressed="false" data-i18n="task.refine">Baum ändern</button>
         </nav>
 
@@ -70,7 +71,7 @@
           <label class="check" data-tasks="folders"><input id="f-opt-improve" type="checkbox"> <span data-i18n="opt.improve">Ordnerstruktur verbessern</span></label>
         </section>
 
-        <section id="sec-refine" class="task-section" data-tasks="refine">
+        <section id="sec-refine" class="task-section" data-tasks="refine assign">
           <div class="field">
             <span class="field-label" data-i18n="field.base">Basis (Ist-Stand)</span>
             <p id="base-summary" class="base-summary" data-i18n="base.none">Noch keine Basis. Beispiel laden, ein Ergebnis übernehmen oder JSON einfügen.</p>
@@ -82,22 +83,22 @@
               <textarea id="f-current-tree" aria-labelledby="lbl-current-tree" class="code-area" rows="6" spellcheck="false" placeholder="{&quot;collection&quot;: [...], &quot;generation&quot;: {...}}"></textarea>
             </details>
           </div>
-          <div class="field">
+          <div class="field" data-tasks="refine">
             <span class="field-label" data-i18n="field.changes">Gezielte Änderungen</span>
             <div id="changes-editor" class="changes-editor"></div>
             <button type="button" id="btn-add-change" class="btn-outline" data-i18n="btn.addChange">+ Änderung hinzufügen</button>
             <p class="help-text" data-i18n="help.changes">Wirken vor der Freitext-Rückmeldung. Knoten lassen sich auch im Baum rechts über „Ändern …“ wählen.</p>
           </div>
-          <div class="field">
+          <div class="field" data-tasks="refine">
             <label for="f-fb-text" data-i18n="field.fbText">Rückmeldung als Freitext (optional)</label>
             <textarea id="f-fb-text" rows="3" maxlength="8000" data-i18n-placeholder="ph.fbText" placeholder="z. B. Farben als eigenes Hauptthema ergänzen"></textarea>
           </div>
-          <div class="field">
+          <div class="field" data-tasks="refine">
             <label for="f-fb-locked" data-i18n="field.fbLocked">Gesperrte Äste (Schlüssel, Komma)</label>
             <input id="f-fb-locked" type="text" placeholder="k-optik, k-mechanik">
             <p class="help-text" data-i18n="help.locked">Gesperrte Äste bleiben unverändert. Auch per „Sperren“ im Baum rechts.</p>
           </div>
-          <label class="check"><input id="f-opt-assign-only" type="checkbox"> <span data-i18n="opt.assignOnly">Nur Inhalte einsortieren, Struktur nicht ändern</span></label>
+          <label class="check" data-tasks="refine"><input id="f-opt-assign-only" type="checkbox"> <span data-i18n="opt.assignOnly">Nur Inhalte einsortieren, Struktur nicht ändern</span></label>
         </section>
 
         <fieldset class="group">
@@ -118,7 +119,7 @@
           <p id="frame-help" class="help-text" data-i18n="help.frame">Steuert Sprache, Tiefe und Breite und wird an jedem Knoten als Metadatum gesetzt.</p>
         </fieldset>
 
-        <fieldset class="group">
+        <fieldset class="group" data-tasks="topic document folders contents refine">
           <legend class="group-label" data-i18n="sec.extras">Zusätzlich einbeziehen</legend>
           <label class="check" data-tasks="topic document folders"><input id="x-structure-materials" type="checkbox"> <span data-i18n="x.structureMaterials">Materialien als Anregung für die Struktur</span></label>
           <label class="check" data-tasks="topic document contents"><input id="x-folders" type="checkbox"> <span data-i18n="x.folders">Ordnerstruktur</span></label>
@@ -177,7 +178,7 @@
           </div>
         </section>
 
-        <details class="accordion" id="acc-shape">
+        <details class="accordion" id="acc-shape" data-tasks="topic document folders contents refine">
           <summary><span data-i18n="acc.shape">Form (leer = Empfehlung)</span></summary>
           <div class="accordion-body">
             <div class="row-3">
@@ -212,7 +213,7 @@
         <details class="accordion" id="acc-assign">
           <summary><span data-i18n="acc.assign">Zuordnung von Materialien</span></summary>
           <div class="accordion-body">
-            <label class="check"><input id="f-opt-assign" type="checkbox" checked> <span data-i18n="opt.assign">Materialien zuordnen</span></label>
+            <label class="check" data-tasks="topic document folders contents refine"><input id="f-opt-assign" type="checkbox" checked> <span data-i18n="opt.assign">Materialien zuordnen</span></label>
             <label class="check"><input id="f-opt-multi" type="checkbox" checked> <span data-i18n="opt.multi">Mehrfachzuordnung erlauben</span></label>
             <div class="field"><label for="f-opt-conf" data-i18n="field.minConf">Mindestkonfidenz (0–1)</label><input id="f-opt-conf" type="number" step="0.05" min="0" max="1" value="0.6"></div>
             <div class="field">
@@ -292,7 +293,7 @@
           <h2 id="base-heading" class="result-title"></h2>
         </div>
         <details class="card fold" open>
-          <summary><span data-i18n="base.tree">Basis-Baum: sperren oder ändern</span></summary>
+          <summary><span id="base-tree-label" data-i18n="base.tree">Basis-Baum: sperren oder ändern</span></summary>
           <div id="base-tree" class="tree-root compact-tree" role="tree"></div>
         </details>
       </section>

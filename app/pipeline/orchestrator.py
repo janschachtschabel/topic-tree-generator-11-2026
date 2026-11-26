@@ -225,7 +225,7 @@ async def run(
         result = await strategy(req, rc)
         _drop_untitled(rc, result)
         await _assign(req, rc, result)
-        if req.options.auto_metadata:
+        if req.options.auto_metadata and not req.options.assign_only:
             await infer_metadata(result.roots, req, rc)
     except LLMStepError as error:
         raise _llm_unavailable(error, rc.mode) from error

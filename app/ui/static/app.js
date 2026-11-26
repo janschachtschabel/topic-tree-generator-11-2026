@@ -7,7 +7,7 @@
   const t = (key, vars) => (I() ? I().t(key, vars) : key);
   const sec = (s) => (I() ? I().formatSeconds(s) : Number(s).toFixed(1));
   const F = () => window.TopicTreeForm;
-  const TASKS = ["topic", "document", "folders", "contents", "refine"];
+  const TASKS = ["topic", "document", "folders", "contents", "assign", "refine"];
 
   const state = {
     task: "topic",
@@ -165,11 +165,13 @@
   }
 
   function renderBase() {
-    const tree = state.task === "refine" ? state.currentTree : null;
+    const tree = ["refine", "assign"].includes(state.task) ? state.currentTree : null;
     $("base-area").hidden = !tree || !$("result-area").hidden;
     if (!tree) return;
     $("base-heading").textContent = t("base.heading", { title: tree.title || "–", version: tree.version || "–" });
-    window.TopicTreeView.renderTree($("base-tree"), tree.collection, state.lockedKeys, toggleLock, {}, editNode);
+    $("base-tree-label").textContent = t(state.task === "assign" ? "base.tree.assign" : "base.tree");
+    if (state.task === "assign") window.TopicTreeView.renderTree($("base-tree"), tree.collection, new Set(), null, {});
+    else window.TopicTreeView.renderTree($("base-tree"), tree.collection, state.lockedKeys, toggleLock, {}, editNode);
   }
 
   function adoptResult() {

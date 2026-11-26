@@ -2,7 +2,7 @@
 
 Every change is validated against the current tree before it is applied: unknown keys, locked nodes (and
 everything below them), branches that hold a locked node, and cycles are rejected with a CHANGE_REJECTED warning instead of being guessed.
-`split` needs the LLM and is only collected here.
+`split` needs the LLM and is only collected here; `describe` is only validated and recorded (the strategy writes it).
 """
 
 from collections.abc import Callable
@@ -157,6 +157,10 @@ class _Applier:
         first.title, first.shorttitle = change.title, ""
         self.record(change, key=first.key, keys=unique_keys)
 
+    def describe(self, change: Change) -> None:
+        self.node(change.key)  # the description itself is written later (describe_nodes, with tree context)
+        self.record(change)
+
     def split(self, change: Change) -> None:
         self.whole_branch(change.key)
         self.result.pending_splits.append(change)
@@ -170,6 +174,7 @@ class _Applier:
             ChangeOp.move: self.move,
             ChangeOp.merge: self.merge,
             ChangeOp.split: self.split,
+            ChangeOp.describe: self.describe,
         }
         try:
             handlers[change.op](change)

@@ -30,7 +30,7 @@ _PHYSIK_TREE = [
 ]
 
 
-def _current(version: str, use_case: str = "topic", tree_frame: dict | None = None) -> dict[str, Any]:
+def current_tree(version: str, use_case: str = "topic", tree_frame: dict | None = None) -> dict[str, Any]:
     return {
         "version": version,
         "title": "Physik Sek I",
@@ -54,7 +54,7 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         "payload": {
             "mode": "refine",
             "use_case": "topic",
-            "current_tree": _current("v1"),
+            "current_tree": current_tree("v1"),
             "feedback": {
                 "changes": [
                     {"op": "add", "parent": "k-optik", "title": "Farben und Spektren"},
@@ -82,6 +82,29 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         },
     },
     {
+        "id": "refine_describe",
+        "task": "refine",
+        "title": "Beschreibungen neu schreiben",
+        "summary": "„describe“ schreibt Beschreibungen mit Baum-Kontext neu, wahlweise nach einer Vorgabe; "
+        "die Struktur bleibt.",
+        "payload": {
+            "mode": "refine",
+            "use_case": "topic",
+            "current_tree": current_tree("v1"),
+            "feedback": {
+                "changes": [
+                    {
+                        "op": "describe",
+                        "key": "k-linsen",
+                        "hint": "Für Klasse 8: Brennweite bestimmen, Lupe, Brille und Fotoapparat als Alltagsbeispiele.",
+                    },
+                    {"op": "describe", "key": "k-akustik"},
+                ],
+            },
+            "frame": FRAME_PHYS_SEK1,
+        },
+    },
+    {
         "id": "refine_feedback",
         "task": "refine",
         "title": "Freitext-Rückmeldung + gesperrter Ast",
@@ -89,7 +112,7 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         "payload": {
             "mode": "refine",
             "use_case": "topic",
-            "current_tree": _current("v1"),
+            "current_tree": current_tree("v1"),
             "feedback": {
                 "text": "Füge Farben und Spektrum als eigenes Hauptthema hinzu, hänge Akustik unter Mechanik "
                 "und lösche „Sonstiges“.",
@@ -106,7 +129,7 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         "payload": {
             "mode": "refine",
             "use_case": "topic",
-            "current_tree": _current("v2"),
+            "current_tree": current_tree("v2"),
             "feedback": {
                 "changes": [
                     {"op": "add", "title": "Elektrizität"},
@@ -122,39 +145,6 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         },
     },
     {
-        "id": "assign_only",
-        "task": "refine",
-        "title": "Nur Inhalte einsortieren (Struktur bleibt)",
-        "summary": "„Nur einsortieren“ lässt die Struktur unverändert; nodeId wird unverändert durchgereicht.",
-        "payload": {
-            "mode": "refine",
-            "use_case": "folders",
-            "current_tree": _current("v3", use_case="folders"),
-            "items": [
-                {
-                    "id": "c9",
-                    "nodeId": "n-c9",
-                    "use": ["content"],
-                    "properties": {"cm:title": ["Brennweite einer Sammellinse bestimmen"]},
-                },
-                {
-                    "id": "c10",
-                    "nodeId": "n-c10",
-                    "use": ["content"],
-                    "properties": {"cm:title": ["Spiegelbilder am Kosmetikspiegel"]},
-                },
-                {
-                    "id": "c11",
-                    "nodeId": "n-c11",
-                    "use": ["content"],
-                    "properties": {"cm:title": ["Gedichtanalyse Romantik"]},
-                },
-            ],
-            "frame": FRAME_PHYS_SEK1,
-            "options": {"assign_only": True},
-        },
-    },
-    {
         "id": "refine_frame",
         "task": "refine",
         "title": "Rahmen ändern: Sek I → Sek II",
@@ -162,7 +152,7 @@ REFINE_PRESETS: list[dict[str, Any]] = [
         "payload": {
             "mode": "refine",
             "use_case": "topic",
-            "current_tree": _current("v4"),
+            "current_tree": current_tree("v4"),
             "feedback": {"locked": ["k-akustik"]},
             "frame": frame([DISC_PHYS], CTX_SEK2, ROLE_TEACHER),
         },

@@ -9,6 +9,7 @@
     document: { mode: "create", useCase: "document" },
     folders: { mode: "create", useCase: "folders" },
     contents: { mode: "create", useCase: "contents" },
+    assign: { mode: "refine", useCase: null }, // sort contents into an existing tree: refine + assign_only
     refine: { mode: "refine", useCase: null },
   };
 
@@ -20,6 +21,7 @@
     move: ["key"],
     merge: ["keys", "title"],
     split: ["key", "hint"],
+    describe: ["key"],
   };
 
   function fail(key, vars = {}) {
@@ -71,10 +73,10 @@
     const o = options || {};
     const inheritedImprove = Boolean(generation && generation.options && generation.options.improve);
     return {
-      auto_metadata: Boolean(o.autoMetadata),
+      auto_metadata: task !== "assign" && Boolean(o.autoMetadata), // hidden there: sorting in never narrows nodes
       improve: task === "refine" ? inheritedImprove : task === "folders" && Boolean(o.improve),
-      assign_contents: o.assignContents !== false,
-      assign_only: task === "refine" && Boolean(o.assignOnly),
+      assign_contents: task === "assign" || o.assignContents !== false,
+      assign_only: task === "assign" || (task === "refine" && Boolean(o.assignOnly)),
       multi_assign: o.multiAssign !== false,
       min_confidence: isSet(o.minConfidence) ? Number(o.minConfidence) : 0.6,
     };
@@ -152,7 +154,8 @@
     const shaping = items.some((i) => (i.use || []).includes("structure"));
     if (task === "contents" && !itemsRef && !shaping) throw fail("err.materialsRequired");
     if (itemsRef) payload.items_ref = itemsRef;
-    if (task === "refine") renameColliding(items, placedIds(form.currentTree));
+    if (task === "assign" && !itemsRef && !items.length) throw fail("err.assignItemsRequired");
+    if (task === "refine" || task === "assign") renameColliding(items, placedIds(form.currentTree));
     if (items.length) payload.items = items;
   }
 
@@ -223,6 +226,7 @@
       if (row.op === "edit") out.properties = { ...(row.otherProps || {}), "cm:description": [text(row.description)] };
       if (row.op === "move") out.to = text(row.to) || null;
       if (row.op === "split") out.hint = text(row.hint);
+      if (row.op === "describe" && text(row.basis)) out.hint = text(row.basis);
     }
     return out;
   }
@@ -262,11 +266,14 @@
     if (!task) throw fail("err.unknownTask");
     const extras = form.extras || {};
     const payload = { mode: task.mode, use_case: task.useCase, frame: form.frame };
-    if (form.task === "refine") {
+    const onBase = form.task === "refine" || form.task === "assign";
+    if (onBase) {
       const tree = form.currentTree;
       if (!tree || !Array.isArray(tree.collection)) throw fail("err.currentTreeRequired");
       payload.use_case = (tree.generation && tree.generation.use_case) || "topic";
       payload.current_tree = tree;
+    }
+    if (form.task === "refine") {
       const feedback = buildFeedback(form.feedback);
       if (feedback) payload.feedback = feedback;
     }
@@ -276,9 +283,9 @@
     if (topicSent && topic) payload.topic = topic;
     collectItems(form, payload);
     const shape = buildShape(form.shape, form.limits);
-    if (shape) payload.shape = shape;
+    if (shape && form.task !== "assign") payload.shape = shape; // sorting in never reshapes the tree
     payload.hints = buildHints(form.hints);
-    const generation = form.task === "refine" ? form.currentTree.generation : null;
+    const generation = onBase ? form.currentTree.generation : null;
     payload.options = buildOptions(form.options, form.task, generation);
     if (generation) inheritUnchanged(payload, generation);
     return payload;

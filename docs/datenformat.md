@@ -30,18 +30,18 @@ Spalten: **Pflicht** = muss gesendet werden; **Standard** = Wert, wenn das Feld 
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
-| `op` | [`ChangeOp`](#changeop) | ja |  | Art der Änderung: add, remove, rename, edit, move, merge oder split |
-| `key` | Text oder null |  | – | Schlüssel des betroffenen Knotens (remove, rename, edit, move, split) |
+| `op` | [`ChangeOp`](#changeop) | ja |  | Art der Änderung: add, remove, rename, edit, move, merge, split oder describe (neu beschreiben) |
+| `key` | Text oder null |  | – | Schlüssel des betroffenen Knotens (remove, rename, edit, move, split, describe) |
 | `keys` | Liste von Text oder null |  | – | Schlüssel der zusammenzuführenden Knoten, mindestens zwei (merge) |
 | `parent` | Text oder null |  | – | add: Schlüssel oder Titel des Elternknotens; ohne Angabe Hauptebene |
 | `to` | Text oder null |  | – | move: Schlüssel des neuen Elternknotens; ohne Angabe oder null Hauptebene |
 | `title` | Text oder null (min. Länge 1, max. Länge 200) |  | – | Neuer Titel (add, rename, merge) |
 | `properties` | [`Properties`](#properties) oder null |  | – | Zu setzende Properties (edit) |
-| `hint` | Text oder null (max. Länge 1000) |  | – | Wie der Knoten aufgeteilt werden soll (split) |
+| `hint` | Text oder null (max. Länge 1000) |  | – | split: wie der Knoten aufgeteilt werden soll; describe: Grundlage oder Wunsch für die Beschreibung |
 
 ### ChangeOp
 
-Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`
+Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`, `describe`
 
 ### ChildRange
 
@@ -174,7 +174,7 @@ Werte: `create`, `refine`
 |---|---|---|---|---|
 | `improve` | ja/nein |  | `False` | folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück |
 | `assign_contents` | ja/nein |  | `True` | Inhalte aus items den Knoten zuordnen |
-| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf |
+| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf |
 | `multi_assign` | ja/nein |  | `True` | Ein Inhalt darf mehreren Knoten zugeordnet werden |
 | `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned |
 | `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist |
@@ -199,6 +199,7 @@ A node of an earlier answer (v2 or legacy format), possibly edited by hand.
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
 | `key` | Text oder null (max. Länge 200) |  | – | Schlüssel des Knotens aus der früheren Antwort; fehlt er, vergibt der Dienst einen |
+| `nodeId` | Text oder null (max. Länge 200) |  | – | Knoten-ID der Sammlung im Repository, unverändert durchgereicht |
 | `title` | Text (min. Länge 1, max. Länge 200) | ja |  | Titel des Knotens |
 | `shorttitle` | Text oder null (max. Länge 200) |  | – | Kurztitel (höchstens 20 Zeichen in der Antwort) |
 | `properties` | [`Properties`](#properties) |  |  | edu-sharing-Properties des Knotens |
@@ -225,7 +226,7 @@ Werte: `topic`, `document`, `folders`, `contents`
 
 ### ChangeOp (Antwort)
 
-Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`
+Werte: `add`, `remove`, `rename`, `edit`, `move`, `merge`, `split`, `describe`
 
 ### ChangeRecord (Antwort)
 
@@ -351,6 +352,7 @@ Werte: `create`, `refine`
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
 | `key` | Text | ja |  | Stabiler Schlüssel des Knotens; bleibt über refine-Läufe erhalten |
+| `nodeId` | Text oder null |  | – | Knoten-ID der Sammlung im Repository, unverändert aus current_tree |
 | `title` | Text | ja |  | Titel des Knotens |
 | `shorttitle` | Text | ja |  | Kurztitel, höchstens 20 Zeichen |
 | `status` | [`NodeStatus`](#nodestatus-antwort) | ja |  | Änderungsstand gegenüber current_tree: new, unchanged, changed, moved oder suggested |
@@ -370,7 +372,7 @@ Werte: `new`, `unchanged`, `changed`, `moved`, `suggested`
 |---|---|---|---|---|
 | `improve` | ja/nein |  | `False` | folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück |
 | `assign_contents` | ja/nein |  | `True` | Inhalte aus items den Knoten zuordnen |
-| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren, Struktur bleibt; gilt nur für diesen Aufruf |
+| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf |
 | `multi_assign` | ja/nein |  | `True` | Ein Inhalt darf mehreren Knoten zugeordnet werden |
 | `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned |
 | `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist |

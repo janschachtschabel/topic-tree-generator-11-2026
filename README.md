@@ -1,9 +1,9 @@
 # topic-tree (Themenbaum-Dienst)
 
-FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores.
+FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores. An existing tree, also one taken from the repository, can be filled with contents only (structure, properties and `nodeId` stay as they are), and single nodes can get a fresh description with the whole tree as context.
 
 - **`POST /v2/topic-tree`** – current v2 API ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
-- **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2)
+- **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2); new callers describe collections with the `describe` change of v2 (see use case 7)
 - **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
 - **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [v1 vs. v2 comparison](docs/measurements/2026-11-25-v1-vs-v2-comparison.md) · [v2 load & token benchmark](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
 
@@ -19,7 +19,7 @@ request → input & cap checks → resolve refs (allow-listed) → strategy per 
 - **`document`**: Parses Markdown headings and page markers deterministically, maps the outline into a tree with `origin.document` (`section`, `page`), and writes node descriptions from section excerpts (falling back deterministically to the document's headings with an `LLM_DEGRADED` warning if the LLM is unavailable).
 - **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`), optionally proposes renames/merges/moves when `options.improve=true`, and degrades gracefully (`LLM_DEGRADED`) if the LLM is unavailable.
 - **`contents`**: Induces topic groups from a stratified sample of items (`origin.cluster`), eliminates duplicate group titles, and assigns every item with confidence.
-- **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree.
+- **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree and every node comes back as sent; the `describe` change rewrites descriptions of chosen nodes with the tree as context.
 - **Prompt caching**: All prompts live in `app/prompts/`; `system.md` is strictly static across every LLM call.
 
 ## What changed from v1 to v2
@@ -206,12 +206,15 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 - **Enable** (default in local dev and Docker Compose): `UI_ENABLED=true` → accessible at `http://localhost:8000/ui/` (and `/ui` redirects to `/ui/`).
 - **Disable** (recommended for production; default in the Helm chart): set `UI_ENABLED=false` in `.env` or container environment. All UI routes (`/ui`, `/ui/`, `/ui/presets`, `/ui/assets/*`) immediately return **`404 Not Found`**. UI routes are never exposed in `/openapi.json`.
 - **Capabilities**:
-  - Left navigation by task (Thema, Dokument, Ordner, Inhalte gruppieren, Baum ändern); each task shows only its fields
-    plus an "also include" group for combinations (materials that shape the structure, materials that are only sorted
-    in, a structure document as inspiration or guide). 18 examples, filtered per task, fill the form without starting.
+  - Left navigation by task (Thema, Dokument, Ordner, Inhalte gruppieren, Inhalte einsortieren, Baum ändern); each task
+    shows only its fields plus an "also include" group for combinations (materials that shape the structure, materials
+    that are only sorted in, a structure document as inspiration or guide). 27 examples, filtered per task, fill the
+    form without starting.
+  - "Inhalte einsortieren": a base tree (example, last result or pasted JSON, also a repository tree with `nodeId` and
+    without keys) plus materials; the tree is shown read-only and sent as `refine` + `assign_only`.
   - Line editors instead of JSON: materials as `Titel | Schlagworte | Beschreibung`, folders as an indented outline.
     A structure document can also be sorted in as content.
-  - "Baum ändern": targeted changes (`feedback.changes`, all seven ops) in a row editor with node pickers; "Lock" and
+  - "Baum ändern": targeted changes (`feedback.changes`, all eight ops including `describe`) in a row editor with node pickers; "Lock" and
     "Change …" directly on the base or result tree; "Use as base for changes" adopts a result.
   - The request as JSON is always visible and can be edited and sent as is, so every option (e.g. `nodeId`) stays
     reachable. Result card with quality, cost and time metrics, foldable warnings/questions/changes/unassigned, tree
@@ -235,12 +238,12 @@ Every field of request and response, with type, default and meaning, is listed i
 | `shape` | no | `depth`, `main_topics`/`children` ranges, `extra_topics` |
 | `hints` | no | `context`, `include`, `exclude`, `order`, `description_length`, `language` |
 | `options` | no | `assign_contents`, `multi_assign`, `min_confidence`, `improve`, `assign_only`, `auto_metadata` |
-| `current_tree`, `feedback` | for `refine` | The previous result and the change request (`text`, `changes`, `locked`) |
+| `current_tree`, `feedback` | for `refine` | The previous result or any existing tree (nodes need only `title`; `key` and `nodeId` are optional) and the change request (`text`, `changes`, `locked`) |
 
 | Response field | Content |
 |---|---|
 | `metadata` | Title, description, `version`, vocabulary labels and `generation` (all settings of the run; send it back for the next run) |
-| `collection[]` | The tree: per node `key` (stable across runs), `title`, `shorttitle`, `status`, `origin`, edu-sharing `properties`, `contents[]` (`id`, `nodeId`, `confidence`), `subcollections[]` |
+| `collection[]` | The tree: per node `key` (stable across runs), `nodeId` (if sent in `current_tree`), `title`, `shorttitle`, `status`, `origin`, edu-sharing `properties`, `contents[]` (`id`, `nodeId`, `confidence`), `subcollections[]` |
 | `unassigned[]` | Items not sorted in, with `reason` (`off_topic`, `low_confidence`, `no_matching_node`, `excluded`) |
 | `changes[]` | Applied (refine) or proposed (`folders` + `improve`) changes |
 | `questions[]` | Questions about unclear feedback; the unclear part is not applied |
@@ -408,17 +411,23 @@ curl -s http://localhost:8000/v2/topic-tree \
 | `move` | `key` (+ `to`) | Moves under `to`; without `to` (or `null`) to the main level |
 | `merge` | `keys` (≥ 2), `title` | Merges nodes into the first key |
 | `split` | `key`, `hint` | Splits a node as described (LLM) |
+| `describe` | `key` (+ optional `hint`) | Rewrites description and keywords with the tree as context, following `hint` (LLM); see use case 7 |
 
-All seven in one request: `curl -s http://localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @docs/examples/refine_changes.json`.
+Seven of them in one request: `curl -s http://localhost:8000/v2/topic-tree -H 'Content-Type: application/json' -d @docs/examples/refine_changes.json`.
 Locked keys (`feedback.locked`) and their branches never change; a change that would touch them is rejected with
 `CHANGE_REJECTED`. The response marks each node's `status` (`new`, `changed`, `moved`, `unchanged`), lists the
 applied `changes` and counts the version up (`v1` → `v2`). For the next run send back `collection`,
 `metadata.version`, `metadata.generation` and (to keep them) `metadata.title`/`metadata.description` as
 `current_tree` (see `docs/api.md`, "Änderungen an einem Baum einreichen").
 
-### 6. `refine` + `assign_only` – Sort new items into a fixed tree
+### 6. Sort contents into an existing tree (`refine` + `assign_only`)
 
-Leaves the entire tree structure untouched and runs only content assignment for newly added items.
+Fills a tree that already exists, for example a collection tree from edu-sharing, with contents and changes nothing
+else: no restructuring, no new descriptions, no shape checks, and every node's `properties` come back exactly as sent
+(the `frame` only helps the assignment). Nodes need only a `title`; missing `key`s are assigned, a `nodeId` per node is
+passed through, so each assignment maps back to its collection. `use_case` does not matter here (`topic` is fine), a
+`generation` is optional; `metadata.generation.frame` keeps the frame the tree was made with. Off-topic or unmatched items land in `unassigned`; `options.auto_metadata` and `feedback`
+are ignored with a warning. In the test UI this is the task "Inhalte einsortieren".
 
 ```shell
 curl -s http://localhost:8000/v2/topic-tree \
@@ -427,20 +436,35 @@ curl -s http://localhost:8000/v2/topic-tree \
     "mode": "refine",
     "use_case": "topic",
     "current_tree": {
-      "version": "v3",
       "collection": [
-        {"key": "k-optik", "title": "Optik", "subcollections": []}
+        {"nodeId": "n-optik", "title": "Optik", "subcollections": [{"nodeId": "n-linsen", "title": "Linsen"}]},
+        {"nodeId": "n-schall", "title": "Schall"}
       ]
     },
     "items": [
-      {"id": "c9", "use": ["content"], "properties": {"cm:title": ["Brechung am Prisma"]}}
+      {"id": "c9", "nodeId": "n-c9", "use": ["content"], "properties": {"cm:title": ["Brennweite einer Lupe bestimmen"]}}
     ],
     "frame": {"discipline_uri": ["http://w3id.org/openeduhub/vocabs/discipline/460"]},
     "options": {"assign_only": true}
   }'
 ```
 
-### 7. Combining Use Cases (e.g. Topic + Items)
+Answer (shortened): the node `Linsen` keeps `"nodeId": "n-linsen"` and gains
+`"contents": [{"id": "c9", "nodeId": "n-c9", "confidence": 0.9}]`; every node has `status: "unchanged"`.
+
+### 7. Describe nodes (`describe` change, successor of `/generate-collection-description`)
+
+`{"op": "describe", "key": …, "hint": …}` in `feedback.changes` writes a fresh description and keywords for the node,
+knowing its path, siblings and the whole tree, so the text sets the node apart from its neighbours. The optional
+`hint` (up to 1,000 characters) is the basis or wish for the text, e.g. the free text the legacy endpoint took.
+The structure stays; locked nodes are rejected with `CHANGE_REJECTED`, a node that a later change in the same request
+removes, merges away or splits with `CHANGE_REJECTED` too, and a node the model left out with `DESCRIBE_FAILED`. As in
+every `refine` with feedback, nodes without any description are described in the same run (on a large tree from the
+repository without descriptions that means one call per 10 nodes), the `frame` is set on nodes that lack it, and
+keywords are tidied. For a single collection send a tree with one node.
+Example: [`docs/examples/describe.json`](docs/examples/describe.json).
+
+### 8. Combining Use Cases (e.g. Topic + Items)
 
 `use_case` picks the source that forms the backbone; roles decide how every other input flows in. Tree generation and content assignment are decoupled and controlled per item via `"use"` (`"content"`, `"structure"`, both, or none) and for the folder structure via `folders_use`:
 

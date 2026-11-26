@@ -119,7 +119,14 @@
     return out;
   }
 
-  const api = { parseMaterialLines, materialLinesFromItems, parseFolderOutline, folderOutlineFromPayload, treeNodeOptions };
+  /** All nodes of a collection, with or without a service key (a tree from the repository has none). */
+  function countNodes(collection) {
+    return (collection || []).reduce((n, node) => n + 1 + countNodes(node.subcollections), 0);
+  }
+
+  const api = {
+    parseMaterialLines, materialLinesFromItems, parseFolderOutline, folderOutlineFromPayload, treeNodeOptions, countNodes,
+  };
   if (typeof module === "object" && module.exports) module.exports = api;
   if (typeof window === "object") window.TopicTreeParsers = api;
 })();
