@@ -13,7 +13,7 @@ Ergebnis: Release `2.2.0` vorbereitet, Doku vollständig auf Deutsch und Englisc
 - Vorher: `uv run pytest -q` 675 grün, 5 übersprungen (Helm ohne `helm`); 35 Node-Tests der UI; ruff sauber.
 - Jeder Befund wurde mit einer Probe bestätigt; jeder Fix hat einen Regressionstest, der vorher fehlschlug. Wo sich
   DOM-Verhalten nicht als Unit-Test prüfen ließ, belegt ein Playwright-Lauf den Fix (im Commit vermerkt).
-- Nachher: 712 grün, 6 übersprungen (Helm-Tests laufen in der CI); 44 Node-Tests; 8 `promtool`-Tests der Alarme
+- Nachher: 714 grün, 6 übersprungen (Helm-Tests laufen in der CI); 44 Node-Tests; 8 `promtool`-Tests der Alarme
   (laufen in der CI, lokal war `promtool` nicht ausführbar); ruff sauber.
 - Nicht als Befund gewertet (Vorgabe Jan): Binärdateien in `fulltext.ref`; die Umwandlung passiert vorher.
 
@@ -56,6 +56,13 @@ Betriebshandbuch und die englische Fassung der Doku.
 | 25 | Niedrig | Test-UI | Ansichtsschalter (Beschreibungen, Schlüssel) fehlten für eine frisch geladene Basis. | Sichtbar, sobald eine Basis da ist. |
 | 26 | Niedrig | Test-UI | „Letztes Ergebnis übernehmen“ in „Inhalte einsortieren“ wechselte nach „Baum ändern“. | Bleibt im Einsortieren. |
 | 27 | Niedrig | Test-UI | „Inhalte“/„Materialien“ gemischt im Einsortieren; „Kombination:“ doppelt in der Gruppe „Kombinationen“. | Einheitlich „Inhalte“; Präfix in der Gruppe entfällt. |
+
+## Nachträge aus dem unabhängigen Review
+
+Das Review des Fix-PRs (#23) fand drei Punkte, alle behoben und mit Test: Ein wegen `edit` abgelehntes `describe`
+schickte den Knoten trotzdem ans LLM, das die Schlagworte neu schrieb; ein leerer oder nur umsortierter `frame` bei
+`assign_only` wurde als geänderter Rahmen gemeldet; ein Playwright-Hilfsskript lag versehentlich im Wurzelverzeichnis.
+Die CI fand außerdem, dass die `promtool`-Tests die Annotationen der Alarme nicht vollständig erwarteten.
 
 ## Geprüft, aber nicht geändert
 
