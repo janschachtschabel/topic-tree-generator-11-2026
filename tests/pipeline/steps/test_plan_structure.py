@@ -171,3 +171,17 @@ async def test_from_inputs_is_ignored_without_supplementary_inputs() -> None:
     llm = FakeLLM({"plan_structure": data})
     result = await plan_structure(req(ex.TOPIC), rc(llm), context="CTX")
     assert result.roots[0].status is None
+
+
+async def test_extra_topics_say_what_belongs_into_them() -> None:
+    data = copy.deepcopy(ex.TOPIC)
+    data["shape"]["extra_topics"] = ["general", "methodology"]
+    llm = FakeLLM({"plan_structure": answer(6, 3, n_grand=2)})
+    await plan_structure(req(data), rc(llm), context="CTX")
+    prompt = llm.prompts("plan_structure")[0]
+    assert "„Allgemeines“ enthält nur fachübergreifende Grundlagen" in prompt
+    assert "„Methodik und Didaktik“ enthält nur" in prompt
+
+    plain = FakeLLM({"plan_structure": answer(6, 3, n_grand=2)})
+    await plan_structure(req(copy.deepcopy(ex.TOPIC)), rc(plain), context="CTX")
+    assert "fachübergreifende Grundlagen" not in plain.prompts("plan_structure")[0]
