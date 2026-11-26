@@ -6,6 +6,8 @@ from app.domain.keys import assign_missing_keys
 from app.domain.quality import PLATFORM_STOPWORDS
 from app.domain.shape_rules import eliminate_generated_duplicates
 from app.domain.text import truncate_sentences
+from app.domain.tree import collapse_single_children
+from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.group_contents import group_contents
@@ -112,7 +114,10 @@ def _max_tokens(req: TopicTreeRequestV2) -> int:
 
 async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     shaping = [i for i in req.items or [] if ItemUse.structure in req.effective_use(i)]
-    grouping = await group_contents(items_block(shaping, rc), rc, max_tokens=_max_tokens(req))
+    # Full texts of shaping items (e.g. a curriculum) and the folder structure come in as supplementary inputs.
+    with_text = [i for i in shaping if i.fulltext and i.fulltext.text and i.fulltext.text.strip()]
+    inputs = structure_inputs_block(req, rc, items=with_text)
+    grouping = await group_contents(items_block(shaping, rc), rc, max_tokens=_max_tokens(req), inputs_block=inputs)
 
     cut = Cut()
     shape = req.shape
@@ -124,6 +129,8 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     if cut.width:
         rc.warn("SHAPE_WIDTH", "Die Gruppenbildung hatte zu viele Gruppen; gekürzt.", step="group_contents")
     eliminate_generated_duplicates(roots)
+    # Invented groups never keep a lone subgroup (system prompt rule); dissolving it is safe before assignment.
+    collapse_single_children(roots)
     assign_missing_keys(roots)
     return StrategyResult(
         roots=roots,

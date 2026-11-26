@@ -73,7 +73,9 @@ class Item(RequestModel):
         description="edu-sharing-Properties wie cm:title oder cclom:general_keyword, Werte als Listen",
     )
     fulltext: Fulltext | None = Field(None, description="Volltext des Eintrags, etwa ein Lehrplan als Markdown")
-    path: str | None = Field(None, max_length=1000, description="Ablageort des Eintrags, nur zur Information")
+    path: str | None = Field(
+        None, max_length=1000, description="Ablageort des Eintrags (z. B. Optik/Linsen); Hinweis bei der Zuordnung"
+    )
 
 
 class FolderNode(RequestModel):
@@ -203,9 +205,16 @@ class TopicTreeRequestV2(RequestModel):
         None,
         min_length=1,
         max_length=2000,
-        description="Thema des Baums; Pflicht bei topic, bei document und contents optional zur Eingrenzung",
+        description="Thema des Baums; Pflicht bei topic, sonst optional (Eingrenzung, Titel, Rahmen)",
     )
-    folders: list[FolderNode] | None = Field(None, description="Bestehende Ordnerstruktur (use_case folders)")
+    folders: list[FolderNode] | None = Field(
+        None, description="Bestehende Ordnerstruktur; Gerüst bei use_case folders, sonst ergänzende Quelle"
+    )
+    folders_use: list[ItemUse] | None = Field(
+        None,
+        description="Rolle der ganzen Ordnerstruktur, Werte wie bei use: ['structure'] prägt den Baum, ['content'] "
+        "Ordnerzuordnung der Dateien wird übernommen bzw. dient als Hinweis, beide (Standard) oder [] keines.",
+    )
     items: list[Item] | None = Field(None, description="Materialien und Dokumente, je mit Rolle in use")
     items_ref: HttpsUrl | None = Field(
         None, description="HTTPS-Adresse einer JSON-Liste von items; nur von Hosts in REF_ALLOWED_HOSTS"
@@ -216,6 +225,10 @@ class TopicTreeRequestV2(RequestModel):
     shape: Shape = Field(default_factory=Shape, description="Form des Baums: Tiefe und Breite")
     hints: Hints = Field(default_factory=Hints, description="Inhaltliche Hinweise")
     options: Options = Field(default_factory=Options, description="Schalter für Zuordnung, Verbesserung und Metadaten")
+
+    def effective_folders_use(self) -> set[ItemUse]:
+        """Without `folders_use` the folder structure shapes the tree and its assignments count (combination)."""
+        return {ItemUse.structure, ItemUse.content} if self.folders_use is None else set(self.folders_use)
 
     def effective_use(self, item: Item) -> set[ItemUse]:
         """Spec: without `use`, contents items are structure and content; everything else is content only.

@@ -239,7 +239,9 @@ async def test_extra_topics_outside_topic_do_not_cause_false_shape_width_warning
     rc = RunContext(llm=FakeLLM({}), settings=Settings(_env_file=None), deadline=time.monotonic() + 60)
     resp = await orchestrator.run(request, rc, strategies={UseCase.contents: fake_contents})
     assert "Zusatzthemen" not in rc.context
-    assert [w.code for w in resp.warnings] == []
+    assert [w.code for w in resp.warnings if w.code != "INPUT_IGNORED"] == []
+    ignored = " ".join(w.message for w in resp.warnings if w.code == "INPUT_IGNORED")
+    assert "extra_topics" in ignored and "assign_contents" in ignored
 
 
 async def test_refine_reports_items_that_are_already_placed_instead_of_skipping_them_silently() -> None:

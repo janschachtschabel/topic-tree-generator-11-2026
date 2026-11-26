@@ -270,3 +270,21 @@ async def test_create_ignores_a_sent_current_tree_and_says_so() -> None:
     assert meta.generation.options.min_confidence == 0.6
     assert meta.generation.feedback == []
     assert "INPUT_IGNORED" in [w.code for w in resp.warnings]
+
+
+async def test_folders_shape_the_plan_unless_their_structure_role_is_off() -> None:
+    from app.pipeline.effective import has_structure_inputs
+
+    combined = req(folders=ex.FOLDERS_TREE, items=ex.FOLDER_ITEMS)
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
+    await build(combined, rc(llm))
+    prompt = llm.prompts("plan_structure")[0]
+    assert "Ordnerstruktur des Nutzers" in prompt
+    assert "  - Linsen (1 Dateien)" in prompt
+    assert has_structure_inputs(combined)
+
+    content_only = req(folders=ex.FOLDERS_TREE, items=ex.FOLDER_ITEMS, folders_use=["content"])
+    llm = FakeLLM({"plan_structure": plan_answer(6, 3), "describe_nodes": describe})
+    await build(content_only, rc(llm))
+    assert "Ordnerstruktur" not in llm.prompts("plan_structure")[0]
+    assert not has_structure_inputs(content_only)

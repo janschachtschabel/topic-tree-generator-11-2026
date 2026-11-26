@@ -34,8 +34,10 @@ def narrowing(topic: str | None) -> str:
     )
 
 
-async def map_outline(outline: str, rc: RunContext, topic: str | None = None) -> OutlineMapping:
-    prompt = render(STEP, context=rc.context, outline=outline, narrowing=narrowing(topic))
+async def map_outline(
+    outline: str, rc: RunContext, topic: str | None = None, *, inputs_block: str = ""
+) -> OutlineMapping:
+    prompt = render(STEP, context=rc.context, inputs=inputs_block, outline=outline, narrowing=narrowing(topic))
     line_count = outline.count("\n") + 1
     budget = max(8000, min(32000, 1500 + line_count * 45))
     return await rc.llm.complete_json(STEP, prompt, OutlineMapping, max_tokens=budget)

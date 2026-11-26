@@ -135,3 +135,11 @@ async def test_items_the_model_leaves_out_are_reported_not_silently_unassigned()
     assert [u.id for u in unassigned] == ["c2"]
     assert [w.code for w in context.warnings] == ["ASSIGN_FAILED"]
     assert "1 Inhalte ohne Antwort" in context.warnings[0].message
+
+
+async def test_folder_paths_are_hints_for_the_assignment() -> None:
+    llm = FakeLLM({"assign_contents": {"items": []}})
+    await assign_contents(tree(), [item(1), item(2)], rc(llm), Options(), paths={"c1": "Optik/Linsen"})
+    lines = [line for line in llm.prompts("assign_contents")[0].splitlines() if line.startswith("- id: ")]
+    assert lines[0].endswith("| Ordner: Optik/Linsen")
+    assert "Ordner" not in lines[1]

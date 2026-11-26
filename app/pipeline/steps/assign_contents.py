@@ -44,13 +44,15 @@ def render_tree(roots: list[Node]) -> str:
     return "\n".join(f"{node.key}: {' > '.join(path(roots, node.key))}" for node, _, _ in walk(roots))
 
 
-def _item_line(item: Item) -> str:
+def _item_line(item: Item, folder: str | None = None) -> str:
     props = item.properties
     parts = [f"- id: {item.id}", props.first("cm:title") or "(ohne Titel)"]
     if description := props.first("cm:description"):
         parts.append(truncate_sentences(description, _TEXT_LIMIT))
     if keywords := props.values("cclom:general_keyword"):
         parts.append("Schlagworte: " + ", ".join(keywords[:10]))
+    if folder:
+        parts.append(f"Ordner: {folder}")
     return " | ".join(parts)
 
 
@@ -89,21 +91,25 @@ def _apply(answer: Assignment, item: Item, nodes: dict[str, Node], options: Opti
     return None
 
 
-async def _batch(items: list[Item], prefix: str, rc: RunContext) -> AssignResult:
-    lines = "\n".join(_item_line(item) for item in items)
+async def _batch(items: list[Item], prefix: str, rc: RunContext, paths: dict[str, str]) -> AssignResult:
+    lines = "\n".join(_item_line(item, paths.get(item.id)) for item in items)
     return await rc.llm.complete_json(
         STEP, f"{prefix}{ITEMS_MARKER}\n{lines}", AssignResult, max_tokens=600 + 60 * len(items)
     )
 
 
-async def assign_contents(roots: list[Node], items: list[Item], rc: RunContext, options: Options) -> list[Unassigned]:
-    """Attach items to nodes (keys must be assigned). Returns the items that found no node."""
+async def assign_contents(
+    roots: list[Node], items: list[Item], rc: RunContext, options: Options, *, paths: dict[str, str] | None = None
+) -> list[Unassigned]:
+    """Attach items to nodes (keys must be assigned). Returns the items that found no node.
+
+    `paths` maps item ids to the caller's folder path, a hint where the material was filed."""
     if not items:
         return []
     nodes = index(roots)
     prefix = render(STEP, context=rc.context, tree=render_tree(roots), items="").rstrip() + "\n\n"
     batches = [items[i : i + BATCH] for i in range(0, len(items), BATCH)]
-    results = await asyncio.gather(*(_batch(b, prefix, rc) for b in batches), return_exceptions=True)
+    results = await asyncio.gather(*(_batch(b, prefix, rc, paths or {}) for b in batches), return_exceptions=True)
 
     out = _Outcome()
     for batch, result in zip(batches, results, strict=True):

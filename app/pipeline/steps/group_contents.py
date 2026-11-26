@@ -16,6 +16,6 @@ class Grouping(BaseModel):
     groups: list[BranchNode]
 
 
-async def group_contents(items_block: str, rc: RunContext, max_tokens: int) -> Grouping:
-    prompt = render(STEP, context=rc.context, items=items_block)
+async def group_contents(items_block: str, rc: RunContext, max_tokens: int, *, inputs_block: str = "") -> Grouping:
+    prompt = render(STEP, context=rc.context, inputs=inputs_block, items=items_block)
     return await rc.llm.complete_json(STEP, prompt, Grouping, max_tokens=max_tokens)

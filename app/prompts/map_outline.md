@@ -1,4 +1,5 @@
 {{context}}
+{{inputs}}
 
 ## Gliederung des Strukturdokuments
 {{outline}}

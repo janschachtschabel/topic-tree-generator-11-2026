@@ -24,7 +24,13 @@
     for (const node of document.querySelectorAll("[data-tasks]")) show(node, node.dataset.tasks.split(" ").includes(task));
     const useDoc = task === "document" || ($("x-document").checked && (task === "topic" || task === "folders"));
     show("sec-document", useDoc);
-    show("sec-materials-a", task === "contents" || (task === "topic" && $("x-structure-materials").checked));
+    const withA = ["topic", "document", "folders"].includes(task) && $("x-structure-materials").checked;
+    show("sec-materials-a", task === "contents" || withA);
+    show("sec-folders", task === "folders" || (FOLDER_EXTRA_TASKS.includes(task) && $("x-folders").checked));
+    // "Nur Ablage" and "Keins" are not possible where the folders are the backbone.
+    if (task === "folders" && !["structure+content", "structure"].includes($("f-folders-use").value)) {
+      $("f-folders-use").value = "structure+content";
+    }
     show("sec-materials-b", $("x-content-materials").checked);
     $("x-content-label").textContent = t(`x.contentMaterials.${task}`);
     $("x-document-label").textContent = t(task === "folders" ? "x.document.folders" : "x.document");
@@ -35,6 +41,8 @@
     $("frame-help").textContent = t(task === "refine" ? "help.frame.refine" : "help.frame");
     $("btn-submit").textContent = t(task === "refine" ? "btn.submit.refine" : "btn.submit.create");
   }
+
+  const FOLDER_EXTRA_TASKS = ["topic", "document", "contents"];
 
   function readFrame(state) {
     return {
@@ -78,10 +86,12 @@
       },
       extras: {
         structureMaterials: $("x-structure-materials").checked,
+        structureOnly: $("x-a-structure-only").checked,
+        folders: FOLDER_EXTRA_TASKS.includes(task) && $("x-folders").checked,
         contentMaterials: $("x-content-materials").checked,
         document: $("x-document").checked,
         documentContent: $("x-doc-content").checked,
-        topicFrame: task === "document" || task === "contents",
+        topicFrame: task === "document" || task === "contents" || task === "folders",
       },
       materialsA: $("f-materials-a").value,
       materialsB: $("f-materials-b").value,
@@ -89,6 +99,9 @@
       documentMarkdown: $("f-doc-markdown").value,
       documentRef: $("f-doc-ref").value,
       documentTitle: $("f-doc-title").value,
+      document2Markdown: $("f-doc2-markdown").value,
+      document2Title: $("f-doc2-title").value,
+      foldersUse: $("f-folders-use").value,
       folderOutline: $("f-folder-outline").value,
       currentTree: state.currentTree,
       feedback: { text: $("f-fb-text").value, locked: csv($("f-fb-locked").value), rows: state.changes.rows() },
@@ -102,12 +115,13 @@
     "f-hint-exclude": "", "f-opt-conf": 0.6, "f-materials-a": "", "f-materials-b": "", "f-items-ref": "",
     "f-doc-markdown": "", "f-doc-ref": "", "f-doc-title": "", "f-folder-outline": "", "f-fb-text": "",
     "f-fb-locked": "", "f-context": "", "f-role": "", "f-discipline": "",
+    "f-doc2-markdown": "", "f-doc2-title": "", "f-folders-use": "structure+content",
   };
   const CHECKS = {
     "f-extra-general": false, "f-extra-methodology": false, "f-opt-auto-meta": false, "f-opt-improve": false,
     "f-opt-assign": true, "f-opt-assign-only": false, "f-opt-multi": true, "x-structure-materials": false,
     "x-content-materials": false, "x-document": false,
-    "x-doc-content": false,
+    "x-doc-content": false, "x-folders": false, "x-a-structure-only": false,
   };
 
   function resetFields(state) {
@@ -158,38 +172,63 @@
     (function visit(list) {
       for (const f of list || []) { (f.items || []).forEach((id) => folderIds.add(id)); visit(f.subcollections); }
     })(payload.folders);
-    const slots = { docs: [], a: [], b: [], folderItems: [] };
+    const slots = { docs: [], a: [], b: [], folderItems: [], aUse: null };
     for (const item of items) {
       const use = sameUse(item, task);
       if (folderIds.has(item.id)) slots.folderItems.push(item);
       else if (item.fulltext && (use === "structure" || use === "content+structure")) slots.docs.push(item);
-      else if (use === "content+structure") slots.a.push(item);
-      else if (use === "content") slots.b.push(item);
+      else if (use === "structure" || use === "content+structure") {
+        if (slots.aUse && slots.aUse !== use) return null;
+        slots.aUse = use;
+        slots.a.push(item);
+      } else if (use === "content") slots.b.push(item);
       else return null;
     }
-    const aAllowed = task === "topic" || task === "contents";
+    const aAllowed = ["topic", "document", "folders", "contents"].includes(task);
     const docAllowed = ["topic", "document", "folders"].includes(task);
-    if (slots.docs.length > 1 || (slots.docs.length && !docAllowed) || (slots.a.length && !aAllowed)) return null;
+    const docUses = new Set(slots.docs.map((d) => sameUse(d, task)));
+    const docsFit = slots.docs.length <= 2 && docUses.size <= 1 && (!slots.docs[1] || slots.docs[1].fulltext.text);
+    if (!docsFit || (slots.docs.length && !docAllowed) || (slots.a.length && !aAllowed)) return null;
+    if (payload.folders && task !== "folders" && !FOLDER_EXTRA_TASKS.includes(task)) return null;
     const linesA = P().materialLinesFromItems(slots.a);
     const linesB = P().materialLinesFromItems(slots.b);
     if (linesA === null || linesB === null || P().materialLinesFromItems(slots.folderItems) === null) return null;
     return { ...slots, linesA, linesB };
   }
 
-  function applyItems(task, payload, slots) {
-    const doc = slots.docs[0];
-    if (doc) {
-      $("x-document").checked = task !== "document";
-      $("x-doc-content").checked = sameUse(doc, task) === "content+structure";
-      $("f-doc-markdown").value = doc.fulltext.text || "";
-      $("f-doc-ref").value = doc.fulltext.ref || "";
-      $("f-doc-title").value = ((doc.properties || {})["cm:title"] || [""])[0];
+  /** `folders_use` of a request as the value of the form's select. */
+  function foldersUseValue(use) {
+    if (!Array.isArray(use)) return "structure+content";
+    if (!use.length) return "none";
+    return use.includes("structure") && use.includes("content") ? "structure+content" : use[0];
+  }
+
+  function applyDocuments(task, docs) {
+    const [doc, doc2] = docs;
+    if (!doc) return;
+    $("x-document").checked = task !== "document";
+    $("x-doc-content").checked = sameUse(doc, task) === "content+structure";
+    $("f-doc-markdown").value = doc.fulltext.text || "";
+    $("f-doc-ref").value = doc.fulltext.ref || "";
+    $("f-doc-title").value = ((doc.properties || {})["cm:title"] || [""])[0];
+    if (doc2) {
+      $("f-doc2-markdown").value = doc2.fulltext.text || "";
+      $("f-doc2-title").value = ((doc2.properties || {})["cm:title"] || [""])[0];
     }
-    $("x-structure-materials").checked = task === "topic" && slots.a.length > 0;
+  }
+
+  function applyItems(task, payload, slots) {
+    applyDocuments(task, slots.docs);
+    $("x-structure-materials").checked = task !== "contents" && slots.a.length > 0;
+    $("x-a-structure-only").checked = slots.aUse === "structure";
     $("f-materials-a").value = slots.linesA;
     $("x-content-materials").checked = slots.b.length > 0;
     $("f-materials-b").value = slots.linesB;
-    if (payload.folders) $("f-folder-outline").value = P().folderOutlineFromPayload(payload.folders, slots.folderItems);
+    if (payload.folders) {
+      $("f-folder-outline").value = P().folderOutlineFromPayload(payload.folders, slots.folderItems);
+      $("x-folders").checked = task !== "folders";
+      $("f-folders-use").value = foldersUseValue(payload.folders_use);
+    }
     $("f-items-ref").value = payload.items_ref || "";
   }
 

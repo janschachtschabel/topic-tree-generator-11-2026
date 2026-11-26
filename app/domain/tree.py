@@ -117,3 +117,17 @@ def drop_untitled(roots: list[Node]) -> list[Node]:
 
     roots[:] = clean(roots)
     return removed
+
+
+def collapse_single_children(roots: list[Node]) -> int:
+    """A node never has exactly one child: the only child dissolves into its parent, which takes over the child's
+    contents and children. Returns the number of dissolved nodes."""
+    dissolved = 0
+    for node, _, _ in walk(roots):
+        while len(node.children) == 1:
+            only = node.children[0]
+            known = {ref.id for ref in node.contents}
+            node.contents.extend(ref for ref in only.contents if ref.id not in known)
+            node.children = only.children
+            dissolved += 1
+    return dissolved

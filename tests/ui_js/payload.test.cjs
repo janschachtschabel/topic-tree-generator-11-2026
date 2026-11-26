@@ -217,3 +217,18 @@ test("document can be structure and content at once", () => {
   const p = B.build(form({ task: "document", documentMarkdown: "# A", extras: { documentContent: true } }));
   assert.deepEqual(p.items[0].use, ["structure", "content"]);
 });
+
+test("a second document goes along with a linked first one and needs a first one", () => {
+  const p = B.build(form({ task: "document", documentRef: "https://x.example/a.md", document2Markdown: "# Zwei" }));
+  assert.deepEqual(p.items.map((i) => i.id), ["doc1", "doc2"]);
+  throwsKey(() => B.build(form({ extras: { document: true }, document2Markdown: "# Zwei" })), "err.doc2WithoutDoc");
+});
+
+test("folders in topic carry their role; the default role is left out", () => {
+  const outline = "Optik\n  - Licht";
+  const both = B.build(form({ extras: { folders: true }, folderOutline: outline, foldersUse: "structure+content" }));
+  assert.equal(both.folders_use, undefined);
+  assert.equal(both.folders[0].title, "Optik");
+  const none = B.build(form({ extras: { folders: true }, folderOutline: outline, foldersUse: "none" }));
+  assert.deepEqual(none.folders_use, []);
+});

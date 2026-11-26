@@ -380,3 +380,14 @@ async def test_a_short_document_without_headings_gives_no_truncation_warning() -
     context = rc(FakeLLM({"map_outline": mapping, "describe_nodes": describe}))
     await build(req([doc(text="Licht breitet sich aus.", fmt="text")]), context)
     assert "OUTLINE_TRUNCATED" not in [w.code for w in context.warnings]
+
+
+async def test_structure_items_without_text_and_folders_reach_the_outline_step() -> None:
+    topics = {"id": "t1", "use": ["structure"], "properties": {"cm:title": ["Themenliste Schulcurriculum"]}}
+    data = req([doc(), topics, *ex.FOLDER_ITEMS], folders=ex.FOLDERS_TREE)
+    llm = FakeLLM({"map_outline": MAPPING, "describe_nodes": describe})
+    await build(data, rc(llm))
+    prompt = llm.prompts("map_outline")[0]
+    assert "- Themenliste Schulcurriculum" in prompt
+    assert "Ordnerstruktur des Nutzers" in prompt and "- Neuer Ordner (2) (1 Dateien)" in prompt
+    assert "Lehrplan" not in prompt.split("## Ergänzende Eingaben")[1].split("###")[0]

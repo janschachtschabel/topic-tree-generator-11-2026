@@ -15,6 +15,18 @@ from app.schemas.response_v2 import Origin, StructureInfo
 
 STEP = "plan_structure"
 _EXTRA_POS = {ExtraTopic.general: "vorn", ExtraTopic.methodology: "hinten"}
+# What each extra topic holds, so it does not drift between runs or absorb subject areas of the regular topics.
+_EXTRA_SCOPE = {
+    ExtraTopic.general: (
+        "„Allgemeines“ enthält nur fachübergreifende Grundlagen des ganzen Themas: Einführung und Überblick, "
+        "Grundbegriffe und Arbeitsweisen, Geschichte des Fachs, Bezüge zu anderen Fächern. Ein fachliches "
+        "Teilgebiet, das zu einem anderen Hauptthema passt, gehört dorthin und nicht in „Allgemeines“."
+    ),
+    ExtraTopic.methodology: (
+        "„Methodik und Didaktik“ enthält nur Wissen für Lehrende: Unterrichtsplanung, Methoden, Lernschwierigkeiten "
+        "und Fehlvorstellungen, Differenzierung, Leistungsbewertung. Keine fachlichen Inhalte."
+    ),
+}
 
 
 class PlannedChild(BaseModel):
@@ -176,7 +188,9 @@ async def plan_structure(
         context=context,
         inputs=inputs_block,
         order_instruction=_order_instruction(req),
-        main_instruction=_main_instruction(req, rc, has_inputs=has_inputs),
+        main_instruction=" ".join(
+            [_main_instruction(req, rc, has_inputs=has_inputs), *(_EXTRA_SCOPE[e] for e in req.shape.extra_topics)]
+        ),
         children_instruction=_children_instruction(req, rc, has_inputs=has_inputs),
     )
     plan = await rc.llm.complete_json(STEP, prompt, StructurePlan, max_tokens=_max_tokens(req))

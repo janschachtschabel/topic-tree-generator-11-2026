@@ -701,7 +701,7 @@
             }
           ],
           "default": null,
-          "description": "Ablageort des Eintrags, nur zur Information",
+          "description": "Ablageort des Eintrags (z. B. Optik/Linsen); Hinweis bei der Zuordnung",
           "title": "Path"
         }
       },
@@ -945,7 +945,7 @@
         }
       ],
       "default": null,
-      "description": "Thema des Baums; Pflicht bei topic, bei document und contents optional zur Eingrenzung",
+      "description": "Thema des Baums; Pflicht bei topic, sonst optional (Eingrenzung, Titel, Rahmen)",
       "title": "Topic"
     },
     "folders": {
@@ -961,8 +961,24 @@
         }
       ],
       "default": null,
-      "description": "Bestehende Ordnerstruktur (use_case folders)",
+      "description": "Bestehende Ordnerstruktur; Gerüst bei use_case folders, sonst ergänzende Quelle",
       "title": "Folders"
+    },
+    "folders_use": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ItemUse"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Rolle der ganzen Ordnerstruktur, Werte wie bei use: ['structure'] prägt den Baum, ['content'] Ordnerzuordnung der Dateien wird übernommen bzw. dient als Hinweis, beide (Standard) oder [] keines.",
+      "title": "Folders Use"
     },
     "items": {
       "anyOf": [

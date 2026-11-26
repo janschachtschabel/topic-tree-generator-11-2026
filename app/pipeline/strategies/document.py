@@ -8,6 +8,7 @@ from app.domain.tree import Node, walk
 from app.llm.client import LLMStepError
 from app.pipeline.inputs.outline import Section, parse_outline
 from app.pipeline.inputs.outline_tree import drop_title_heading, outline_mapping
+from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
 from app.pipeline.run_context import RunContext
 from app.pipeline.steps.describe_nodes import describe_nodes
@@ -109,6 +110,13 @@ class _Converter:
         return node
 
 
+def _inputs(req: TopicTreeRequestV2, rc: RunContext, docs: list[Item]) -> str:
+    """Structure items without a full text (e.g. a list of topics) and the folder structure, as supplements."""
+    used = {d.id for d in docs}
+    rest = [i for i in req.items or [] if ItemUse.structure in req.effective_use(i) and i.id not in used]
+    return structure_inputs_block(req, rc, items=rest)
+
+
 def _checked_mapping(
     nodes: list[MappedNode], sections: list[DocSection], req: TopicTreeRequestV2, rc: RunContext
 ) -> list[MappedNode]:
@@ -134,7 +142,9 @@ async def _mapping(
 ) -> tuple[list[MappedNode], str, list[str], str]:
     """(mapped nodes, order, levels, description) from the LLM, or from the headings when it is unavailable."""
     try:
-        mapping = await map_outline(_outline_text(sections, docs, rc), rc, req.topic)
+        mapping = await map_outline(
+            _outline_text(sections, docs, rc), rc, req.topic, inputs_block=_inputs(req, rc, docs)
+        )
     except LLMStepError as err:
         fallback = outline_mapping([(s.ref, s.section) for s in sections], req.hints.exclude)
         if not fallback or len(sections) <= len(docs):

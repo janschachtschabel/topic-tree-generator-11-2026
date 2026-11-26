@@ -22,13 +22,14 @@ def item_titles(items: list[Item]) -> dict[str, str]:
 
 def folders_to_nodes(folders: list[FolderNode], req: TopicTreeRequestV2, trail: list[str] | None = None) -> list[Node]:
     by_id = {item.id: item for item in req.items or []}
+    keep = ItemUse.content in req.effective_folders_use()  # without it, the files are assigned anew afterwards
     nodes = []
     for folder in folders:
         here = [*(trail or []), folder.title]
         contents = [
             ContentRef(id=i, nodeId=by_id[i].node_id if i in by_id else None, confidence=1.0)
             for i in folder.items
-            if i not in by_id or ItemUse.content in req.effective_use(by_id[i])
+            if keep and (i not in by_id or ItemUse.content in req.effective_use(by_id[i]))
         ]
         nodes.append(
             Node(
@@ -48,10 +49,12 @@ async def build(req: TopicTreeRequestV2, rc: RunContext) -> StrategyResult:
     assign_missing_keys(roots)
     titles = item_titles(req.items or [])
     changes = []
-    if not req.options.improve and any(ItemUse.structure in req.effective_use(i) for i in req.items or []):
+    shaping = [i.id for i in req.items or [] if ItemUse.structure in req.effective_use(i)]
+    if not req.options.improve and shaping:
         rc.warn(
             "INPUT_IGNORED",
-            "Gliederungsdokumente fließen bei use_case 'folders' nur mit options.improve ein und wurden ignoriert.",
+            "Einträge mit Rolle Gliederung prägen bei use_case 'folders' die Struktur nur mit options.improve; "
+            f"ihre Gliederungsrolle wurde ignoriert, Inhalte darunter werden trotzdem einsortiert ({', '.join(shaping[:20])}).",
             step="folders",
         )
     if req.options.improve:

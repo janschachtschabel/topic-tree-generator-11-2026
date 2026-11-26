@@ -97,30 +97,51 @@
       return null;
     }
     const title = text(form.documentTitle) || text(form.topic) || "Strukturdokument";
+    return documentShape("doc1", title, form, ref ? { format: "markdown", ref } : { format: "markdown", text: markdown });
+  }
+
+  /** The optional second document of the form (inline Markdown only). */
+  function secondDocument(form) {
+    const markdown = text(form.document2Markdown);
+    if (!markdown) return null;
+    const title = text(form.document2Title) || "Strukturdokument 2";
+    return documentShape("doc2", title, form, { format: "markdown", text: markdown });
+  }
+
+  function documentShape(id, title, form, fulltext) {
     return {
-      id: "doc1",
+      id,
       use: (form.extras || {}).documentContent ? ["structure", "content"] : ["structure"],
       properties: { "cm:title": [title] },
-      fulltext: ref ? { format: "markdown", ref } : { format: "markdown", text: markdown },
+      fulltext,
     };
   }
+
+  // Select value -> `folders_use`; the default (structure and content) is left out of the request.
+  const FOLDERS_USE = { structure: ["structure"], content: ["content"], none: [] };
 
   function collectItems(form, payload) {
     const task = form.task;
     const extras = form.extras || {};
     const items = [];
-    if (task === "folders") {
+    if (task === "folders" || extras.folders) {
       const outline = parsed(Parsers.parseFolderOutline(form.folderOutline), "folders");
       if (!outline.folders.length) throw fail("err.foldersRequired");
       payload.folders = outline.folders;
+      const use = FOLDERS_USE[form.foldersUse];
+      if (use) payload.folders_use = use;
       items.push(...outline.items);
     }
     const useDocument = task === "document" || (extras.document && (task === "topic" || task === "folders"));
     const doc = useDocument ? documentItem(form, task === "document") : null;
     if (doc) items.push(doc);
-    if (task === "contents" || (task === "topic" && extras.structureMaterials)) {
-      const listA = parsed(Parsers.parseMaterialLines(form.materialsA, "a", ["structure", "content"]), "materialsA");
-      items.push(...listA.items);
+    const doc2 = useDocument ? secondDocument(form) : null;
+    if (doc2 && !doc) throw fail("err.doc2WithoutDoc");
+    if (doc2) items.push(doc2);
+    const withA = ["topic", "document", "folders"].includes(task) && extras.structureMaterials;
+    if (task === "contents" || withA) {
+      const useA = extras.structureOnly ? ["structure"] : ["structure", "content"];
+      items.push(...parsed(Parsers.parseMaterialLines(form.materialsA, "a", useA), "materialsA").items);
     }
     if (extras.contentMaterials) {
       items.push(...parsed(Parsers.parseMaterialLines(form.materialsB, "b", ["content"]), "materialsB").items);
@@ -249,7 +270,7 @@
     }
     const topic = text(form.topic);
     if (form.task === "topic" && !topic) throw fail("err.topicRequired");
-    const topicSent = form.task === "topic" || (extras.topicFrame && ["document", "contents"].includes(form.task));
+    const topicSent = form.task === "topic" || (extras.topicFrame && ["document", "contents", "folders"].includes(form.task));
     if (topicSent && topic) payload.topic = topic;
     collectItems(form, payload);
     const shape = buildShape(form.shape, form.limits);
