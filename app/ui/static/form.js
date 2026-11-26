@@ -34,15 +34,15 @@
     if (task === "folders" && !["structure+content", "structure"].includes($("f-folders-use").value)) {
       $("f-folders-use").value = "structure+content";
     }
-    show("sec-materials-b", $("x-content-materials").checked);
+    show("sec-materials-b", task === "assign" || $("x-content-materials").checked);
     $("x-content-label").textContent = t(`x.contentMaterials.${task}`);
     $("x-document-label").textContent = t(task === "folders" ? "x.document.folders" : "x.document");
     $("materials-a-label").textContent = t(task === "contents" ? "field.materialsA.contents" : "field.materialsA");
     $("topic-req").textContent = t(task === "topic" ? "topic.req.required" : "topic.req.optional");
     $("topic-help").textContent = t(`help.topic.${task}`);
     $("task-intro").textContent = t(`intro.${task}`);
-    $("frame-help").textContent = t(task === "refine" ? "help.frame.refine" : "help.frame");
-    $("btn-submit").textContent = t(task === "refine" ? "btn.submit.refine" : "btn.submit.create");
+    $("frame-help").textContent = t(["refine", "assign"].includes(task) ? `help.frame.${task}` : "help.frame");
+    $("btn-submit").textContent = t(["refine", "assign"].includes(task) ? `btn.submit.${task}` : "btn.submit.create");
   }
 
   const FOLDER_EXTRA_TASKS = ["topic", "document", "contents"];
@@ -99,7 +99,7 @@
         structureMaterials: $("x-structure-materials").checked,
         structureOnly: $("x-a-structure-only").checked,
         folders: FOLDER_EXTRA_TASKS.includes(task) && $("x-folders").checked,
-        contentMaterials: $("x-content-materials").checked,
+        contentMaterials: task === "assign" || $("x-content-materials").checked,
         document: $("x-document").checked,
         documentContent: $("x-doc-content").checked,
         topicFrame: task === "document" || task === "contents" || task === "folders",
@@ -291,6 +291,7 @@
     if (!slots) return false;
     applySettings(state, payload, setSelectValue);
     applyItems(preset.task, payload, slots);
+    if (preset.task === "assign") setBase(state, payload.current_tree);
     if (preset.task === "refine") {
       setBase(state, payload.current_tree);
       const fb = payload.feedback || {};

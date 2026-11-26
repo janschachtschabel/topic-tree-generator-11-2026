@@ -115,7 +115,7 @@ def test_ui_css_enforces_hidden_attribute_over_flex_and_grid() -> None:
 def test_ui_navigates_by_task_and_exposes_every_request_input() -> None:
     client = _client(ui_enabled=True)
     html = client.get("/ui/").text
-    for task in ("topic", "document", "folders", "contents", "refine"):
+    for task in ("topic", "document", "folders", "contents", "assign", "refine"):
         assert f'data-task="{task}"' in html, task
     # Example picker in the sidebar, filtered by task in the browser.
     assert 'id="f-preset"' in html and 'id="btn-reset"' in html
@@ -214,7 +214,7 @@ def test_refine_presets_start_from_a_fully_described_tree() -> None:
 
     for preset in PRESETS:
         current = preset["payload"].get("current_tree")
-        if not current:
+        if not current or preset["task"] == "assign":  # sorting in never describes, foreign trees may lack texts
             continue
         undescribed = [
             n["key"] for n in nodes(current["collection"]) if not n.get("properties", {}).get("cm:description")
@@ -232,11 +232,12 @@ def test_presets_are_grouped_by_task_with_at_least_two_per_task() -> None:
     from app.ui.presets import PRESETS
 
     tasks = [p["task"] for p in PRESETS]
-    for task in ("topic", "document", "folders", "contents", "refine"):
+    for task in ("topic", "document", "folders", "contents", "assign", "refine"):
         assert tasks.count(task) >= 2, task
     for preset in PRESETS:
         payload = preset["payload"]
-        expected = "refine" if payload["mode"] == "refine" else payload["use_case"]
+        assign_only = payload.get("options", {}).get("assign_only")
+        expected = ("assign" if assign_only else "refine") if payload["mode"] == "refine" else payload["use_case"]
         assert preset["task"] == expected, preset["id"]
     assert len({p["id"] for p in PRESETS}) == len(PRESETS)
 
@@ -300,3 +301,18 @@ def test_ui_every_field_has_an_accessible_name_and_shape_errors_name_the_field()
     i18n = (static / "i18n.js").read_text(encoding="utf-8")
     for field in ("f-depth", "f-main-min", "f-main-max", "f-child-min", "f-child-max"):
         assert i18n.count(f'"fieldname.{field}"') == 2
+
+
+def test_assign_presets_include_a_foreign_tree_with_node_ids() -> None:
+    from app.ui.presets import PRESETS
+
+    assign = [p for p in PRESETS if p["task"] == "assign"]
+
+    def foreign(nodes: list[dict]) -> bool:
+        return all("key" not in n and n.get("nodeId") and foreign(n.get("subcollections", [])) for n in nodes)
+
+    assert any(
+        foreign(p["payload"]["current_tree"]["collection"]) and "generation" not in p["payload"]["current_tree"]
+        for p in assign
+    )
+    assert all(not p["payload"].get("feedback") for p in assign)

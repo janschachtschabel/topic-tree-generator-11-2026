@@ -242,3 +242,27 @@ test("contents with only a folder structure asks for structure materials before 
   const outline = "Optik\n  - Spiegel\n  - Linse";
   throwsKey(() => B.build(form({ task: "contents", extras: { folders: true }, folderOutline: outline })), "err.materialsRequired");
 });
+
+test("assign task: refine with assign_only, no feedback, no shape, materials required", () => {
+  const base = { collection: [{ nodeId: "es-1", title: "Optik", subcollections: [] }] };
+  const p = B.build(form({
+    task: "assign",
+    currentTree: base,
+    extras: { contentMaterials: true },
+    materialsB: "Lupe bauen",
+    shape: { depth: 2 },
+    options: { assignContents: false, assignOnly: false, multiAssign: true, minConfidence: 0.6 },
+    feedback: { text: "nicht senden", rows: [] },
+  }));
+  assert.equal(p.mode, "refine");
+  assert.equal(p.use_case, "topic");
+  assert.equal(p.current_tree, base);
+  assert.equal(p.options.assign_only, true);
+  assert.equal(p.options.assign_contents, true);
+  assert.equal(p.feedback, undefined);
+  assert.equal(p.shape, undefined);
+  assert.equal(p.topic, undefined);
+  assert.deepEqual(p.items.map((i) => [i.properties["cm:title"][0], i.use]), [["Lupe bauen", ["content"]]]);
+  throwsKey(() => B.build(form({ task: "assign", currentTree: base, extras: { contentMaterials: true } })), "err.assignItemsRequired");
+  throwsKey(() => B.build(form({ task: "assign", extras: { contentMaterials: true }, materialsB: "X" })), "err.currentTreeRequired");
+});
