@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased (planned 2.2.0)
+
+New
+- Sorting into an existing tree is its own use case: `refine` + `options.assign_only` now returns every node exactly as
+  sent (`properties` untouched, no frame stamping, no `auto_metadata`, which is reported as `INPUT_IGNORED`), so a
+  collection tree from the repository can be filled with contents only. Test UI task "Inhalte einsortieren" with a
+  foreign-tree example; README use case 6, `docs/api.md` section and decision table.
+- `nodeId` on tree nodes: `current_tree` nodes may carry the repository id of their collection; it comes back
+  unchanged on the node (before, it was dropped silently).
+- Change `describe` (`feedback.changes`, `key` + optional `hint`): rewrites description and keywords of chosen nodes
+  with the whole tree as context. It is the v2 successor of `/generate-collection-description`, which stays frozen.
+  Test UI: row editor op "Neu beschreiben" and an example.
+
+Fixed
+- Test UI: the base summary counted only nodes with a key (a repository tree showed "0 Knoten").
+
 ## 2.1.0 (2026-11-26)
 
 New

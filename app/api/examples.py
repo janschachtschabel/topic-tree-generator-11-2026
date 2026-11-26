@@ -104,14 +104,38 @@ REQUEST_EXAMPLES = {
         },
     },
     "assign_only": {
-        "summary": "Neue Inhalte in einen bestehenden Baum einsortieren",
+        "summary": "Inhalte in einen bestehenden (auch fremden) Baum einsortieren; Knoten bleiben unverändert",
         "value": {
             "mode": "refine",
             "use_case": "topic",
-            "current_tree": {"version": "v3", "collection": [{"key": "k-optik", "title": "Optik"}]},
+            "current_tree": {
+                "collection": [
+                    {
+                        "nodeId": "n-optik",
+                        "title": "Optik",
+                        "subcollections": [{"nodeId": "n-linsen", "title": "Linsen"}],
+                    }
+                ]
+            },
             "items": [{"id": "c9", "use": ["content"], "properties": {"cm:title": ["Brechung am Prisma"]}}],
             "frame": _FRAME,
             "options": {"assign_only": True},
+        },
+    },
+    "describe": {
+        "summary": "Beschreibung eines Knotens mit Baum-Kontext neu schreiben (statt /generate-collection-description)",
+        "value": {
+            "mode": "refine",
+            "use_case": "topic",
+            "current_tree": {
+                "collection": [
+                    {"key": "k-optik", "title": "Optik", "subcollections": [{"key": "k-linsen", "title": "Linsen"}]}
+                ]
+            },
+            "feedback": {
+                "changes": [{"op": "describe", "key": "k-linsen", "hint": "Alltagsbeispiele wie Lupe und Brille"}]
+            },
+            "frame": _FRAME,
         },
     },
 }

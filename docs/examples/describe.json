@@ -1,0 +1,45 @@
+{
+  "mode": "refine",
+  "use_case": "topic",
+  "current_tree": {
+    "collection": [
+      {
+        "key": "k-optik",
+        "title": "Optik",
+        "subcollections": [
+          {
+            "key": "k-linsen",
+            "title": "Linsen"
+          },
+          {
+            "key": "k-spiegel",
+            "title": "Spiegel"
+          }
+        ]
+      }
+    ]
+  },
+  "feedback": {
+    "changes": [
+      {
+        "op": "describe",
+        "key": "k-linsen",
+        "hint": "Für Klasse 8: Brennweite bestimmen, Lupe, Brille und Fotoapparat als Alltagsbeispiele."
+      }
+    ],
+    "locked": [
+      "k-spiegel"
+    ]
+  },
+  "frame": {
+    "discipline_uri": [
+      "http://w3id.org/openeduhub/vocabs/discipline/460"
+    ],
+    "educational_context_uri": [
+      "http://w3id.org/openeduhub/vocabs/educationalContext/sekundarstufe_1"
+    ],
+    "intended_end_user_role_uri": [
+      "http://w3id.org/openeduhub/vocabs/intendedEndUserRole/teacher"
+    ]
+  }
+}

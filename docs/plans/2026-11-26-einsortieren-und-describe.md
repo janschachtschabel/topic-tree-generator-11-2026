@@ -41,10 +41,10 @@ Test: `tests/pipeline/strategies/test_refine.py`, `tests/schemas/test_request_v2
 **Schnittstelle:** `TreeNodeIn.node_id: str | None` (Alias `nodeId`, max 200), `Node.node_id: str | None = None`,
 `NodeOut.node_id: str | None` (Alias `nodeId`, nur ausgegeben, wenn gesetzt).
 
-- [ ] Test `test_node_ids_of_collection_nodes_pass_through_unchanged`: refine mit `changes` (rename) auf Baum
+- [x] Test `test_node_ids_of_collection_nodes_pass_through_unchanged`: refine mit `changes` (rename) auf Baum
       mit `nodeId` je Knoten → jede Antwort-Node hat dieselbe `nodeId`; neu hinzugefügter Knoten hat keine.
-- [ ] Test fehlschlagen sehen, Felder ergänzen, Test grün.
-- [ ] Commit `feat: pass nodeId of collection nodes through refine`.
+- [x] Test fehlschlagen sehen, Felder ergänzen, Test grün.
+- [x] Commit `feat: pass nodeId of collection nodes through refine`.
 
 ### Aufgabe 2: `assign_only` lässt Knoten unverändert
 
@@ -54,13 +54,13 @@ Test: `tests/pipeline/strategies/test_refine.py`, `tests/schemas/test_request_v2
 `app/pipeline/input_checks.py` bzw. `warn_unused_inputs` (`INPUT_IGNORED` für `auto_metadata`);
 Test: `tests/pipeline/strategies/test_refine.py`.
 
-- [ ] Test `test_assign_only_into_foreign_tree_changes_nothing_but_contents`: Baum ohne Schlüssel/`generation`,
+- [x] Test `test_assign_only_into_foreign_tree_changes_nothing_but_contents`: Baum ohne Schlüssel/`generation`,
       `nodeId`, Properties ohne `cm:title`, langer Titel, `frame` mit Fach → `properties` je Knoten identisch zur
       Eingabe, Struktur gleich, `status` überall `unchanged`, Inhalt am Zielknoten.
-- [ ] Test `test_assign_only_ignores_changed_frame` (Review-Fokus 2) und
+- [x] Test `test_assign_only_ignores_changed_frame` (Review-Fokus 2) und
       `test_assign_only_skips_auto_metadata_with_warning` (Review-Fokus 3).
-- [ ] Umsetzen; Felder `shorttitle` der Antwort bleiben vertragsgemäß (≤ 20 Zeichen), nur `properties` bleiben roh.
-- [ ] Commit `fix: assign_only leaves node properties untouched`.
+- [x] Umsetzen; Felder `shorttitle` der Antwort bleiben vertragsgemäß (≤ 20 Zeichen), nur `properties` bleiben roh.
+- [x] Commit `fix: assign_only leaves node properties untouched`.
 
 ### Aufgabe 3: Änderung `describe`
 
@@ -69,30 +69,30 @@ Test: `tests/pipeline/strategies/test_refine.py`.
 gesperrt → abgelehnt, sonst `record`), `app/pipeline/strategies/refine.py` (`describe`-Schlüssel in `refresh`,
 Hinweise als `extra` an `describe_nodes`); Test: `tests/domain/test_ops.py`, `tests/pipeline/strategies/test_refine.py`.
 
-- [ ] Test `test_describe_rewrites_description_with_hint`: Knoten mit Beschreibung, `describe` mit `hint` →
+- [x] Test `test_describe_rewrites_description_with_hint`: Knoten mit Beschreibung, `describe` mit `hint` →
       ein `describe_nodes`-Aufruf, Prompt enthält den Hinweis, neue Beschreibung, `changes[0].op == "describe"`,
       Status `changed`, andere Knoten unverändert.
-- [ ] Test `test_describe_on_locked_node_is_rejected` (Review-Fokus 4), `describe` ohne `key` → 422.
-- [ ] Umsetzen; `interpret_feedback` (Freitext) bleibt ohne `describe`.
-- [ ] Commit `feat: describe change regenerates node descriptions with tree context`.
+- [x] Test `test_describe_on_locked_node_is_rejected` (Review-Fokus 4), `describe` ohne `key` → 422.
+- [x] Umsetzen; `interpret_feedback` (Freitext) bleibt ohne `describe`.
+- [x] Commit `feat: describe change regenerates node descriptions with tree context`.
 
 ### Aufgabe 4: Sichtbarer Use Case in UI, README und Doku
 
 **Dateien:** `app/ui/static/{index.html,app.js,form.js,payload.js,changes.js,i18n.js}`,
-`app/ui/presets_refine.py` (neue Aufgabe `assign`), `README.md`, `docs/api.md`, `docs/examples/`, `CHANGELOG.md`,
-`pyproject.toml` (2.2.0); Tests: `tests/ui_js/payload.test.cjs`, `tests/api/test_ui_presets_form.py`.
+`app/ui/presets_assign.py` (neue Aufgabe `assign`), `README.md`, `docs/api.md`, `docs/examples/`, `CHANGELOG.md`,
+Versionsnummer bleibt 2.1.0 bis zum Release (Changelog „Unreleased“); Tests: `tests/ui_js/payload.test.cjs`, `tests/api/test_ui_presets_form.py`.
 
-- [ ] UI-Aufgabe „Inhalte einsortieren“ (`task: "assign"`): Basis-Baum (JSON/übernommen) + Materialien zum
+- [x] UI-Aufgabe „Inhalte einsortieren“ (`task: "assign"`): Basis-Baum (JSON/übernommen) + Materialien zum
       Einsortieren; Anfrage = `refine` + `assign_only: true`, ohne `feedback`.
-- [ ] JS-Test: `build({task: "assign", ...})` ergibt `mode: "refine"`, `options.assign_only: true`, keine `feedback`;
+- [x] JS-Test: `build({task: "assign", ...})` ergibt `mode: "refine"`, `options.assign_only: true`, keine `feedback`;
       ohne Basis → `err.currentTreeRequired`; ohne Materialien → Fehler.
-- [ ] Vorlagen: bisherige `assign_only` nach `assign` verschieben, neue „Fremden Baum befüllen (edu-sharing)“ mit
+- [x] Vorlagen: bisherige `assign_only` nach `assign` verschieben, neue „Fremden Baum befüllen (edu-sharing)“ mit
       `nodeId` und ohne Schlüssel; `describe` im Änderungs-Editor und als Vorlage unter „Baum ändern“.
-- [ ] README: Use Case „Sort items into an existing tree“ und „Describe nodes“; docs/api.md: Entscheidungstabelle,
+- [x] README: Use Case „Sort items into an existing tree“ und „Describe nodes“; docs/api.md: Entscheidungstabelle,
       `describe`, `nodeId` an Knoten; Changelog 2.2.0.
-- [ ] Commit(s) `feat: assign task in the test UI`, `docs: assign into an existing tree and describe`.
+- [x] Commit(s) `feat: assign task in the test UI`, `docs: assign into an existing tree and describe`.
 
 ### Aufgabe 5: Abschluss
 
-- [ ] `uv run pytest -q`, `uv run ruff check`, `uv run ruff format --check` grün.
-- [ ] Review, PR, grüne CI, mergen (Freigabe laut Projektregel).
+- [x] `uv run pytest -q`, `uv run ruff check`, `uv run ruff format --check` grün.
+- [ ] Review, PR, grüne CI, mergen (Freigabe laut Projektregel; erst nach Tag v2.1.0, damit der Tag diese Funktionen nicht enthält).

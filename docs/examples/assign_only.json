@@ -2,23 +2,54 @@
   "mode": "refine",
   "use_case": "topic",
   "current_tree": {
-    "version": "v3",
     "collection": [
       {
-        "key": "k-optik",
-        "title": "Optik"
+        "nodeId": "4f1c2a9e-0b7d-4c55-9a21-6d3e8f0a1b01",
+        "title": "Licht und Optik",
+        "properties": {
+          "cm:title": [
+            "Licht und Optik"
+          ]
+        },
+        "subcollections": [
+          {
+            "nodeId": "4f1c2a9e-0b7d-4c55-9a21-6d3e8f0a1b02",
+            "title": "Spiegel und Reflexion"
+          },
+          {
+            "nodeId": "4f1c2a9e-0b7d-4c55-9a21-6d3e8f0a1b03",
+            "title": "Linsen"
+          }
+        ]
+      },
+      {
+        "nodeId": "4f1c2a9e-0b7d-4c55-9a21-6d3e8f0a1b04",
+        "title": "Schall"
       }
     ]
   },
   "items": [
     {
-      "id": "c9",
+      "id": "c1",
+      "nodeId": "7a0e5b3c-1d2f-4e6a-8b9c-0d1e2f3a4b01",
       "use": [
         "content"
       ],
       "properties": {
         "cm:title": [
-          "Brechung am Prisma"
+          "Brennweite einer Lupe bestimmen"
+        ]
+      }
+    },
+    {
+      "id": "c2",
+      "nodeId": "7a0e5b3c-1d2f-4e6a-8b9c-0d1e2f3a4b02",
+      "use": [
+        "content"
+      ],
+      "properties": {
+        "cm:title": [
+          "Echo und Schallgeschwindigkeit"
         ]
       }
     }
