@@ -2,7 +2,7 @@
 
 FastAPI service that generates edu-sharing collection structures ("Themenbäume") with an LLM: from a topic, a structure document (such as a curriculum), uploaded folders and files, or unstructured contents. Drafts can be refined iteratively with feedback, and content items are assigned to nodes with confidence scores. An existing tree, also one taken from the repository, can be filled with contents only (structure, properties and `nodeId` stay as they are), and single nodes can get a fresh description with the whole tree as context.
 
-- **`POST /v2/topic-tree`** – current v2 API ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
+- **`POST /v2/topic-tree`** – current v2 API; `/docs` explains use cases, combinations and options and offers an example for each in the "Examples" drop-down ([API reference](docs/api.md), [JSON schemas](docs/schemas/), [example payloads](docs/examples/))
 - **`POST /generate-topic-tree`**, **`POST /generate-collection-description`** – format-frozen legacy v1 endpoints (now sharing standalone & b-api auth/backend resolution with v2); new callers describe collections with the `describe` change of v2 (see use case 7)
 - **Built-in Test UI** at `/ui/` (optional, toggleable via `UI_ENABLED`)
 - **Operations & benchmarks**: [docs/steckbrief.md](docs/steckbrief.md) · [v1 vs. v2 comparison](docs/measurements/2026-11-25-v1-vs-v2-comparison.md) · [v2 load & token benchmark](docs/measurements/2026-11-24-openai-gpt-6-luna.md) · [Design plan](docs/plans/2026-11-24-topic-tree-v2.md)
@@ -17,7 +17,7 @@ request → input & cap checks → resolve refs (allow-listed) → strategy per 
 
 - **`topic`**: Generates the complete title-only skeleton across all requested levels in a single LLM call, eliminates any duplicate titles deterministically, and describes all nodes in parallel balanced batches of up to 10 nodes (each sharing the full tree outline in the prompt-cache prefix for crisp demarcation). Extra Level-1 topics (`extra_topics`: `"general"`, `"methodology"`) count toward the total Level-1 `main_topics` range.
 - **`document`**: Parses Markdown headings and page markers deterministically, maps the outline into a tree with `origin.document` (`section`, `page`), and writes node descriptions from section excerpts (falling back deterministically to the document's headings with an `LLM_DEGRADED` warning if the LLM is unavailable).
-- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`), optionally proposes renames/merges/moves when `options.improve=true`, and degrades gracefully (`LLM_DEGRADED`) if the LLM is unavailable.
+- **`folders`**: Preserves the uploaded folder hierarchy (`origin.folder`), optionally applies renames/merges/moves when `options.improve=true` (each reported in `changes[]`), and degrades gracefully (`LLM_DEGRADED`) if the LLM is unavailable.
 - **`contents`**: Induces topic groups from a stratified sample of items (`origin.cluster`), eliminates duplicate group titles, and assigns every item with confidence.
 - **`mode: refine`**: Applies structured `feedback.changes` first, then interprets free-text `feedback.text` while protecting `feedback.locked` subtrees. With `options.assign_only=true`, only new items are sorted into the existing tree and every node comes back as sent; the `describe` change rewrites descriptions of chosen nodes with the tree as context.
 - **Prompt caching**: All prompts live in `app/prompts/`; `system.md` is strictly static across every LLM call.
@@ -208,8 +208,8 @@ The service ships with a self-hosted interactive test UI (zero external scripts,
 - **Capabilities**:
   - Left navigation by task (Thema, Dokument, Ordner, Inhalte gruppieren, Inhalte einsortieren, Baum ändern); each task
     shows only its fields plus an "also include" group for combinations (materials that shape the structure, materials
-    that are only sorted in, a structure document as inspiration or guide). 27 examples, filtered per task, fill the
-    form without starting.
+    that are only sorted in, a structure document as inspiration or guide). 28 examples, filtered per task and split
+    into basic examples and combinations (e.g. topic + materials only sorted in), fill the form without starting.
   - "Inhalte einsortieren": a base tree (example, last result or pasted JSON, also a repository tree with `nodeId` and
     without keys) plus materials; the tree is shown read-only and sent as `refine` + `assign_only`.
   - Line editors instead of JSON: materials as `Titel | Schlagworte | Beschreibung`, folders as an indented outline.
@@ -245,7 +245,7 @@ Every field of request and response, with type, default and meaning, is listed i
 | `metadata` | Title, description, `version`, vocabulary labels and `generation` (all settings of the run; send it back for the next run) |
 | `collection[]` | The tree: per node `key` (stable across runs), `nodeId` (if sent in `current_tree`), `title`, `shorttitle`, `status`, `origin`, edu-sharing `properties`, `contents[]` (`id`, `nodeId`, `confidence`), `subcollections[]` |
 | `unassigned[]` | Items not sorted in, with `reason` (`off_topic`, `low_confidence`, `no_matching_node`, `excluded`) |
-| `changes[]` | Applied (refine) or proposed (`folders` + `improve`) changes |
+| `changes[]` | Applied changes (refine, or `folders` + `improve`, then `source: service`) |
 | `questions[]` | Questions about unclear feedback; the unclear part is not applied |
 | `warnings[]` | Everything that failed or stood out, with a fixed `code` (never a silent gap) |
 
@@ -330,7 +330,7 @@ curl -s http://localhost:8000/v2/topic-tree \
 
 ### 3. `folders` – Keep and optionally improve an uploaded folder hierarchy
 
-Preserves the caller's folder tree (`origin.type="folder"`), writes descriptions/keywords for each folder, and keeps assigned items with confidence `1.0`. Set `"options": {"improve": true}` to let the service rename generic folders (like `Neuer Ordner (2)`) or suggest structural fixes reported in `changes[]`.
+Preserves the caller's folder tree (`origin.type="folder"`), writes descriptions/keywords for each folder, and keeps assigned items with confidence `1.0`. Set `"options": {"improve": true}` to let the service rename generic folders (like `Neuer Ordner (2)`) or fix the structure; every applied change is reported in `changes[]`.
 
 ```shell
 curl -s http://localhost:8000/v2/topic-tree \

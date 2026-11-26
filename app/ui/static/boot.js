@@ -16,7 +16,9 @@
       text.textContent = t(`intro.${task}`);
       const count = document.createElement("span");
       count.className = "task-card-count";
-      count.textContent = t("task.examples", { n: state.presets.filter((p) => p.task === task).length });
+      const own = state.presets.filter((p) => p.task === task);
+      const combos = own.filter((p) => p.combo).length;
+      count.textContent = t(combos ? (combos === 1 ? "task.examplesCombo1" : "task.examplesCombo") : "task.examples", { n: own.length, c: combos });
       card.append(title, text, count);
       card.addEventListener("click", () => selectTask(task));
       return card;

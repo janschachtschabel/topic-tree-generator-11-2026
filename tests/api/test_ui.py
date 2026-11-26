@@ -316,3 +316,30 @@ def test_assign_presets_include_a_foreign_tree_with_node_ids() -> None:
         for p in assign
     )
     assert all(not p["payload"].get("feedback") for p in assign)
+
+
+def test_every_create_task_offers_combinations_marked_as_such() -> None:
+    from app.ui.presets import PRESETS
+
+    for task in ("topic", "document", "folders", "contents"):
+        assert any(p.get("combo") for p in PRESETS if p["task"] == task), task
+    for preset in PRESETS:
+        if preset.get("combo"):
+            assert preset["task"] not in ("assign", "refine"), preset["id"]
+
+
+def test_topic_offers_contents_that_are_only_sorted_in() -> None:
+    from app.ui.presets import PRESETS
+
+    def only_content(p: dict) -> bool:
+        items = p["payload"].get("items") or []
+        return bool(items) and all(i.get("use", ["content"]) == ["content"] for i in items)
+
+    assert any(p["task"] == "topic" and p.get("combo") and only_content(p) for p in PRESETS)
+
+
+def test_preset_picker_groups_basic_examples_and_combinations() -> None:
+    from pathlib import Path
+
+    js = (Path("app/ui/static") / "app.js").read_text(encoding="utf-8")
+    assert "optgroup" in js and "preset.group.combo" in js

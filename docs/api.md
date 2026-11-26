@@ -30,14 +30,14 @@ Serverseitige Obergrenzen (`MAX_TREE_DEPTH`, `MAX_NODES_PER_LEVEL`) können per 
 |---|---|---|
 | `topic_minimal.json`, `topic_full.json` | topic | Vollständiges Titel-Grundgerüst in einem Aufruf, deterministische Duplikatbereinigung, dann parallele Beschreibungs-Batches (je 10 Knoten mit Gesamtstruktur im Cache-Präfix) |
 | `document.json` | document | Gliederung aus den Überschriften, Abschnitt und Seite je Knoten |
-| `folders.json` | folders | Ordner bleiben; mit `options.improve` Vorschläge, die als `changes` zurückkommen |
+| `folders.json` | folders | Ordner bleiben; mit `options.improve` umgesetzte Verbesserungen, die als `changes` zurückkommen |
 | `contents.json` | contents | Gruppen aus den Inhalten (inkl. Duplikatbereinigung), Zuordnung mit Konfidenz |
 | `refine_feedback.json` | refine | Rückmeldung als Text; `locked` schützt Äste |
 | `assign_only.json` | refine + `assign_only` | Inhalte in einen bestehenden Baum aus dem Repository einsortieren (`nodeId`, ohne Schlüssel); Knoten bleiben unverändert |
 | `describe.json` | refine + `describe` | Beschreibung eines Knotens mit Baum-Kontext und Vorgabe neu schreiben |
 | `refine_changes.json` | refine | Sieben gezielte Änderungen (alle außer `describe`), dazu Freitext, gesperrter Ast und ein neuer Inhalt |
 | `topic_with_items.json` | topic | Thema und zwei Inhalte; die Antwort dazu: `responses/topic_with_items.json` |
-| `combo_topic_folders.json` | topic + Ordner | Ordnerstruktur regt an (`folders_use`), Ordnerpfade und `path` helfen beim Einsortieren |
+| `combo_topic_folders.json` | topic + Ordner | Ordnerstruktur regt an (`folders_use`), Ordnerpfade und `path` helfen beim Einsortieren (`path` prägt die Gliederung nicht) |
 | `combo_document_topic_contents.json` | document + Thema + Inhalte | Lehrplan als Gerüst, `topic` grenzt ein, Themenliste ohne Text ergänzt, Inhalte werden einsortiert |
 | `contents_with_curriculum.json` | contents + Lehrplan | Gruppen aus Inhalten, der Lehrplan-Volltext fließt ein, ein Inhalt wird nur einsortiert |
 
@@ -237,7 +237,7 @@ Beispiel: `docs/examples/responses/topic_with_items.json`; alle Felder: [`datenf
   `confidence`) und `subcollections[]`.
 - `unassigned[]`: nicht einsortierte Inhalte mit Grund (`off_topic`, `low_confidence`, `no_matching_node`,
   `excluded`).
-- `changes[]`: umgesetzte (refine) oder vorgeschlagene (`folders` mit `improve`) Änderungen.
+- `changes[]`: umgesetzte Änderungen (refine oder `folders` mit `improve`, dann `source: service`).
 - `warnings[]`: `{code, message, key?, step?}` – was nicht gelungen ist oder auffiel (z. B. `LLM_DEGRADED`,
   `DESCRIBE_FAILED`, `DESCRIBE_UNKNOWN_KEY`, `METADATA_LABEL_UNKNOWN`, `METADATA_FAILED`, `INPUTS_TRUNCATED`,
   `OUTLINE_FALLBACK`, `DEADLINE_EXCEEDED`, `SHAPE_SINGLE_CHILD`, `SHAPE_UNBALANCED`, `DUPLICATE_TITLE`, `GENERIC_TITLE`,

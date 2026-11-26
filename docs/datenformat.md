@@ -172,12 +172,12 @@ Werte: `create`, `refine`
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
-| `improve` | ja/nein |  | `False` | folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück |
-| `assign_contents` | ja/nein |  | `True` | Inhalte aus items den Knoten zuordnen |
-| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf |
-| `multi_assign` | ja/nein |  | `True` | Ein Inhalt darf mehreren Knoten zugeordnet werden |
-| `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned |
-| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist |
+| `improve` | ja/nein |  | `False` | Nur use_case folders: Umbenennen, Zusammenlegen und Umstellen der Ordner vorschlagen (auch nach einem Gliederungsdokument in items). Die Vorschläge sind im Baum umgesetzt und stehen als changes mit from service in der Antwort; ohne improve bleiben die Ordner wie gesendet. |
+| `assign_contents` | ja/nein |  | `True` | Einträge mit Rolle content den Knoten zuordnen (mit Konfidenz). false: nur die Struktur erzeugen; gesendete Inhalte meldet INPUT_IGNORED. |
+| `assign_only` | ja/nein |  | `False` | Nur mode refine: nur neue Inhalte in den current_tree einsortieren. Struktur, Titel, properties und nodeId jedes Knotens bleiben (auch bei einem Baum aus dem Repository); feedback wird nicht umgesetzt. Gilt nur für diesen Aufruf und wird nicht geerbt. |
+| `multi_assign` | ja/nein |  | `True` | true: Ein Inhalt darf an mehreren passenden Knoten hängen. false: nur am besten passenden Knoten. |
+| `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz (0 bis 1) einer Zuordnung. Darunter kommt der Inhalt mit Grund low_confidence nach unassigned; höher heißt strenger, weniger Zuordnungen. |
+| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Nur dann kostet es zusätzliche Aufrufe des Sprachmodells. |
 
 ### Properties
 
@@ -370,12 +370,12 @@ Werte: `new`, `unchanged`, `changed`, `moved`, `suggested`
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
-| `improve` | ja/nein |  | `False` | folders: Verbesserungen der Ordnerstruktur vorschlagen; sie kommen als changes zurück |
-| `assign_contents` | ja/nein |  | `True` | Inhalte aus items den Knoten zuordnen |
-| `assign_only` | ja/nein |  | `False` | refine: nur neue Inhalte einsortieren; Struktur und Knoten-Properties bleiben, gilt nur für diesen Aufruf |
-| `multi_assign` | ja/nein |  | `True` | Ein Inhalt darf mehreren Knoten zugeordnet werden |
-| `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz einer Zuordnung; darunter landet der Inhalt mit low_confidence in unassigned |
-| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten verengen, wenn frame leer oder mehrwertig ist |
+| `improve` | ja/nein |  | `False` | Nur use_case folders: Umbenennen, Zusammenlegen und Umstellen der Ordner vorschlagen (auch nach einem Gliederungsdokument in items). Die Vorschläge sind im Baum umgesetzt und stehen als changes mit from service in der Antwort; ohne improve bleiben die Ordner wie gesendet. |
+| `assign_contents` | ja/nein |  | `True` | Einträge mit Rolle content den Knoten zuordnen (mit Konfidenz). false: nur die Struktur erzeugen; gesendete Inhalte meldet INPUT_IGNORED. |
+| `assign_only` | ja/nein |  | `False` | Nur mode refine: nur neue Inhalte in den current_tree einsortieren. Struktur, Titel, properties und nodeId jedes Knotens bleiben (auch bei einem Baum aus dem Repository); feedback wird nicht umgesetzt. Gilt nur für diesen Aufruf und wird nicht geerbt. |
+| `multi_assign` | ja/nein |  | `True` | true: Ein Inhalt darf an mehreren passenden Knoten hängen. false: nur am besten passenden Knoten. |
+| `min_confidence` | Zahl (≥ 0, ≤ 1) |  | `0.6` | Mindestkonfidenz (0 bis 1) einer Zuordnung. Darunter kommt der Inhalt mit Grund low_confidence nach unassigned; höher heißt strenger, weniger Zuordnungen. |
+| `auto_metadata` | ja/nein |  | `False` | Fach, Bildungsstufe und Zielgruppe je Knoten bestimmen und als Vokabular-URIs setzen; sinnvoll, wenn frame leer oder mehrwertig ist (z. B. fächerübergreifend). Nur dann kostet es zusätzliche Aufrufe des Sprachmodells. |
 
 ### Origin (Antwort)
 

@@ -33,6 +33,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_topic_document_contents",
         "task": "topic",
+        "combo": True,
         "title": "Kombination: Thema + Lehrplan als Anregung + Materialien",
         "summary": "Das Thema bildet das Gerüst, der Lehrplan regt Themen an, ein Material prägt mit, drei werden "
         "nur einsortiert.",
@@ -54,6 +55,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_document_as_content",
         "task": "document",
+        "combo": True,
         "title": "Kombination: Lehrplan als Gerüst und Inhalt + Thema + Materialien",
         "summary": "Der Lehrplan liefert die Gliederung und wird selbst einsortiert; das Thema grenzt ein, zwei "
         "Materialien kommen dazu.",
@@ -72,6 +74,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_folders_document_loose",
         "task": "folders",
+        "combo": True,
         "title": "Kombination: Ordner verbessern mit Lehrplan + lose Dateien",
         "summary": "Die Ordner bleiben das Gerüst und werden am Lehrplan ausgerichtet; zwei lose Dateien werden "
         "einsortiert.",
@@ -94,6 +97,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_topic_folders",
         "task": "topic",
+        "combo": True,
         "title": "Kombination: Thema + Ordnerstruktur + lose Materialien",
         "summary": "Das Thema bildet das Gerüst, die Ordner regen die Gliederung an und ihre Dateien werden mit dem "
         "Ordnerpfad als Hinweis einsortiert.",
@@ -110,6 +114,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_document_two_docs_folders",
         "task": "document",
+        "combo": True,
         "title": "Kombination: zwei Lehrpläne + Themenliste + Ordner als Ablage",
         "summary": "Landeslehrplan und Schulcurriculum ergeben eine Gliederung, eine Themenliste ergänzt sie, die Ordner "
         "zählen nur als Ablage der Dateien.",
@@ -131,6 +136,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_contents_folders",
         "task": "contents",
+        "combo": True,
         "title": "Kombination: Materialien gruppieren + Ordner als Gliederungshinweis",
         "summary": "Die Gruppen entstehen aus den Materialien, die Ordnerstruktur regt sie an; Ordnerdateien werden "
         "neu einsortiert.",
@@ -151,6 +157,7 @@ COMBO_PRESETS: list[dict[str, Any]] = [
     {
         "id": "combo_folders_outline_only",
         "task": "folders",
+        "combo": True,
         "title": "Kombination: Ordner nur als Gliederung + Lehrplan, alle Dateien neu einsortieren",
         "summary": "Die Ordner bleiben das Gerüst und werden am Lehrplan verbessert; ihre bisherige Zuordnung zählt "
         "nicht, alle Dateien werden neu einsortiert.",
