@@ -87,14 +87,14 @@ DOCUMENT_PRESETS: list[dict[str, Any]] = [
     },
 ]
 
-_UPLOAD_FILES = [
+UPLOAD_FILES = [
     material("c1", "Licht und Schatten", []),
     material("c2", "Lochkamera bauen", []),
     material("c3", "Sammellinse & Fokus", []),
     material("c4", "Reflexion am Spiegel", []),
     material("c5", "Hohlspiegel-Versuch", []),
 ]
-_UPLOAD_FOLDERS = [
+UPLOAD_FOLDERS = [
     {
         "title": "Optik",
         "items": ["c1", "c2"],
@@ -112,8 +112,8 @@ FOLDERS_PRESETS: list[dict[str, Any]] = [
         "payload": {
             "mode": "create",
             "use_case": "folders",
-            "folders": _UPLOAD_FOLDERS,
-            "items": _UPLOAD_FILES,
+            "folders": UPLOAD_FOLDERS,
+            "items": UPLOAD_FILES,
             "frame": FRAME_PHYS_SEK1,
             "shape": {"depth": 2, "main_topics": {"min": 1, "max": 6}, "children": {"min": 2, "max": 6}},
             "options": {"improve": True},
@@ -127,9 +127,9 @@ FOLDERS_PRESETS: list[dict[str, Any]] = [
         "payload": {
             "mode": "create",
             "use_case": "folders",
-            "folders": _UPLOAD_FOLDERS,
+            "folders": UPLOAD_FOLDERS,
             "items": [
-                *_UPLOAD_FILES,
+                *UPLOAD_FILES,
                 material("b1", "Brennweite einer Lupe bestimmen", ["Linse"]),
                 material("b2", "Schattentheater im Klassenraum", ["Schatten"]),
                 material("b3", "Spiegelschrift lesen", ["Spiegel"]),

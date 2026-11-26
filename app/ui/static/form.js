@@ -81,7 +81,7 @@
         contentMaterials: $("x-content-materials").checked,
         document: $("x-document").checked,
         documentContent: $("x-doc-content").checked,
-        topicFrame: task === "document" || task === "contents",
+        topicFrame: task === "document" || task === "contents" || task === "folders",
       },
       materialsA: $("f-materials-a").value,
       materialsB: $("f-materials-b").value,

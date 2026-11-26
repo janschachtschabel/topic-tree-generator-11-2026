@@ -25,6 +25,7 @@ from app.ui.preset_vocab import (
     frame,
     material,
 )
+from app.ui.presets_combos import COMBO_PRESETS
 from app.ui.presets_inputs import CONTENTS_PRESETS, DOCUMENT_PRESETS, FOLDERS_PRESETS, LEHRPLAN_DOC
 from app.ui.presets_refine import REFINE_PRESETS
 
@@ -149,4 +150,5 @@ PRESETS: list[dict[str, Any]] = [
     *FOLDERS_PRESETS,
     *CONTENTS_PRESETS,
     *REFINE_PRESETS,
+    *COMBO_PRESETS,
 ]

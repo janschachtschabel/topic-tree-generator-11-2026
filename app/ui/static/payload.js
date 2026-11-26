@@ -249,7 +249,7 @@
     }
     const topic = text(form.topic);
     if (form.task === "topic" && !topic) throw fail("err.topicRequired");
-    const topicSent = form.task === "topic" || (extras.topicFrame && ["document", "contents"].includes(form.task));
+    const topicSent = form.task === "topic" || (extras.topicFrame && ["document", "contents", "folders"].includes(form.task));
     if (topicSent && topic) payload.topic = topic;
     collectItems(form, payload);
     const shape = buildShape(form.shape, form.limits);
