@@ -1,4 +1,4 @@
-"""Compatibility entry point (IDE run configuration, `fastapi run main.py`). The app lives in `app.main`."""
+"""Compatibility entry point (IDE run configuration, `uvicorn main:app`). The app lives in `app.main`."""
 
 from app.main import app
 

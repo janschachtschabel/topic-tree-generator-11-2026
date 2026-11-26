@@ -5,7 +5,8 @@ description = "Themenbaum-Dienst: generates edu-sharing collection structures wi
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi[standard]>=0.116.1",
+    "fastapi>=0.116.1",
+    "uvicorn[standard]>=0.35.0",
     "loguru>=0.7.3",
     "openai>=1.99.9",
     "pydantic>=2.11.7",

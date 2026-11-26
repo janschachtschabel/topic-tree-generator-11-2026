@@ -21,6 +21,10 @@ Fixed (full audit 26.11.2026, `docs/audits/2026-11-26-gesamtaudit.md`)
 - Test UI: a refine base keeps every educational context and role; include/exclude terms may hold a comma (separate
   with `;`); presets whose folder files carry more than a title open in the JSON view; `contents` with only folders
   asks for structure materials; both JSON areas have accessible names; shape errors name the field.
+- Dependencies: the new `pip-audit` job found 46 known vulnerabilities in the locked runtime dependencies (starlette
+  0.45, urllib3, python-multipart, jinja2, dnspython, pygments). `fastapi[standard]` is replaced by `fastapi` plus
+  `uvicorn[standard]` (the extras pulled in unused CLI, template, form and e-mail packages), FastAPI/Starlette are
+  updated (Starlette 1.10), and the `httpx2` loggers are muted like `httpx` (they would log request URLs).
 - CI: a release tag never moves `latest`, a version is never published twice, `uv lock --check`, and a report-only
   `pip-audit` job. `docs/api.md` lists every warning and error code (with a test).
 

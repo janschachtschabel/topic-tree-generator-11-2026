@@ -80,8 +80,9 @@ def configure_logging(service: str, level: str = "INFO", fmt: str = "json", stre
     for name in ("uvicorn", "uvicorn.error", "gunicorn.error"):
         logging.getLogger(name).handlers = [_InterceptHandler()]
         logging.getLogger(name).propagate = False
-    # httpx/httpcore log every outgoing URL at INFO; URLs may carry caller-controlled or secret query values.
-    for name in ("httpx", "httpcore"):
+    # httpx/httpcore (and their httpx2 fork, used by Starlette 1.x and the openai SDK) log every URL at INFO;
+    # URLs may carry caller-controlled or secret query values.
+    for name in ("httpx", "httpcore", "httpx2", "httpcore2"):
         logging.getLogger(name).setLevel(logging.WARNING)
     # The access log of the server is replaced by our own line per request (no header values, no raw paths).
     for name in ("uvicorn.access", "gunicorn.access"):
