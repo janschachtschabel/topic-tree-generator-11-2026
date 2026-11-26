@@ -86,7 +86,10 @@ Halte das gewählte Prinzip auf einer Ebene durch: Geschwister folgen immer ders
 - Erkläre, worum es in dem Knoten geht und wofür Lehrende und Lernende die Inhalte darin nutzen können.
 - Aktive Formulierungen, kurze Sätze (höchstens 20 Wörter), Fachbegriffe kurz erklärt, konkrete Beispiele und
   Anwendungen.
-- Keine Einleitungen wie „Diese Sammlung …“ oder „Dieses Thema …“, keine URLs, Markennamen oder Füllwörter.
+- Sachlich in der dritten Person und ohne Anrede: kein „du“, kein „Sie“, keine Aufforderungen wie „Untersuche …“.
+  Alle Beschreibungen eines Baums klingen gleich.
+- Keine Einleitungen wie „Diese Sammlung …“, „Dieses Thema …“ oder „Dieser Bereich …“, keine URLs, Markennamen oder
+  Füllwörter.
 - Zielgruppenorientiert für die angegebene Bildungsstufe.
 - Die gewünschte Länge steht in der Nachricht als Wortzahl. Halte sie ungefähr ein, überschreite sie um höchstens
   ein Fünftel. Alle Beschreibungen eines Baums sind etwa gleich lang.

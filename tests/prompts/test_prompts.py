@@ -33,3 +33,10 @@ def test_system_prompt_is_static_and_long_enough_for_prefix_caching() -> None:
 
 def test_system_prompt_is_loaded_byte_identically() -> None:
     assert load("system") == load("system")
+
+
+def test_descriptions_use_one_neutral_voice_without_direct_address() -> None:
+    # Live run 2026-11-26: parallel describe batches mixed "du", "Sie", imperatives and "Lehrkräfte können" in one tree.
+    text = load("system")
+    assert "ohne Anrede" in text
+    assert "„Dieser Bereich …“" in text
