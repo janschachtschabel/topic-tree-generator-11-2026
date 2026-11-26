@@ -57,3 +57,12 @@ def test_changelog_mentions_the_current_version() -> None:
     from app.version import service_version
 
     assert f"## {service_version()}" in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+
+def test_steckbrief_short_description_equals_openapi_description() -> None:
+    # Leitfaden Kap. 6: the Kurzbeschreibung row of the Steckbrief equals info.description.
+    from app.main import DESCRIPTION
+
+    steckbrief = (ROOT / "docs" / "steckbrief.md").read_text(encoding="utf-8")
+    row = next(line for line in steckbrief.splitlines() if line.startswith("| **Funktionalität / Kurzbeschreibung**"))
+    assert row.split("|")[2].strip() == DESCRIPTION
