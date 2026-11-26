@@ -3,6 +3,7 @@
 from pydantic import BaseModel, Field
 
 from app.domain.keys import make_key
+from app.domain.text import one_line
 from app.domain.tree import Node, index, parent_of
 from app.pipeline.run_context import RunContext
 from app.prompts import render
@@ -24,9 +25,9 @@ class SplitResult(BaseModel):
 
 
 def _describe(node: Node) -> str:
-    children = "\n".join(f"- Kind {c.key}: {c.title}" for c in node.children) or "- (keine Kinder)"
+    children = "\n".join(f"- Kind {c.key}: {one_line(c.title)}" for c in node.children) or "- (keine Kinder)"
     contents = "\n".join(f"- Inhalt {r.id}" for r in node.contents)
-    return f"{node.key}: {node.title}\n{children}" + (f"\n{contents}" if contents else "")
+    return f"{node.key}: {one_line(node.title)}\n{children}" + (f"\n{contents}" if contents else "")
 
 
 async def split_node(

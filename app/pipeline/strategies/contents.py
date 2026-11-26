@@ -5,7 +5,7 @@ import re
 from app.domain.keys import assign_missing_keys
 from app.domain.quality import PLATFORM_STOPWORDS
 from app.domain.shape_rules import eliminate_generated_duplicates
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.domain.tree import collapse_single_children
 from app.pipeline.inputs_block import structure_inputs_block
 from app.pipeline.result import StrategyResult
@@ -25,14 +25,14 @@ _WORD = re.compile(r"[^\W\d_]{4,}")
 
 def _detail(item: Item) -> str:
     p = item.properties
-    parts = [f"- id: {item.id}", p.first("cm:title") or "(ohne Titel)"]
+    parts = [f"- id: {item.id}", one_line(p.first("cm:title") or "(ohne Titel)")]
     disciplines = list(dict.fromkeys(lbl for uri in p.values("ccm:taxonid") if (lbl := label(uri))))
     if disciplines:
         parts.append("Fach: " + ", ".join(disciplines[:3]))
     if description := p.first("cm:description"):
-        parts.append(truncate_sentences(description, _TEXT))
+        parts.append(one_line(truncate_sentences(description, _TEXT)))
     if keywords := p.values("cclom:general_keyword"):
-        parts.append("Schlagworte: " + ", ".join(keywords[:8]))
+        parts.append("Schlagworte: " + ", ".join(map(one_line, keywords[:8])))
     return " | ".join(parts)
 
 
@@ -102,7 +102,7 @@ def items_block(items: list[Item], rc: RunContext) -> str:
             rc.warn("ITEMS_SAMPLED", f"Nur {MAX_TITLES} weitere Titel flossen in die Gruppenbildung ein.", step="group")
             rest = rest[:MAX_TITLES]
         lines.append("\nWeitere Titel:")
-        lines.extend(f"- {(i.properties.first('cm:title') or i.id)[:80]}" for i in rest)
+        lines.extend(f"- {one_line(i.properties.first('cm:title') or i.id)[:80]}" for i in rest)
     return "\n".join(lines)
 
 

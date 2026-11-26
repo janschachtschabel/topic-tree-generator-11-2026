@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.domain.ops import ApplyResult, apply_changes
+from app.domain.text import one_line
 from app.domain.tree import Node, walk
 from app.pipeline.run_context import RunContext
 from app.prompts import render
@@ -35,7 +36,8 @@ def render_folders(roots: list[Node], titles: dict[str, str]) -> str:
         sample = ", ".join(titles.get(ref.id, ref.id) for ref in node.contents[:_SAMPLE])
         indent = "  " * (depth - 1)
         lines.append(
-            f"{indent}- {node.key}: {node.title} | {len(node.contents)} Inhalte" + (f" | {sample}" if sample else "")
+            f"{indent}- {node.key}: {one_line(node.title)} | {len(node.contents)} Inhalte"
+            + (f" | {sample}" if sample else "")
         )
     return "\n".join(lines)
 

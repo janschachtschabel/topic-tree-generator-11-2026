@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from app.domain.text import one_line
 from app.domain.tree import Node, walk
 from app.pipeline.run_context import RunContext
 from app.prompts import render
@@ -32,7 +33,7 @@ def render_tree(roots: list[Node], protected: set[str]) -> str:
     lines = []
     for node, _, depth in walk(roots):
         mark = " [gesperrt]" if node.key in protected else ""
-        lines.append(f"{'  ' * (depth - 1)}- {node.key}: {node.title}{mark}")
+        lines.append(f"{'  ' * (depth - 1)}- {node.key}: {one_line(node.title)}{mark}")
     return "\n".join(lines)
 
 

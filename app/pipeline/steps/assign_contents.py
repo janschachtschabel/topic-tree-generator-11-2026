@@ -8,7 +8,7 @@ import asyncio
 
 from pydantic import BaseModel, Field
 
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.domain.tree import Node, index, path, walk
 from app.llm.client import LLMStepError
 from app.pipeline.key_matching import match_keys
@@ -46,13 +46,13 @@ def render_tree(roots: list[Node]) -> str:
 
 def _item_line(item: Item, folder: str | None = None) -> str:
     props = item.properties
-    parts = [f"- id: {item.id}", props.first("cm:title") or "(ohne Titel)"]
+    parts = [f"- id: {item.id}", one_line(props.first("cm:title") or "(ohne Titel)")]
     if description := props.first("cm:description"):
-        parts.append(truncate_sentences(description, _TEXT_LIMIT))
+        parts.append(one_line(truncate_sentences(description, _TEXT_LIMIT)))
     if keywords := props.values("cclom:general_keyword"):
-        parts.append("Schlagworte: " + ", ".join(keywords[:10]))
+        parts.append("Schlagworte: " + ", ".join(map(one_line, keywords[:10])))
     if folder:
-        parts.append(f"Ordner: {folder}")
+        parts.append(f"Ordner: {one_line(folder)}")
     return " | ".join(parts)
 
 

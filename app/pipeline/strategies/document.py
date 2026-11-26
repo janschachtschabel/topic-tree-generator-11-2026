@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from app.domain.keys import assign_missing_keys
-from app.domain.text import truncate_sentences
+from app.domain.text import one_line, truncate_sentences
 from app.domain.tree import Node, walk
 from app.llm.client import LLMStepError
 from app.pipeline.inputs.outline import Section, parse_outline
@@ -66,7 +66,7 @@ def _outline_text(sections: list[DocSection], docs: list[Item], rc: RunContext) 
     lines = []
     for s in sections:
         page = f" | Seite {s.section.page}" if s.section.page is not None else ""
-        lines.append(f"{s.ref} | Ebene {s.section.level}{page} | {s.section.title}")
+        lines.append(f"{s.ref} | Ebene {s.section.level}{page} | {one_line(s.section.title)}")
     return "\n".join(lines)
 
 
