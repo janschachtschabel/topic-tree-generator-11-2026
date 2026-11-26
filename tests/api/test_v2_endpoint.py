@@ -116,11 +116,10 @@ def test_exported_json_schemas_are_current() -> None:
         path = Path(SCHEMA_DIR) / name
         assert path.exists(), f"run: uv run python -m scripts.export_schemas ({name} missing)"
         assert json.loads(path.read_text()) == schema, f"run: uv run python -m scripts.export_schemas ({name} stale)"
-    from scripts.export_schemas import FIELD_REFERENCE, field_reference
+    from scripts.export_schemas import FIELD_REFERENCES, field_reference
 
-    assert FIELD_REFERENCE.read_text(encoding="utf-8") == field_reference(), (
-        "run: uv run python -m scripts.export_schemas"
-    )
+    for lang, path in FIELD_REFERENCES.items():
+        assert path.read_text(encoding="utf-8") == field_reference(lang), "run: uv run python -m scripts.export_schemas"
 
 
 @pytest.mark.parametrize(
